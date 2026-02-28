@@ -11,13 +11,13 @@ class CreateDsdangkyTable extends Migration
         Schema::create('dsdangky', function (Blueprint $table) {
             $table->id();
             $table->string('mamonhoc');
-            $table->string('masinhvien');
+            $table->string('mssv');
             $table->string('dstenmonhoc');
             $table->string('dsgiangvien');
             $table->integer('dssotinchi');
 
             $table->foreign('mamonhoc')->references('mamonhoc')->on('monhoc');
-            $table->foreign('masinhvien')->references('mssv')->on('sinhvien');
+            $table->foreign('mssv')->references('mssv')->on('sinhvien');
             $table->timestamps();
         });
     }

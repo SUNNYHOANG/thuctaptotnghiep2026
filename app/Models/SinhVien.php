@@ -18,7 +18,7 @@ class SinhVien extends Authenticatable
     protected $fillable = [
         'mssv',
         'password',
-        'masinhvien',
+        'mssv',
         'ngaysinh',
         'gioitinh',
         'malop',
@@ -33,13 +33,13 @@ class SinhVien extends Authenticatable
 
     public function dsdangky()
     {
-        return $this->hasMany(DSDangKy::class, 'masinhvien', 'mssv');
+        return $this->hasMany(DSDangKy::class, 'mssv', 'mssv');
     }
 
-    public function monhocs()
-    {
-        return $this->belongsToMany(MonHoc::class, 'dsdangky', 'masinhvien', 'mamonhoc');
-    }
+    // public function monhocs()
+    // {
+    //     return $this->belongsToMany(MonHoc::class, 'dsdangky', 'mssv', 'mamonhoc');
+    // }
 
     public function lop()
     {
@@ -49,6 +49,10 @@ class SinhVien extends Authenticatable
     public function khoa()
     {
         return $this->belongsTo(Khoa::class, 'makhoa', 'makhoa');
+    }
+    public function hocky_sinhvien()
+    {
+        return $this->hasMany(HocKy_SinhVien::class, 'mssv', 'mssv');
     }
 
     // Add this method to get the name of the unique identifier for the user

@@ -1,0 +1,8 @@
+.ctsv-don-online .toolbar { display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center; }
+.ctsv-don-online .toolbar select { padding: 0.5rem; }
+.ctsv-don-online .noidung { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+.ctsv-don-online .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; }
+.ctsv-don-online .status-choduyet { background: #fff3cd; }
+.ctsv-don-online .status-daduyet { background: #d4edda; }
+.ctsv-don-online .status-tuchoi { background: #f8d7da; }
+.ctsv-don-online .btn.small { padding: 0.25rem 0.5rem; font-size: 0.85rem; margin-right: 0.25rem; }

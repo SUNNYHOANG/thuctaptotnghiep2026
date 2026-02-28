@@ -1,0 +1,3 @@
+B1: bật xamp xem có dữ liệu chưa (DB_DATABASE=dkhp1)
+B2: trong teminal: php artisan serve để chạy code
+B3: ctrl + click chuột vào dường dẫn http://127.0.0.1:8000 để mở chương trình

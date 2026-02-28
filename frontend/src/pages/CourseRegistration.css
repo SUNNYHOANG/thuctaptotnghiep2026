@@ -1,0 +1,370 @@
+.course-registration-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 60px);
+}
+
+.course-registration-container h2 {
+  color: #1a73e8;
+  margin-bottom: 30px;
+  font-size: 28px;
+  border-bottom: 3px solid #1a73e8;
+  padding-bottom: 10px;
+}
+
+.course-registration-container h3 {
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Semester Filter */
+.semester-filter {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.semester-filter label {
+  font-weight: 600;
+  color: #333;
+  min-width: 150px;
+}
+
+.semester-filter select {
+  padding: 10px 15px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  min-width: 200px;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.semester-filter select:hover {
+  border-color: #1a73e8;
+}
+
+.semester-filter select:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+/* Sections */
+.registered-courses-section,
+.available-courses-section {
+  margin-bottom: 40px;
+}
+
+.fee-summary {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #ff9800;
+  font-size: 14px;
+  color: #374151;
+}
+
+.fee-summary .fee-total {
+  color: #e65100;
+}
+
+/* Courses List */
+.courses-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.course-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border-left: 5px solid #4caf50;
+}
+
+.course-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.course-card.registered {
+  border-left-color: #4caf50;
+  background: #f0f9f0;
+}
+
+.course-card.already-registered {
+  opacity: 0.8;
+  border-left-color: #4caf50;
+}
+
+.course-card.full {
+  opacity: 0.6;
+  border-left-color: #999;
+}
+
+.course-header {
+  margin-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 12px;
+}
+
+.course-header h4 {
+  color: #1a73e8;
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+}
+
+.course-info {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.info-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tincredits {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.tinckredits {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.fee {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.course-details {
+  flex-grow: 1;
+  margin-bottom: 15px;
+}
+
+.course-details p {
+  margin: 8px 0;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.course-details strong {
+  color: #333;
+}
+
+.course-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Capacity Bar */
+.capacity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.capacity-bar {
+  width: 100%;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.capacity-used {
+  height: 100%;
+  background: linear-gradient(90deg, #ff9800, #f57c00);
+  transition: width 0.3s ease;
+}
+
+.capacity small {
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+}
+
+/* Buttons */
+.btn-register,
+.btn-cancel,
+.btn-registered,
+.btn-full {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  text-align: center;
+}
+
+.btn-register {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-register:hover:not(:disabled) {
+  background: #45a049;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.btn-register:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: #f44336;
+  color: white;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #da190b;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.btn-cancel:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-registered {
+  background: #e8f5e9;
+  color: #2e7d32;
+  cursor: default;
+  border: 2px solid #2e7d32;
+  font-weight: 700;
+}
+
+.btn-full {
+  background: #f5f5f5;
+  color: #999;
+  cursor: default;
+  border: 2px solid #ddd;
+}
+
+/* No Data */
+.no-data {
+  background: white;
+  padding: 40px;
+  text-align: center;
+  border-radius: 8px;
+  color: #999;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Error Message */
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 15px 20px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c62828;
+  font-size: 14px;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .course-registration-container {
+    padding: 15px;
+  }
+
+  .courses-list {
+    grid-template-columns: 1fr;
+  }
+
+  .semester-filter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .semester-filter select {
+    width: 100%;
+  }
+
+  .course-card h4 {
+    font-size: 16px;
+  }
+
+  .btn-register,
+  .btn-cancel,
+  .btn-registered,
+  .btn-full {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .course-registration-container {
+    padding: 10px;
+  }
+
+  .course-registration-container h2 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .course-registration-container h3 {
+    font-size: 16px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+  }
+
+  .course-info {
+    flex-direction: column;
+  }
+
+  .info-badge {
+    width: 100%;
+    display: block;
+    text-align: center;
+  }
+}

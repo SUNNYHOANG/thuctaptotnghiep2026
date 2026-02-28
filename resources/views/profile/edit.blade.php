@@ -1,23 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.main')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ asset('css/util.css') }}">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+@section('title', 'Chỉnh sửa thông tin sinh viên')
 
-
-
-    <title>Chỉnh sửa thông tin sinh viên</title>
-
-</head>
-
-<body>
-    @include('layouts.header')
-
+@section('content')
     <div class="container mx-auto py-10">
         @if (session('error'))
             <script>
@@ -72,8 +57,7 @@
                         class="input98 w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring focus:ring-blue-300"
                         name="lop" id="lop">
                         @foreach ($lophoc as $class)
-                            <option value="{{ $class->malop }}"
-                                {{ $sinhvien->malop == $class->malop ? 'selected' : '' }}>
+                            <option value="{{ $class->malop }}" {{ $sinhvien->malop == $class->malop ? 'selected' : '' }}>
                                 {{ $class->malop }} - Lớp: {{ $class->tenlop }}
                             </option>
                         @endforeach
@@ -95,9 +79,4 @@
             </form>
         </div>
     </div>
-
-    @include('layouts.footer')
-</body>
-
-
-</html>
+@endsection

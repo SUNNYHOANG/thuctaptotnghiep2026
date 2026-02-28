@@ -1,0 +1,6 @@
+.teacher-class-students .filter-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.teacher-class-students .filter-row select { padding: 0.5rem; min-width: 180px; }
+.teacher-class-students .summary { margin-bottom: 0.5rem; color: var(--text-2); }
+.teacher-class-students .table-wrap { overflow-x: auto; }
+.teacher-class-students .data-table { width: 100%; border-collapse: collapse; }
+.teacher-class-students .data-table th, .teacher-class-students .data-table td { padding: 0.5rem 0.75rem; border: 1px solid var(--border, #ddd); text-align: left; }

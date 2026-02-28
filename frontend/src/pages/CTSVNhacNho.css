@@ -1,0 +1,6 @@
+.ctsv-nhac-nho .intro { margin-bottom: 1rem; color: var(--text-2); }
+.ctsv-nhac-nho .message { margin-bottom: 1rem; padding: 0.5rem; background: var(--surface-2); border-radius: 6px; }
+.ctsv-nhac-nho .nhac-nho-form { max-width: 500px; }
+.ctsv-nhac-nho .nhac-nho-form label { display: block; margin-top: 0.75rem; }
+.ctsv-nhac-nho .nhac-nho-form input, .ctsv-nhac-nho .nhac-nho-form textarea, .ctsv-nhac-nho .nhac-nho-form select { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+.ctsv-nhac-nho .form-actions { margin-top: 1rem; }

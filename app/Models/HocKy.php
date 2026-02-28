@@ -11,9 +11,24 @@ class HocKy extends Model
 
     protected $table = 'hocky';
     protected $fillable = [
+        'mahocky',
         'tenhocky',
+        'ngaybatdau',
+        'ngayketthuc',
         'namhoc',
-        'hienhanh',
+        'trangthai',
     ];
+
+    public function hocky_sinhvien()
+    {
+        return $this->hasMany(HocKy_SinhVien::class, 'mahocky', 'mahocky');
+    }
+
+    public function monhoc()
+    {
+        return $this->hasMany(MonHoc::class, 'mahocky', 'mahocky');
+    }
+
+
     
 }

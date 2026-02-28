@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HocKy_SinhVien;
 use App\Models\LopHoc;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,6 +61,12 @@ class AuthController extends Controller
         $sinhvien->makhoa = $request->makhoa;
         $sinhvien->quequan = $request->quequan;
         $sinhvien->save();
+
+        $hocky_sinhvien = new HocKy_SinhVien();
+        $hocky_sinhvien->mssv = $request->mssv;
+        $hocky_sinhvien->mahocky = "HK1-2024";
+        $hocky_sinhvien->trangthai_hocky_sinhvien = "Đang học";
+        $hocky_sinhvien->save();
 
         return redirect()->route('login')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập.'); // Thông báo thành công
     }

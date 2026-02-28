@@ -39,6 +39,10 @@ class MonHoc extends Model
     // Liên kết nhiều-nhiều với bảng SinhVien qua bảng DSDangKy
     public function sinhviens()
     {
-        return $this->belongsToMany(SinhVien::class, 'dsdangky', 'mamonhoc', 'masinhvien');
+        return $this->belongsToMany(SinhVien::class, 'dsdangky', 'mamonhoc', 'mssv');
+    }
+    public function hocky()
+    {
+        return $this->belongsTo(HocKy::class, 'makhoa', 'makhoa');
     }
 }

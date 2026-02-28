@@ -1,0 +1,8 @@
+.tieu-chi-drl .intro { margin-bottom: 1rem; color: var(--text-2, #555); }
+.tieu-chi-drl .tieu-chi-list { display: flex; flex-direction: column; gap: 1rem; }
+.tieu-chi-drl .tieu-chi-card { border: 1px solid var(--border, #ddd); border-radius: 8px; padding: 1rem; }
+.tieu-chi-drl .tieu-chi-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+.tieu-chi-drl .loai { font-size: 0.85rem; color: var(--primary); }
+.tieu-chi-drl .diem { font-size: 0.85rem; font-weight: 600; }
+.tieu-chi-drl .tieu-chi-card h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+.tieu-chi-drl .mota { margin: 0; font-size: 0.9rem; color: var(--text-2); }

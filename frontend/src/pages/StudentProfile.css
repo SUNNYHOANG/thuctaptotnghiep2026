@@ -1,0 +1,6 @@
+.student-profile .profile-view p { margin: 0.5rem 0; }
+.student-profile .profile-form { max-width: 400px; }
+.student-profile .profile-form label { display: block; margin-top: 0.75rem; }
+.student-profile .profile-form input { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+.student-profile .form-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
+.student-profile .message { margin: 0.5rem 0; padding: 0.5rem; background: var(--surface-2, #f0f0f0); border-radius: 6px; }

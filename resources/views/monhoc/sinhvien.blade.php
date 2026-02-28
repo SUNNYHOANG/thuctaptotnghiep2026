@@ -20,7 +20,7 @@
             @forelse ($monhoc->dsDangKy as $index => $dangKy)
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $dangKy->masinhvien }}</td>
+                    <td>{{ $dangKy->mssv }}</td>
                     <td>{{ $dangKy->sinhvien->hoten }}</td>
                     <td>
                         <form action="{{ route('monhoc.deleteStudent', [$monhoc->mamonhoc, $dangKy->id]) }}" method="POST">

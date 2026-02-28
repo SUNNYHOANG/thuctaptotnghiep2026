@@ -12,7 +12,7 @@ class DSDangKy extends Model
     protected $table = 'dsdangky';
     protected $fillable = [
         'mamonhoc',
-        'masinhvien',
+        'mssv',
         'dstenmonhoc',
         'dsgiangvien',
         'dssotinchi',
@@ -20,7 +20,7 @@ class DSDangKy extends Model
     // Liên kết với bảng SinhVien
     public function sinhvien()
     {
-        return $this->belongsTo(SinhVien::class, 'masinhvien', 'mssv');
+        return $this->belongsTo(SinhVien::class, 'mssv', 'mssv');
     }
 
     // Liên kết với bảng MonHoc

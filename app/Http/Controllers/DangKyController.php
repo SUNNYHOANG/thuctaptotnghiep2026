@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DSDangKy;
 use App\Models\SinhVien;
+use App\Models\HocKy;
 use App\Models\MonHoc;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,35 +13,30 @@ use Illuminate\Support\Facades\Auth;
 
 class DangKyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $sinhvien = Auth::user();
+        $hockyList = HocKy::where('trangthai', true)->orderBy('ngaybatdau', 'desc')->get();
+
+        if ($hockyList->isEmpty()) {
+            return view('dangky')->with('error', 'Hiện tại không có học kỳ nào đang mở đăng ký');
+        }
 
         $monHocDaDangKy = $sinhvien->dsdangky->pluck('mamonhoc')->toArray();
+
+        $selectedType = request('study_type', 'new'); // 'new' hoặc 'improve'
+        $selectedHocKy = request('hocky', $hockyList->first()->mahocky);
+
         $monHocList = MonHoc::where('makhoa', $sinhvien->makhoa)
+            ->where('mahocky', $selectedHocKy)
             ->whereNotIn('mamonhoc', $monHocDaDangKy)
             ->get();
 
-        return view('dangky', compact('sinhvien', 'monHocList'));
+        return view('dangky', compact('sinhvien', 'hockyList', 'selectedHocKy', 'monHocList', 'selectedType'));
     }
 
-    public function search(Request $request)
-    {
-        $searchTerm = $request->input('search');
-        $sinhvien = Auth::user();
-        $mssv = $sinhvien->mssv;
-
-        // Tìm kiếm môn học theo từ khóa
-        $monHocList = DB::table('sinhvien')
-            ->join('lophoc', 'sinhvien.malop', '=', 'lophoc.malop')
-            ->join('khoa', 'lophoc.makhoa', '=', 'khoa.makhoa')
-            ->join('monhoc', 'khoa.makhoa', '=', 'monhoc.makhoa')
-            ->where('sinhvien.mssv', $mssv)
-            ->where('monhoc.tenmonhoc', 'LIKE', "%{$searchTerm}%")
-            ->select('monhoc.*')
-            ->get();
-
-        return view('dangky', compact('sinhvien', 'monHocList'));
+    public function search(Request $request) {
+        
     }
 
     public function addMonHoc(Request $request)
@@ -58,7 +54,7 @@ class DangKyController extends Controller
                 // Thêm môn học vào bảng đăng ký
                 DB::table('dsdangky')->insert([
                     'mamonhoc' => $mamonhoc,
-                    'masinhvien' => $sinhvien->mssv,
+                    'mssv' => $sinhvien->mssv,
                     'dstenmonhoc' => $monhoc->tenmonhoc,
                     'dsgiangvien' => $monhoc->giangvien,
                     'dssotinchi' => $monhoc->sotinchi,
@@ -94,7 +90,7 @@ class DangKyController extends Controller
         if ($monhoc && $monhoc->dadangky < $monhoc->soluongsinhvien) {
             DB::table('dsdangky')->insert([
                 'mamonhoc' => $mamonhoc,
-                'masinhvien' => $sinhvien->mssv,
+                'mssv' => $sinhvien->mssv,
                 'dstenmonhoc' => $monhoc->tenmonhoc,
                 'dsgiangvien' => $monhoc->giangvien,
                 'dssotinchi' => $monhoc->sotinchi,
@@ -122,7 +118,7 @@ class DangKyController extends Controller
         $hoten = $sinhvien->hoten;
         // Lấy danh sách đăng ký của sinh viên
         $dsDangKy = DSDangKy::with('monHoc')
-            ->where('masinhvien', $mssv)
+            ->where('mssv', $mssv)
             ->get();
 
         return view('ketquadangky', compact('sinhvien', 'dsDangKy', 'hoten'));
@@ -138,9 +134,9 @@ class DangKyController extends Controller
 
         // Kiểm tra nếu môn học tồn tại
         if ($monhoc) {
-            // Xóa học phần từ bảng `dsdangky` với `masinhvien` và `mamonhoc` tương ứng
+            // Xóa học phần từ bảng `dsdangky` với `mssv` và `mamonhoc` tương ứng
             DB::table('dsdangky')->where([
-                ['masinhvien', '=', $mssv],
+                ['mssv', '=', $mssv],
                 ['mamonhoc', '=', $mamonhoc]
             ])->delete();
 

@@ -1,66 +1,221 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hệ Thống Quản Lý Công Tác Sinh Viên và Điểm Rèn Luyện
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Hệ thống quản lý hoạt động sinh viên và tính điểm rèn luyện được xây dựng bằng React (Frontend) và Node.js/Express (Backend).
 
-## About Laravel
+## Công Nghệ Sử Dụng
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Backend
+- Node.js
+- Express.js
+- MySQL
+- MySQL2
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Frontend
+- React 18
+- React Router DOM
+- Axios
+- Vite
+- CSS3
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Cấu Trúc Dự Án
 
-## Learning Laravel
+```
+.
+├── backend/                 # Backend API
+│   ├── config/             # Cấu hình database
+│   ├── models/             # Models cho database
+│   ├── routes/             # API routes
+│   ├── database/          # SQL schema
+│   ├── server.js           # Entry point
+│   └── package.json
+│
+├── frontend/               # Frontend React
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── pages/          # Các trang
+│   │   ├── api/            # API client
+│   │   ├── App.jsx         # Main app component
+│   │   └── main.jsx        # Entry point
+│   ├── index.html
+│   └── package.json
+│
+└── README.md
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Cài Đặt và Chạy
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Backend
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. Di chuyển vào thư mục backend:
+```bash
+cd backend
+```
 
-## Laravel Sponsors
+2. Cài đặt dependencies:
+```bash
+npm install
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. Tạo file `.env` từ `.env.example` và cấu hình:
+```env
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=dkhp1
+JWT_SECRET=your-secret-key-here
+```
 
-### Premium Partners
+4. Chạy SQL schema để tạo các bảng:
+```bash
+mysql -u root -p dkhp1 < database/schema.sql
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+5. Chạy server:
+```bash
+npm run dev
+```
 
-## Contributing
+Server sẽ chạy tại `http://localhost:5000`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Frontend
 
-## Code of Conduct
+1. Di chuyển vào thư mục frontend:
+```bash
+cd frontend
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+2. Cài đặt dependencies:
+```bash
+npm install
+```
 
-## Security Vulnerabilities
+3. Chạy development server:
+```bash
+npm run dev
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Frontend sẽ chạy tại `http://localhost:3000`
 
-## License
+Tính Năng
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+ 1. Quản Lý Hoạt Động
+- Xem danh sách hoạt động
+- Lọc hoạt động theo loại và trạng thái
+- Xem chi tiết hoạt động
+- Đăng ký tham gia hoạt động
+
+ 2. Quản Lý Hoạt Động Của Sinh Viên
+- Xem danh sách hoạt động đã đăng ký
+- Theo dõi trạng thái đăng ký (Chờ duyệt, Được duyệt, Từ chối, Hoàn thành)
+- Hủy đăng ký (nếu chưa được duyệt)
+
+ 3. Điểm Rèn Luyện
+- Tính điểm rèn luyện tự động
+- Xem điểm rèn luyện theo học kỳ
+- Xem chi tiết điểm từng tiêu chí
+- Xếp loại điểm rèn luyện (Xuất sắc, Tốt, Khá, Trung bình, Yếu, Chưa đạt)
+
+API Endpoints
+
+### Activities
+- `GET /api/activities` - Lấy danh sách hoạt động
+- `GET /api/activities/:id` - Lấy chi tiết hoạt động
+- `GET /api/activities/types` - Lấy danh sách loại hoạt động
+- `POST /api/activities` - Tạo hoạt động mới
+- `PUT /api/activities/:id` - Cập nhật hoạt động
+- `DELETE /api/activities/:id` - Xóa hoạt động
+
+### Student Activities
+- `POST /api/student-activities/register` - Đăng ký tham gia hoạt động
+- `GET /api/student-activities/student/:mssv` - Lấy hoạt động của sinh viên
+- `GET /api/student-activities/activity/:mahoatdong` - Lấy danh sách sinh viên tham gia
+- `POST /api/student-activities/:id/approve` - Duyệt đăng ký
+- `POST /api/student-activities/:id/reject` - Từ chối đăng ký
+- `POST /api/student-activities/:id/complete` - Đánh dấu hoàn thành
+- `DELETE /api/student-activities/:id` - Hủy đăng ký
+
+### Scores
+- `POST /api/scores/calculate` - Tính điểm rèn luyện
+- `GET /api/scores/student/:mssv` - Lấy điểm của sinh viên
+- `GET /api/scores/student/:mssv/semester/:mahocky` - Lấy điểm theo học kỳ
+- `GET /api/scores/semester/:mahocky` - Lấy điểm theo học kỳ (tất cả sinh viên)
+- `PUT /api/scores/update` - Cập nhật điểm thủ công
+
+## 📊 Quản Lý Điểm Sinh Viên (Mới)
+
+Hệ thống quản lý điểm toàn diện cho sinh viên và giảng viên:
+
+### Tính Năng Chính
+✅ **Sinh Viên**:
+- Xem bảng điểm với 5 loại điểm (Chuyên cần, Giữa kỳ, Cuối kỳ, Tổng kết, GPA)
+- Lọc theo học kỳ
+- Xem GPA, xếp loại học lực
+- Cảnh báo học vụ (GPA < 2.0, < 2.4)
+
+✅ **Giảng Viên**:
+- Tạo bảng điểm từ danh sách sinh viên đăng ký
+- Nhập điểm trực tiếp trong bảng
+- Sửa điểm với tự động ghi nhật ký thay đổi
+- Xem lịch sử sửa điểm (ai, lúc nào, thay đổi gì)
+- Khóa/mở khóa bảng điểm
+- Xuất bảng điểm ra Excel/CSV
+
+✅ **Hệ Thống**:
+- Tự động tính Điểm Tổng Kết = Chuyên cần×10% + Giữa kỳ×30% + Cuối kỳ×60%
+- Tự động tính GPA (thang 0-4)
+- Tự động xếp loại: Xuất sắc/Tốt/Khá/Trung bình/Yếu/Kém
+- Ghi log tất cả thay đổi để kiểm toán
+
+### Hướng Dẫn Sử Dụng
+📖 **[Tài Liệu Chi Tiết](HUONG_DAN_QUAN_LY_DIEM.md)** - Hướng dẫn đầy đủ cho sinh viên và giảng viên
+
+### API Endpoints
+```
+GET    /api/grades/student/:mssv           - Xem điểm cá nhân
+GET    /api/grades/class/:malophocphan     - Xem bảng điểm lớp
+POST   /api/grades/init/:malophocphan      - Tạo bảng điểm
+POST   /api/grades                         - Nhập/cập nhật điểm
+PUT    /api/grades/:mabangdiem             - Sửa điểm (tạo log)
+POST   /api/grades/lock/:malophocphan      - Khóa điểm
+POST   /api/grades/unlock/:malophocphan    - Mở khóa
+GET    /api/grades/export/:malophocphan    - Xuất CSV
+GET    /api/grades/:mabangdiem/log         - Xem lịch sử sửa
+GET    /api/grades/stats/:mahocky          - Thống kê
+```
+
+---
+
+## Database Schema
+
+### Các bảng chính (Backend Node.js):
+- `bangdiem` - Bảng điểm chi tiết (Chuyên cần, Giữa kỳ, Cuối kỳ, TK, GPA, xếp loại)
+- `log_suadiem` - Nhật ký thay đổi điểm
+- `lophocphan` - Lớp học phần (liên kết giảng viên, môn học, học kỳ)
+- `sinhvien` - Sinh viên
+- `monhoc` - Môn học
+- `hocky` - Học kỳ
+
+### Các bảng từ Laravel:
+- `users` - Tài khoản (admin, giảng viên)
+- `sinhvien` - Thông tin sinh viên
+- `giangvien` - Thông tin giảng viên
+
+## Ghi Chú
+
+- Đảm bảo MySQL đang chạy và database `dkhp1` đã được tạo
+- Chạy `setup-complete.sql` để tạo tất cả các bảng và dữ liệu mẫu
+- Cần có bảng `users` với các tài khoản: admin, giảng viên, sinh viên
+- Tính năng phúc khảo và import Excel sẽ được thêm trong phiên bản tiếp theo
+- Trong môi trường production, cần thêm validation và authorization hoàn chỉnh
+
+## Phát Triển Thêm
+
+- [ ] ✅ Quản lý điểm sinh viên (Basic)
+- [ ] Import Excel bảng điểm
+- [ ] Modal xem chi tiết lịch sử sửa
+- [ ] Tích hợp phúc khảo
+- [ ] Dashboard thống kê điểm
+- [ ] PDF export báo cáo
+- [ ] Thông báo real-time khi sửa điểm
+- [ ] Batch upload điểm từ file
