@@ -55,16 +55,16 @@ app.post('/api/auth/face-login', async (req, res) => {
     }
     let staffRows = [];
     try {
-      const [rows] = await pool.execute(
-        'SELECT id, username, hoten, role, magiangvien, status FROM users WHERE username = ? AND status = ?',
-        [identifier, 'active']
-      );
+    const [rows] = await pool.execute(
+      'SELECT id, username, hoten, role, magiaovien, status FROM users WHERE username = ? AND status = ?',
+      [identifier, 'active']
+    );
       staffRows = rows;
     } catch (error) {
       // Một số schema cũ không có cột `status`
       if (error && error.code === 'ER_BAD_FIELD_ERROR') {
         const [rows] = await pool.execute(
-          'SELECT id, username, hoten, role, magiangvien FROM users WHERE username = ?',
+          'SELECT id, username, hoten, role, magiaovien FROM users WHERE username = ?',
           [identifier]
         );
         staffRows = rows;

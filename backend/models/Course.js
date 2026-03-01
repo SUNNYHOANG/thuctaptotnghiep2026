@@ -1,11 +1,6 @@
 import pool from '../config/database.js';
-import { v4 as uuidv4 } from 'uuid';
 
 class Course {
-  // Generate random course code
-  static generateRandomCode() {
-    return 'MH' + uuidv4().replace(/-/g, '').substring(0, 10).toUpperCase();
-  }
   static async getAll(filters = {}) {
     let query = 'SELECT * FROM monhoc WHERE 1=1';
     const params = [];
@@ -24,24 +19,23 @@ class Course {
   static async getById(mamonhoc) {
     const [rows] = await pool.execute(
       'SELECT * FROM monhoc WHERE mamonhoc = ?',
-      [mamonhoc]
+      [Number(mamonhoc)]
     );
     return rows[0];
   }
 
   static async create(data) {
-    const mamonhoc = data.mamonhoc || this.generateRandomCode();
     const tenmonhoc = data.tenmonhoc == null ? '' : data.tenmonhoc;
     const sotinchi = data.sotinchi == null ? 3 : data.sotinchi;
     const makhoa = data.makhoa == null ? null : data.makhoa;
     const mota = data.mota == null ? null : data.mota;
     const hocphi = data.hocphi == null ? 0 : data.hocphi;
     const [result] = await pool.execute(
-      `INSERT INTO monhoc (mamonhoc, tenmonhoc, sotinchi, makhoa, mota, hocphi)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [mamonhoc, tenmonhoc, sotinchi, makhoa, mota, hocphi]
+      `INSERT INTO monhoc (tenmonhoc, sotinchi, makhoa, mota, hocphi)
+       VALUES (?, ?, ?, ?, ?)`,
+      [tenmonhoc, sotinchi, makhoa, mota, hocphi]
     );
-    return this.getById(mamonhoc);
+    return this.getById(result.insertId);
   }
 
   static async update(mamonhoc, data) {
@@ -58,7 +52,7 @@ class Course {
 
     if (fields.length === 0) return null;
 
-    values.push(mamonhoc);
+    values.push(Number(mamonhoc));
     await pool.execute(
       `UPDATE monhoc SET ${fields.join(', ')} WHERE mamonhoc = ?`,
       values
@@ -69,17 +63,17 @@ class Course {
   static async delete(mamonhoc) {
     const [result] = await pool.execute(
       'DELETE FROM monhoc WHERE mamonhoc = ?',
-      [mamonhoc]
+      [Number(mamonhoc)]
     );
     return result.affectedRows > 0;
   }
 
   static async getAvailableForRegistration(mahocky) {
     const [rows] = await pool.execute(
-      `SELECT l.malophoc, l.magiaovien, l.lichhoc, l.maphong, l.soluongtoida, 
+      `SELECT l.malophocphan, l.magiaovien, l.lichhoc, l.maphong, l.soluongtoida, 
               l.soluongdadangky, m.mamonhoc, m.tenmonhoc, m.sotinchi, m.hocphi,
               g.hoten AS tengiangvien, p.tenphong
-       FROM lophoc l
+       FROM lophocphan l
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        LEFT JOIN giangvien g ON l.magiaovien = g.magiaovien
        LEFT JOIN phonghoc p ON l.maphong = p.maphong

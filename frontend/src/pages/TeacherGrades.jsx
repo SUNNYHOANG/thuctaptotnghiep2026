@@ -29,6 +29,7 @@ const TeacherGrades = () => {
     diemcuoiky: '',
     ghichu: ''
   });
+  const [logData, setLogData] = useState(null);
 
   useEffect(() => {
     fetchClassSections();
@@ -37,10 +38,12 @@ const TeacherGrades = () => {
   const fetchClassSections = async () => {
     try {
       setLoading(true);
-      // Lấy lớp học phần của giảng viên
-      const response = await classSectionAPIEndpoints.getByTeacher(user?.magiangvien);
-      setClassSections(response.data);
-      if (response.data.length > 0) {
+      const isCtsv = user?.role === 'ctsv';
+      const response = isCtsv
+        ? await classSectionAPIEndpoints.getAll()
+        : await classSectionAPIEndpoints.getByTeacher(user?.magiaovien);
+      setClassSections(response.data || []);
+      if (response.data?.length > 0) {
         setSelectedClass(response.data[0].malophocphan);
       }
     } catch (err) {
@@ -146,13 +149,22 @@ const TeacherGrades = () => {
     }
   };
 
+  const handleViewLog = async (grade) => {
+    try {
+      const res = await gradesAPIEndpoints.getGradeLog(grade.mabangdiem);
+      setLogData({ grade, logs: res.data || [] });
+    } catch (err) {
+      setError('Lỗi tải log: ' + err.message);
+    }
+  };
+
   const selectedClassInfo = classSections.find(c => c.malophocphan === selectedClass);
 
   return (
     <div className="teacher-grades-container">
       <div className="grades-header">
-        <h1>📊 Quản Lý Điểm Sinh Viên</h1>
-        <p>Giảng viên: {user?.hoten}</p>
+        <h1>📊 {user?.role === 'ctsv' ? 'Quản lý điểm (Kiểm tra & khóa)' : 'Quản Lý Điểm Sinh Viên'}</h1>
+        <p>{user?.role === 'ctsv' ? 'Phòng CTSV – Kiểm tra và duyệt bảng điểm các lớp học phần' : `Giảng viên: ${user?.hoten}`}</p>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -164,7 +176,7 @@ const TeacherGrades = () => {
           <option value="">-- Chọn lớp --</option>
           {classSections.map(cls => (
             <option key={cls.malophocphan} value={cls.malophocphan}>
-              {cls.tenmonhoc} - {cls.thoigian} ({cls.phonghoc})
+              {cls.tenmonhoc} - {cls.lichhoc} {cls.tenphong ? `(${cls.tenphong})` : ''}
             </option>
           ))}
         </select>
@@ -176,7 +188,10 @@ const TeacherGrades = () => {
           <div className="class-info">
             <div className="info-details">
               <h3>{selectedClassInfo?.tenmonhoc}</h3>
-              <p>Lớp: {selectedClassInfo?.tenmalop} | Phòng: {selectedClassInfo?.phonghoc} | Thời gian: {selectedClassInfo?.thoigian}</p>
+              <p>
+                Học kỳ: {selectedClassInfo?.tenhocky} | Phòng: {selectedClassInfo?.tenphong || 'N/A'} | 
+                Lịch học: {selectedClassInfo?.lichhoc}
+              </p>
             </div>
             <div className="class-actions">
               <button className="btn-init" onClick={handleInitGrades}>
@@ -301,7 +316,7 @@ const TeacherGrades = () => {
                           ) : (
                             <>
                               <button className="btn-edit" onClick={() => setEditingId(grade.mabangdiem)}>✏️</button>
-                              <button className="btn-log" onClick={() => alert('Xem log - chưa implement')}>📋</button>
+                              <button className="btn-log" onClick={() => handleViewLog(grade)}>📋</button>
                             </>
                           )}
                         </td>
@@ -312,6 +327,23 @@ const TeacherGrades = () => {
               </table>
             )}
           </div>
+          {logData && (
+            <div className="grade-log-panel">
+              <h3>Nhật ký sửa điểm - {logData.grade.mssv} / {logData.grade.hoten}</h3>
+              {logData.logs.length === 0 ? (
+                <p>Chưa có lịch sử sửa điểm.</p>
+              ) : (
+                <ul>
+                  {logData.logs.map((log) => (
+                    <li key={log.id}>
+                      <strong>{log.loaidiem}</strong>: {log.giatricu} → {log.giatrimoi} bởi {log.nguoisua} lúc {new Date(log.ngaysua).toLocaleString('vi-VN')} ({log.lydo})
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button className="btn-close-log" onClick={() => setLogData(null)}>Đóng</button>
+            </div>
+          )}
         </>
       )}
     </div>

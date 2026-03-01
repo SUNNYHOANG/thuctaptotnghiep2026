@@ -54,7 +54,9 @@ const AppShell = ({ children }) => {
     if (hasRole('ctsv')) {
       return [
         { label: 'Tổng quan', path: '/ctsv/dashboard' },
+        { label: 'Quản lý điểm (kiểm tra & khóa)', path: '/ctsv/quan-ly-diem' },
         { label: 'Duyệt đơn online', path: '/ctsv/duyet-don-online' },
+        { label: 'Duyệt đơn phúc khảo', path: '/ctsv/duyet-phuc-khao' },
         { label: 'Gửi nhắc nhở', path: '/ctsv/nhac-nho' },
         { label: 'Học bổng', path: '/ctsv/hoc-bong' },
         { label: 'Khen thưởng / Kỷ luật', path: '/ctsv/khen-thuong-ky-luat' },

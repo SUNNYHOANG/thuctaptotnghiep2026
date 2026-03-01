@@ -10,7 +10,7 @@ router.get('/admin-stats', async (req, res) => {
     const [students] = await pool.execute('SELECT COUNT(*) as cnt FROM sinhvien');
     const [teachers] = await pool.execute('SELECT COUNT(*) as cnt FROM giangvien');
     const [courses] = await pool.execute('SELECT COUNT(*) as cnt FROM monhoc');
-    const [enrollments] = await pool.execute('SELECT COUNT(*) as cnt FROM dangky');
+    const [enrollments] = await pool.execute('SELECT COUNT(*) as cnt FROM dangkyhocphan');
     
     res.json({
       totalUsers: users[0].cnt,
@@ -80,13 +80,13 @@ router.get('/tieu-chi-drl', async (req, res) => {
   }
 });
 
-// Danh sách lớp (để GV chọn lớp xem SV)
+// Danh sách lớp (lớp hành chính - để GV chọn lớp xem SV)
 router.get('/lop', async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT DISTINCT malop FROM sinhvien WHERE malop IS NOT NULL AND malop != \'\' ORDER BY malop'
+      'SELECT malop, tenlop FROM lophanhchinh ORDER BY malop'
     );
-    res.json({ data: rows.map((r) => r.malop) });
+    res.json({ data: rows });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

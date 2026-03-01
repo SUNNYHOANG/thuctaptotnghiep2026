@@ -100,10 +100,10 @@ export const lookupAPI = {
 
 // Phúc Khảo API
 export const phucKhaoAPI = {
-  getAll: (malophoc = null) => 
-    api.get('/phuc-khao', { params: { malophoc } }),
+  getAll: (filters = {}) =>
+    api.get('/phuc-khao', { params: filters }),
   getByStudent: (mssv) => api.get(`/phuc-khao/student/${mssv}`),
-  getByClassSection: (malophoc) => api.get(`/phuc-khao/class-section/${malophoc}`),
+  getByClassSection: (malophocphan) => api.get(`/phuc-khao/class-section/${malophocphan}`),
   getById: (id) => api.get(`/phuc-khao/${id}`),
   create: (data) => api.post('/phuc-khao', data),
   update: (id, data) => api.put(`/phuc-khao/${id}`, data),

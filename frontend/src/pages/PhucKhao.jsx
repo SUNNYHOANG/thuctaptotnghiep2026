@@ -8,7 +8,7 @@ const PhucKhao = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ mabangdiem: '', malophoc: '', lydo: '' });
+  const [formData, setFormData] = useState({ mabangdiem: '', malophocphan: '', lydo: '' });
   const [editingId, setEditingId] = useState(null);
   const { user } = useAuth();
 
@@ -40,7 +40,7 @@ const PhucKhao = () => {
         await phucKhaoAPI.create(data);
       }
       loadRequests();
-      setFormData({ mabangdiem: '', malophoc: '', lydo: '' });
+      setFormData({ mabangdiem: '', malophocphan: '', lydo: '' });
       setEditingId(null);
       setShowForm(false);
     } catch (error) {
@@ -49,7 +49,7 @@ const PhucKhao = () => {
   };
 
   const handleEdit = (request) => {
-    setFormData({ mabangdiem: request.mabangdiem, malophoc: request.malophoc, lydo: request.lydo || '' });
+    setFormData({ mabangdiem: request.mabangdiem, malophocphan: request.malophocphan, lydo: request.lydo || '' });
     setEditingId(request.maphuckhao);
     setShowForm(true);
   };
@@ -90,7 +90,7 @@ const PhucKhao = () => {
             Có Lý Do ({requests.filter(r => r.trangthai === 'duyet').length})
           </button>
         </div>
-        <button className="btn-add" onClick={() => { setShowForm(!showForm); setEditingId(null); setFormData({ mabangdiem: '', malophoc: '', lydo: '' }); }}>
+        <button className="btn-add" onClick={() => { setShowForm(!showForm); setEditingId(null); setFormData({ mabangdiem: '', malophocphan: '', lydo: '' }); }}>
           + Tạo Đơn Phúc Khảo
         </button>
       </div>
@@ -105,7 +105,7 @@ const PhucKhao = () => {
             </div>
             <div className="form-group">
               <label>Mã Lớp Học Phần *</label>
-              <input value={formData.malophoc} onChange={e => setFormData({...formData, malophoc: e.target.value})} required />
+              <input value={formData.malophocphan} onChange={e => setFormData({...formData, malophocphan: e.target.value})} required />
             </div>
             <div className="form-group">
               <label>Lý Do Phúc Khảo *</label>

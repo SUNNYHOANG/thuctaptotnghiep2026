@@ -1,0 +1,16 @@
+.ctsv-phuckhao .page-desc { margin-bottom: 1rem; color: #555; }
+.ctsv-phuckhao .filter-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.ctsv-phuckhao .filter-row select { padding: 0.35rem 0.75rem; }
+.ctsv-phuckhao .btn-refresh { padding: 0.35rem 0.75rem; }
+.ctsv-phuckhao .table-wrap { overflow-x: auto; }
+.ctsv-phuckhao .data-table { width: 100%; border-collapse: collapse; }
+.ctsv-phuckhao .data-table th, .ctsv-phuckhao .data-table td { padding: 0.5rem; border: 1px solid #ddd; text-align: left; }
+.ctsv-phuckhao .data-table th { background: #f5f5f5; }
+.ctsv-phuckhao .cell-lydo, .ctsv-phuckhao .cell-ketqua { max-width: 200px; word-break: break-word; }
+.ctsv-phuckhao .status-badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem; }
+.ctsv-phuckhao .status-cho { background: #fff3cd; }
+.ctsv-phuckhao .status-dangxuly { background: #cce5ff; }
+.ctsv-phuckhao .status-chapnhan { background: #d4edda; }
+.ctsv-phuckhao .status-tuchoi { background: #f8d7da; }
+.ctsv-phuckhao .btn-approve { margin-right: 0.5rem; padding: 0.25rem 0.5rem; background: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+.ctsv-phuckhao .btn-reject { padding: 0.25rem 0.5rem; background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; }

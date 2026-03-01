@@ -31,8 +31,8 @@ export const classSectionAPIEndpoints = {
     classSectionAPI.get(`/class-sections/${malophocphan}`),
 
   // Get class sections by teacher
-  getByTeacher: (magiangvien) => 
-    classSectionAPI.get(`/class-sections/teacher/${magiangvien}`),
+  getByTeacher: (magiaovien) => 
+    classSectionAPI.get(`/class-sections/teacher/${magiaovien}`),
 
   // Get class sections by semester
   getBySemester: (mahocky) => 

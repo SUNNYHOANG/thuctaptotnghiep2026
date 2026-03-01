@@ -29,7 +29,7 @@ const AdminCourseAvailability = () => {
   });
   const [editingSection, setEditingSection] = useState(null);
   const [editForm, setEditForm] = useState({
-    malophoc: '',
+    malophocphan: '',
     lichhoc: '',
     soluongtoida: 60,
     magiaovien: '',
@@ -124,19 +124,19 @@ const AdminCourseAvailability = () => {
     }
   };
 
-  const handleToggleStatus = async (malophoc, currentStatus) => {
+  const handleToggleStatus = async (malophocphan, currentStatus) => {
     try {
-      setUpdating(malophoc);
+      setUpdating(malophocphan);
       
       // Determine new status
       const newStatus = currentStatus === 'dangmo' ? 'dong' : 'dangmo';
       
       // Update via API
-      await classSectionAPIEndpoints.update(malophoc, { trangthai: newStatus });
+      await classSectionAPIEndpoints.update(malophocphan, { trangthai: newStatus });
       
       // Update local state
       setCourses(courses.map(c => 
-        c.malophoc === malophoc ? { ...c, trangthai: newStatus } : c
+        c.malophocphan === malophocphan ? { ...c, trangthai: newStatus } : c
       ));
       
       alert(`Cập nhật trạng thái thành công! Trạng thái mới: ${newStatus === 'dangmo' ? 'Đang mở' : 'Đã đóng'}`);
@@ -167,7 +167,7 @@ const AdminCourseAvailability = () => {
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.tenmonhoc?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.malophoc?.toLowerCase().includes(searchTerm.toLowerCase());
+                         course.malophocphan?.toString().toLowerCase().includes(searchTerm.toLowerCase());
     
     if (filterStatus === 'all') {
       return matchesSearch;
@@ -214,9 +214,9 @@ const AdminCourseAvailability = () => {
   };
 
   const startEditSection = (course) => {
-    setEditingSection(course.malophoc);
+    setEditingSection(course.malophocphan);
     setEditForm({
-      malophoc: course.malophoc,
+      malophocphan: course.malophocphan,
       lichhoc: course.lichhoc || '',
       soluongtoida: course.soluongtoida || 60,
       magiaovien: course.magiaovien || '',
@@ -248,13 +248,13 @@ const AdminCourseAvailability = () => {
     }
   };
 
-  const handleDeleteSection = async (malophoc) => {
+  const handleDeleteSection = async (malophocphan) => {
     if (!window.confirm('Bạn chắc chắn muốn xóa lớp học phần này?')) return;
     try {
-      setUpdating(malophoc);
-      await classSectionAPIEndpoints.delete(malophoc);
-      setCourses(courses.filter(c => c.malophoc !== malophoc));
-      if (editingSection === malophoc) {
+      setUpdating(malophocphan);
+      await classSectionAPIEndpoints.delete(malophocphan);
+      setCourses(courses.filter(c => c.malophocphan !== malophocphan));
+      if (editingSection === malophocphan) {
         setEditingSection(null);
       }
       alert('Xóa lớp học phần thành công');
@@ -358,7 +358,7 @@ const AdminCourseAvailability = () => {
 
         {editingSection && (
           <div className="edit-section-form">
-            <h3>✏️ Sửa Lớp Học Phần {editForm.malophoc}</h3>
+            <h3>✏️ Sửa Lớp Học Phần {editForm.malophocphan}</h3>
             <div className="form-row">
               <label>Thời gian (lịch học):</label>
               <input
@@ -496,8 +496,8 @@ const AdminCourseAvailability = () => {
             </thead>
             <tbody>
               {filteredCourses.map(course => (
-                <tr key={course.malophoc}>
-                  <td><strong>{course.malophoc}</strong></td>
+                <tr key={course.malophocphan}>
+                  <td><strong>{course.malophocphan}</strong></td>
                   <td>{course.tenmonhoc}</td>
                   <td className="center">{course.sotinchi}</td>
                   <td className="right">{formatCurrency(course.hocphi)}</td>
@@ -518,10 +518,10 @@ const AdminCourseAvailability = () => {
                       {course.trangthai !== 'huy' && (
                         <button
                           className={`btn-toggle ${course.trangthai === 'dangmo' ? 'btn-close' : 'btn-open'}`}
-                          onClick={() => handleToggleStatus(course.malophoc, course.trangthai)}
-                          disabled={updating === course.malophoc}
+                          onClick={() => handleToggleStatus(course.malophocphan, course.trangthai)}
+                          disabled={updating === course.malophocphan}
                         >
-                          {updating === course.malophoc ? (
+                          {updating === course.malophocphan ? (
                             '⏳ Đang xử lý...'
                           ) : course.trangthai === 'dangmo' ? (
                             '🔒 Đóng Đk'
@@ -538,8 +538,8 @@ const AdminCourseAvailability = () => {
                       </button>
                       <button
                         className="btn-small btn-delete"
-                        onClick={() => handleDeleteSection(course.malophoc)}
-                        disabled={updating === course.malophoc}
+                        onClick={() => handleDeleteSection(course.malophocphan)}
+                        disabled={updating === course.malophocphan}
                       >
                         Xóa
                       </button>

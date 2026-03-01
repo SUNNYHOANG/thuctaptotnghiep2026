@@ -130,7 +130,7 @@ class SelfEvaluation {
       await pool.execute(
         `UPDATE drl_tudanhgia
          SET trangthai = ?,
-             diem_cvht = ?, nhan_xet_cvht = ?, nguoi_duyet = ?, ngay_duyet = NOW()
+             diem_cvht = ?, nhan_xet_cvht = ?, nguoi_duyet_cvht = ?, ngay_duyet_cvht = NOW()
          WHERE id = ?`,
         [
           nextStatus,
@@ -157,68 +157,38 @@ class SelfEvaluation {
           ]
         );
       } catch (err) {
-        // Nếu schema chưa có cột CTSV, fallback: ghi vào cột chung (diem_cvht/nhan_xet_cvht)
-        if (err && err.code === 'ER_BAD_FIELD_ERROR') {
-          await pool.execute(
-            `UPDATE drl_tudanhgia
-             SET trangthai = ?,
-                 diem_cvht = COALESCE(?, diem_cvht),
-                 nhan_xet_cvht = COALESCE(?, nhan_xet_cvht),
-                 nguoi_duyet = COALESCE(?, nguoi_duyet),
-                 ngay_duyet = NOW()
-             WHERE id = ?`,
-            [nextStatus, diem_ctsv ?? null, nhan_xet_ctsv || null, nguoi_duyet || null, id]
-          );
-        } else {
-          throw err;
-        }
+        // Schema đã có cột CTSV (nguoi_duyet_ctsv), không fallback nữa
+        throw err;
       }
     } else {
-      // Admin: có thể cập nhật cả 2 lớp duyệt, nếu schema có cột CTSV.
-      try {
-        await pool.execute(
-          `UPDATE drl_tudanhgia
-           SET trangthai = ?,
-               diem_cvht = COALESCE(?, diem_cvht),
-               nhan_xet_cvht = COALESCE(?, nhan_xet_cvht),
-               nguoi_duyet = COALESCE(?, nguoi_duyet),
-               ngay_duyet = CASE WHEN ? IS NULL AND ? IS NULL THEN ngay_duyet ELSE NOW() END,
-               diem_ctsv = COALESCE(?, diem_ctsv),
-               nhan_xet_ctsv = COALESCE(?, nhan_xet_ctsv),
-               nguoi_duyet_ctsv = COALESCE(?, nguoi_duyet_ctsv),
-               ngay_duyet_ctsv = CASE WHEN ? IS NULL AND ? IS NULL THEN ngay_duyet_ctsv ELSE NOW() END
-           WHERE id = ?`,
-          [
-            nextStatus,
-            diem_cvht ?? null,
-            nhan_xet_cvht || null,
-            nguoi_duyet || null,
-            diem_cvht ?? null,
-            nhan_xet_cvht || null,
-            diem_ctsv ?? null,
-            nhan_xet_ctsv || null,
-            nguoi_duyet || null,
-            diem_ctsv ?? null,
-            nhan_xet_ctsv || null,
-            id,
-          ]
-        );
-      } catch (err) {
-        if (err && err.code === 'ER_BAD_FIELD_ERROR') {
-          await pool.execute(
-            `UPDATE drl_tudanhgia
-             SET trangthai = ?,
-                 diem_cvht = COALESCE(?, diem_cvht),
-                 nhan_xet_cvht = COALESCE(?, nhan_xet_cvht),
-                 nguoi_duyet = COALESCE(?, nguoi_duyet),
-                 ngay_duyet = NOW()
-             WHERE id = ?`,
-            [nextStatus, diem_cvht ?? null, nhan_xet_cvht || null, nguoi_duyet || null, id]
-          );
-        } else {
-          throw err;
-        }
-      }
+      // Admin: cập nhật cả 2 bước duyệt (CVHT + CTSV)
+      await pool.execute(
+        `UPDATE drl_tudanhgia
+         SET trangthai = ?,
+             diem_cvht = COALESCE(?, diem_cvht),
+             nhan_xet_cvht = COALESCE(?, nhan_xet_cvht),
+             nguoi_duyet_cvht = COALESCE(?, nguoi_duyet_cvht),
+             ngay_duyet_cvht = CASE WHEN ? IS NOT NULL OR ? IS NOT NULL THEN NOW() ELSE ngay_duyet_cvht END,
+             diem_ctsv = COALESCE(?, diem_ctsv),
+             nhan_xet_ctsv = COALESCE(?, nhan_xet_ctsv),
+             nguoi_duyet_ctsv = COALESCE(?, nguoi_duyet_ctsv),
+             ngay_duyet_ctsv = CASE WHEN ? IS NOT NULL OR ? IS NOT NULL THEN NOW() ELSE ngay_duyet_ctsv END
+         WHERE id = ?`,
+        [
+          nextStatus,
+          diem_cvht ?? null,
+          nhan_xet_cvht || null,
+          nguoi_duyet || null,
+          diem_cvht ?? null,
+          nhan_xet_cvht || null,
+          diem_ctsv ?? null,
+          nhan_xet_ctsv || null,
+          nguoi_duyet || null,
+          diem_ctsv ?? null,
+          nhan_xet_ctsv || null,
+          id,
+        ]
+      );
     }
 
     const [rows] = await pool.execute('SELECT * FROM drl_tudanhgia WHERE id = ?', [id]);

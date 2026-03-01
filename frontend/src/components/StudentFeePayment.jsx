@@ -25,7 +25,7 @@ const StudentFeePayment = () => {
         const resp = await feeAPIEndpoints.getUnpaidEnrollments(user.mssv);
         const list = resp?.data || [];
         setItems(list);
-        setSelected(list.map((i) => i.malophoc)); // mặc định chọn tất cả
+        setSelected(list.map((i) => i.malophocphan)); // mặc định chọn tất cả
       } catch (err) {
         console.error(err);
         setError(err.message || 'Không thể tải danh sách học phần chưa thanh toán.');
@@ -37,14 +37,14 @@ const StudentFeePayment = () => {
     fetchUnpaid();
   }, [user]);
 
-  const toggleSelect = (malophoc) => {
+  const toggleSelect = (malophocphan) => {
     setSelected((prev) =>
-      prev.includes(malophoc) ? prev.filter((id) => id !== malophoc) : [...prev, malophoc]
+      prev.includes(malophocphan) ? prev.filter((id) => id !== malophocphan) : [...prev, malophocphan]
     );
   };
 
   const totalSelected = items
-    .filter((i) => selected.includes(i.malophoc))
+    .filter((i) => selected.includes(i.malophocphan))
     .reduce((sum, i) => sum + (Number(i.hocphi) || 0), 0);
 
   const totalDebt = items.reduce((sum, i) => sum + (Number(i.hocphi) || 0), 0);
@@ -56,7 +56,7 @@ const StudentFeePayment = () => {
       setMessage('');
       const resp = await feeAPIEndpoints.pay(user.mssv, selected);
       const remainingDebt = resp?.data?.debt?.total ?? null;
-      setItems((prev) => prev.filter((i) => !selected.includes(i.malophoc)));
+      setItems((prev) => prev.filter((i) => !selected.includes(i.malophocphan)));
       setSelected([]);
       setMessage(
         `Thanh toán thành công ${
@@ -99,12 +99,12 @@ const StudentFeePayment = () => {
         ) : (
           <ul>
             {items.map((item) => (
-              <li key={item.malophoc}>
+              <li key={item.malophocphan}>
                 <label>
                   <input
                     type="checkbox"
-                    checked={selected.includes(item.malophoc)}
-                    onChange={() => toggleSelect(item.malophoc)}
+                    checked={selected.includes(item.malophocphan)}
+                    onChange={() => toggleSelect(item.malophocphan)}
                   />
                   {' '}
                   {item.tenmonhoc} (Kỳ {item.mahocky}) -{' '}

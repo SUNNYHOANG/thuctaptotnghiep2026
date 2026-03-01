@@ -4,6 +4,16 @@ import { requireRole } from '../middleware/requireRole.js';
 
 const router = express.Router();
 
+// CTSV/Admin: lấy tất cả đơn phúc khảo (có thể lọc theo trangthai)
+router.get('/', requireRole(['admin', 'ctsv']), async (req, res) => {
+  try {
+    const rows = await PhucKhao.getAll(req.query);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Sinh viên có thể tạo đơn phúc khảo
 router.post('/', async (req, res) => {
   try {
@@ -14,9 +24,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/class-section/:malophoc', requireRole(), async (req, res) => {
+router.get('/class-section/:malophocphan', requireRole(), async (req, res) => {
   try {
-    const rows = await PhucKhao.getByClassSection(req.params.malophoc);
+    const rows = await PhucKhao.getByClassSection(req.params.malophocphan);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -42,8 +42,10 @@ const TeacherClassStudents = () => {
         <label>Chọn lớp:</label>
         <select value={selectedLop} onChange={(e) => setSelectedLop(e.target.value)}>
           <option value="">-- Chọn lớp --</option>
-          {lopList.map((malop) => (
-            <option key={malop} value={malop}>{malop}</option>
+          {lopList.map((item) => (
+            <option key={item.malop} value={item.malop}>
+              {item.tenlop || item.malop}
+            </option>
           ))}
         </select>
       </div>

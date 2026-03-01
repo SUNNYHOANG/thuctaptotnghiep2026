@@ -2,9 +2,10 @@ import pool from '../config/database.js';
 
 class Enrollment {
   static async register(data) {
-    const { malophoc, mssv } = data;
+    const { malophocphan, mssv } = data;
+    const malophoc = malophocphan; // alias
 
-    if (!malophoc) {
+    if (!malophocphan && !malophoc) {
       throw new Error('Thiếu mã lớp học phần');
     }
     if (!mssv) {
@@ -12,17 +13,17 @@ class Enrollment {
     }
 
     const [existing] = await pool.execute(
-      `SELECT madangky FROM dsdangky 
-       WHERE malophoc = ? AND mssv = ? AND trangthai != 'huy'`,
-      [malophoc, mssv]
+      `SELECT madangky FROM dangkyhocphan 
+       WHERE malophocphan = ? AND mssv = ? AND trangthai != 'huy'`,
+      [malophocphan || malophoc, mssv]
     );
     if (existing.length > 0) {
       throw new Error('Bạn đã đăng ký lớp học phần này rồi');
     }
 
     const [lop] = await pool.execute(
-      'SELECT soluongtoida, soluongdadangky, trangthai FROM lophoc WHERE malophoc = ?',
-      [malophoc]
+      'SELECT soluongtoida, soluongdadangky, trangthai FROM lophocphan WHERE malophocphan = ?',
+      [malophocphan || malophoc]
     );
     if (lop.length === 0) {
       throw new Error('Không tìm thấy lớp học phần');
@@ -36,14 +37,14 @@ class Enrollment {
     }
 
     const [result] = await pool.execute(
-      `INSERT INTO dsdangky (malophoc, mssv, trangthai)
-       VALUES (?, ?, 'dangcho')`,
-      [malophoc, mssv]
+      `INSERT INTO dangkyhocphan (malophocphan, mssv, trangthai)
+       VALUES (?, ?, 'dangky')`,
+      [malophocphan || malophoc, mssv]
     );
 
     await pool.execute(
-      'UPDATE lophoc SET soluongdadangky = soluongdadangky + 1 WHERE malophoc = ?',
-      [malophoc]
+      'UPDATE lophocphan SET soluongdadangky = soluongdadangky + 1 WHERE malophocphan = ?',
+      [malophocphan || malophoc]
     );
 
     return this.getById(result.insertId);
@@ -51,12 +52,12 @@ class Enrollment {
 
   static async getById(madangky) {
     const [rows] = await pool.execute(
-      `SELECT d.madangky, d.mssv, d.malophoc, d.thoidiemdk, d.trangthai,
+      `SELECT d.madangky, d.mssv, d.malophocphan, d.ngaydangky, d.trangthai,
               l.lichhoc, l.mahocky, l.maphong, l.magiaovien,
               l.soluongtoida, l.soluongdadangky,
               m.mamonhoc, m.tenmonhoc, m.sotinchi, m.hocphi
-       FROM dsdangky d
-       JOIN lophoc l ON d.malophoc = l.malophoc
+       FROM dangkyhocphan d
+       JOIN lophocphan l ON d.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        WHERE d.madangky = ?`,
       [madangky]
@@ -74,24 +75,24 @@ class Enrollment {
     }
 
     await pool.execute(
-      "UPDATE dsdangky SET trangthai = 'huy' WHERE madangky = ?",
+      "UPDATE dangkyhocphan SET trangthai = 'huy' WHERE madangky = ?",
       [madangky]
     );
     await pool.execute(
-      'UPDATE lophoc SET soluongdadangky = GREATEST(0, soluongdadangky - 1) WHERE malophoc = ?',
-      [reg.malophoc]
+      'UPDATE lophocphan SET soluongdadangky = GREATEST(0, soluongdadangky - 1) WHERE malophocphan = ?',
+      [reg.malophocphan]
     );
     return true;
   }
 
   static async getByStudent(mssv, mahocky = null) {
     let query = `
-      SELECT d.madangky, d.mssv, d.malophoc, d.thoidiemdk, d.trangthai,
+      SELECT d.madangky, d.mssv, d.malophocphan, d.ngaydangky, d.trangthai,
              l.lichhoc, l.mahocky, l.maphong, l.magiaovien,
              l.soluongtoida, l.soluongdadangky,
              m.mamonhoc, m.tenmonhoc, m.sotinchi, m.hocphi
-      FROM dsdangky d
-      JOIN lophoc l ON d.malophoc = l.malophoc
+      FROM dangkyhocphan d
+      JOIN lophocphan l ON d.malophocphan = l.malophocphan
       JOIN monhoc m ON l.mamonhoc = m.mamonhoc
       WHERE d.mssv = ? AND d.trangthai != 'huy'
     `;
@@ -108,11 +109,11 @@ class Enrollment {
 
   static async getTimetable(mssv, mahocky) {
     const [rows] = await pool.execute(
-      `SELECT d.madangky, d.mssv, d.malophoc, d.thoidiemdk, d.trangthai,
+      `SELECT d.madangky, d.mssv, d.malophocphan, d.ngaydangky, d.trangthai,
               m.mamonhoc, m.tenmonhoc, m.sotinchi, m.hocphi,
               l.lichhoc, l.maphong, l.magiaovien
-       FROM dsdangky d
-       JOIN lophoc l ON d.malophoc = l.malophoc
+       FROM dangkyhocphan d
+       JOIN lophocphan l ON d.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        WHERE d.mssv = ? AND d.trangthai != 'huy' AND l.mahocky = ?
        ORDER BY m.tenmonhoc`,
@@ -121,18 +122,18 @@ class Enrollment {
     return rows;
   }
 
-  static async getByClassSection(malophoc) {
+  static async getByClassSection(malophocphan) {
     const [rows] = await pool.execute(
-      `SELECT d.madangky, d.mssv, d.malophoc, d.thoidiemdk, d.trangthai,
+      `SELECT d.madangky, d.mssv, d.malophocphan, d.ngaydangky, d.trangthai,
               l.lichhoc, l.mahocky, l.maphong, l.magiaovien,
               l.soluongtoida, l.soluongdadangky,
               m.mamonhoc, m.tenmonhoc, m.sotinchi, m.hocphi
-       FROM dsdangky d
-       JOIN lophoc l ON d.malophoc = l.malophoc
+       FROM dangkyhocphan d
+       JOIN lophocphan l ON d.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
-       WHERE d.malophoc = ? AND d.trangthai != 'huy'
-       ORDER BY d.thoidiemdk`,
-      [malophoc]
+       WHERE d.malophocphan = ? AND d.trangthai != 'huy'
+       ORDER BY d.ngaydangky`,
+      [malophocphan]
     );
     return rows;
   }

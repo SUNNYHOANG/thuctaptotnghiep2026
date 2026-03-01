@@ -69,16 +69,16 @@ const CourseRegistration = () => {
     }
   };
 
-  const handleRegister = async (malophoc) => {
+  const handleRegister = async (malophocphan) => {
     try {
       if (!user?.mssv) {
         alert('Lỗi: Không tìm thấy mã số sinh viên. Vui lòng đăng nhập lại.');
         return;
       }
       
-      setRegistering(malophoc);
+      setRegistering(malophocphan);
       await enrollmentAPIEndpoints.register({
-        malophoc: malophoc,
+        malophocphan: malophocphan,
         mssv: user.mssv
       });
       alert('Đăng ký môn học thành công!');
@@ -117,8 +117,8 @@ const CourseRegistration = () => {
     }
   };
 
-  const isAlreadyRegistered = (malophoc) => {
-    return registeredCourses.some(rc => rc.malophoc === malophoc);
+  const isAlreadyRegistered = (malophocphan) => {
+    return registeredCourses.some(rc => rc.malophocphan === malophocphan);
   };
 
   const formatCurrency = (value) => {
@@ -147,7 +147,7 @@ const CourseRegistration = () => {
   );
 
   const visibleAvailableCourses = availableCourses.filter(
-    (course) => !isAlreadyRegistered(course.malophoc)
+    (course) => !isAlreadyRegistered(course.malophocphan)
   );
 
   if (loading) {
@@ -238,7 +238,7 @@ const CourseRegistration = () => {
               
               return (
                 <div 
-                  key={course.malophoc} 
+                  key={course.malophocphan} 
                   className={`course-card ${isFull ? 'full' : ''}`}
                 >
                   <div className="course-header">
@@ -271,10 +271,10 @@ const CourseRegistration = () => {
                     ) : (
                       <button
                         className="btn-register"
-                        onClick={() => handleRegister(course.malophoc)}
-                        disabled={registering === course.malophoc}
+                        onClick={() => handleRegister(course.malophocphan)}
+                        disabled={registering === course.malophocphan}
                       >
-                        {registering === course.malophoc ? 'Đang đăng ký...' : 'Đăng Ký'}
+                        {registering === course.malophocphan ? 'Đang đăng ký...' : 'Đăng Ký'}
                       </button>
                     )}
                   </div>

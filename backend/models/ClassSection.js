@@ -7,7 +7,7 @@ class ClassSection {
              g.hoten AS tengiangvien,
              p.tenphong, p.toanha,
              h.tenhocky, h.namhoc
-      FROM lophoc l
+      FROM lophocphan l
       JOIN monhoc m ON l.mamonhoc = m.mamonhoc
       LEFT JOIN giangvien g ON l.magiaovien = g.magiaovien
       LEFT JOIN phonghoc p ON l.maphong = p.maphong
@@ -35,19 +35,19 @@ class ClassSection {
     return rows;
   }
 
-  static async getById(malophoc) {
+  static async getById(malophocphan) {
     const [rows] = await pool.execute(
       `SELECT l.*, m.tenmonhoc, m.sotinchi, m.hocphi, m.makhoa,
               g.hoten AS tengiangvien, g.email AS email_giangvien,
               p.tenphong, p.toanha,
               h.tenhocky, h.namhoc
-       FROM lophoc l
+       FROM lophocphan l
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        LEFT JOIN giangvien g ON l.magiaovien = g.magiaovien
        LEFT JOIN phonghoc p ON l.maphong = p.maphong
        LEFT JOIN hocky h ON l.mahocky = h.mahocky
-       WHERE l.malophoc = ?`,
-      [malophoc]
+       WHERE l.malophocphan = ?`,
+      [malophocphan]
     );
     return rows[0];
   }
@@ -75,7 +75,7 @@ class ClassSection {
       trangthai == null ? 'dangmo' : trangthai
     ];
     const [result] = await pool.execute(
-      `INSERT INTO lophoc
+      `INSERT INTO lophocphan
        (mamonhoc, mahocky, magiaovien, maphong, lichhoc, sogiohoc, soluongtoida, trangthai)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       vals
@@ -83,7 +83,7 @@ class ClassSection {
     return this.getById(result.insertId);
   }
 
-  static async update(malophoc, data) {
+  static async update(malophocphan, data) {
     const allowed = [
       'mamonhoc',
       'mahocky',
@@ -106,18 +106,18 @@ class ClassSection {
 
     if (fields.length === 0) return null;
 
-    values.push(malophoc);
+    values.push(malophocphan);
     await pool.execute(
-      `UPDATE lophoc SET ${fields.join(', ')} WHERE malophoc = ?`,
+      `UPDATE lophocphan SET ${fields.join(', ')} WHERE malophocphan = ?`,
       values
     );
-    return this.getById(malophoc);
+    return this.getById(malophocphan);
   }
 
-  static async delete(malophoc) {
+  static async delete(malophocphan) {
     const [result] = await pool.execute(
-      'DELETE FROM lophoc WHERE malophoc = ?',
-      [malophoc]
+      'DELETE FROM lophocphan WHERE malophocphan = ?',
+      [malophocphan]
     );
     return result.affectedRows > 0;
   }

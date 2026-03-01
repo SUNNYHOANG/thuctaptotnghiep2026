@@ -6,7 +6,7 @@ const router = express.Router();
 async function selectStaffByUsernameAndPassword(username, password) {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, role, magiangvien, status FROM users WHERE username = ? AND password = ? AND status = ?',
+      'SELECT id, username, hoten, role, magiaovien, status FROM users WHERE username = ? AND password = ? AND status = ?',
       [username, password, 'active']
     );
     return rows;
@@ -14,7 +14,7 @@ async function selectStaffByUsernameAndPassword(username, password) {
     // Một số schema cũ không có cột `status`
     if (error && error.code === 'ER_BAD_FIELD_ERROR') {
       const [rows] = await pool.execute(
-        'SELECT id, username, hoten, role, magiangvien FROM users WHERE username = ? AND password = ?',
+        'SELECT id, username, hoten, role, magiaovien FROM users WHERE username = ? AND password = ?',
         [username, password]
       );
       return rows;
@@ -26,14 +26,14 @@ async function selectStaffByUsernameAndPassword(username, password) {
 async function selectStaffByUsernameForFaceLogin(username) {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, role, magiangvien, status FROM users WHERE username = ? AND status = ?',
+      'SELECT id, username, hoten, role, magiaovien, status FROM users WHERE username = ? AND status = ?',
       [username, 'active']
     );
     return rows;
   } catch (error) {
     if (error && error.code === 'ER_BAD_FIELD_ERROR') {
       const [rows] = await pool.execute(
-        'SELECT id, username, hoten, role, magiangvien FROM users WHERE username = ?',
+        'SELECT id, username, hoten, role, magiaovien FROM users WHERE username = ?',
         [username]
       );
       return rows;
@@ -45,14 +45,14 @@ async function selectStaffByUsernameForFaceLogin(username) {
 async function selectStaffById(id) {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, role, magiangvien, status FROM users WHERE id = ?',
+      'SELECT id, username, hoten, role, magiaovien, status FROM users WHERE id = ?',
       [id]
     );
     return rows;
   } catch (error) {
     if (error && error.code === 'ER_BAD_FIELD_ERROR') {
       const [rows] = await pool.execute(
-        'SELECT id, username, hoten, role, magiangvien FROM users WHERE id = ?',
+        'SELECT id, username, hoten, role, magiaovien FROM users WHERE id = ?',
         [id]
       );
       return rows;
@@ -78,18 +78,17 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Mã sinh viên đã tồn tại' });
     }
 
-    // malop phải tồn tại trong lophoc (FK) và không được null
+    // malop phải tồn tại trong lophanhchinh (lớp hành chính)
     let validMalop = null;
     if (malop) {
       const [lopRows] = await pool.execute(
-        'SELECT malop FROM lophoc WHERE malop = ? LIMIT 1',
+        'SELECT malop FROM lophanhchinh WHERE malop = ? LIMIT 1',
         [malop]
       );
       if (lopRows.length > 0) validMalop = lopRows[0].malop;
     }
     if (!validMalop) {
-      // Lấy lớp đầu tiên làm mặc định
-      const [defaultRows] = await pool.execute('SELECT malop FROM lophoc LIMIT 1');
+      const [defaultRows] = await pool.execute('SELECT malop FROM lophanhchinh LIMIT 1');
       if (defaultRows.length === 0) {
         return res.status(400).json({
           error: 'Chưa có lớp học. Vui lòng nhập mã lớp hợp lệ (ví dụ: CNTT01) hoặc liên hệ quản trị để thêm lớp.'

@@ -205,6 +205,20 @@ INSERT INTO dangkyhocphan (mssv, malophocphan) VALUES
 ('20123457', 1),
 ('20123458', 2);
 
+-- Bảng Thanh toán học phí (theo lớp học phần)
+CREATE TABLE IF NOT EXISTS hocphi_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    mssv VARCHAR(50) NOT NULL,
+    malophocphan INT NOT NULL,
+    amount DECIMAL(12,0) NOT NULL,
+    paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_fee_enrollment (mssv, malophocphan),
+    INDEX idx_mssv (mssv),
+    INDEX idx_malophocphan (malophocphan),
+    FOREIGN KEY (mssv) REFERENCES sinhvien(mssv) ON DELETE CASCADE,
+    FOREIGN KEY (malophocphan) REFERENCES lophocphan(malophocphan) ON DELETE CASCADE
+);
+
 -- ============================================================
 -- PHẦN 5: QUẢN LÝ ĐIỂM
 -- ============================================================

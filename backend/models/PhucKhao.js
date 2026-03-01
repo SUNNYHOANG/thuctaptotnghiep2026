@@ -2,10 +2,10 @@ import pool from '../config/database.js';
 
 class PhucKhao {
   static async create(data) {
-    const { mabangdiem, mssv, malophoc, lydo } = data;
+    const { mabangdiem, mssv, malophocphan, lydo } = data;
     const [result] = await pool.execute(
-      `INSERT INTO phuckhao (mabangdiem, mssv, malophoc, lydo) VALUES (?, ?, ?, ?)`,
-      [mabangdiem, mssv, malophoc, lydo ?? '']
+      `INSERT INTO phuckhao (mabangdiem, mssv, malophocphan, lydo) VALUES (?, ?, ?, ?)`,
+      [mabangdiem, mssv, malophocphan, lydo ?? '']
     );
     return this.getById(result.insertId);
   }
@@ -15,7 +15,7 @@ class PhucKhao {
       `SELECT p.*, s.hoten, m.tenmonhoc, b.diemtongket
        FROM phuckhao p
        JOIN sinhvien s ON p.mssv = s.mssv
-       JOIN lophoc l ON p.malophoc = l.malophoc
+       JOIN lophocphan l ON p.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        JOIN bangdiem b ON p.mabangdiem = b.mabangdiem
        WHERE p.maphuckhao = ?`,
@@ -24,26 +24,46 @@ class PhucKhao {
     return rows[0];
   }
 
-  static async getByClassSection(malophoc) {
+  static async getByClassSection(malophocphan) {
     const [rows] = await pool.execute(
       `SELECT p.*, s.hoten, s.malop
        FROM phuckhao p
        JOIN sinhvien s ON p.mssv = s.mssv
-       WHERE p.malophoc = ? ORDER BY p.ngaygui DESC`,
-      [malophoc]
+       WHERE p.malophocphan = ? ORDER BY p.ngaygui DESC`,
+      [malophocphan]
     );
     return rows;
   }
 
   static async getByStudent(mssv) {
     const [rows] = await pool.execute(
-      `SELECT p.*, m.tenmonhoc, l.malophoc
+      `SELECT p.*, m.tenmonhoc, l.malophocphan
        FROM phuckhao p
-       JOIN lophoc l ON p.malophoc = l.malophoc
+       JOIN lophocphan l ON p.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        WHERE p.mssv = ? ORDER BY p.ngaygui DESC`,
       [mssv]
     );
+    return rows;
+  }
+
+  /** Danh sách tất cả đơn phúc khảo (cho CTSV/Admin), có thể lọc theo trangthai */
+  static async getAll(filters = {}) {
+    let query = `
+      SELECT p.*, s.hoten, s.malop, m.tenmonhoc
+       FROM phuckhao p
+       JOIN sinhvien s ON p.mssv = s.mssv
+       JOIN lophocphan l ON p.malophocphan = l.malophocphan
+       JOIN monhoc m ON l.mamonhoc = m.mamonhoc
+       WHERE 1=1
+    `;
+    const params = [];
+    if (filters.trangthai) {
+      query += ' AND p.trangthai = ?';
+      params.push(filters.trangthai);
+    }
+    query += ' ORDER BY p.ngaygui DESC';
+    const [rows] = await pool.execute(query, params);
     return rows;
   }
 

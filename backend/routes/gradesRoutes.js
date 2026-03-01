@@ -64,13 +64,13 @@ router.get('/student/:mssv', async (req, res) => {
         bd.malophocphan,
         bd.mssv,
         mh.tenmonhoc,
-        lhp.thoigian,
-        lhp.phonghoc,
-        gv.tengiaovien,
+        lhp.lichhoc,
+        p.tenphong,
+        gv.hoten AS tengiangvien,
         bd.diemchuyencan,
         bd.diemgiuaky,
         bd.diemcuoiky,
-        bd.diemtongket,
+        bd.diemtongket AS diemtongket,
         bd.gpa,
         bd.trangthai,
         bd.ghichu,
@@ -80,6 +80,7 @@ router.get('/student/:mssv', async (req, res) => {
       JOIN lophocphan lhp ON bd.malophocphan = lhp.malophocphan
       JOIN monhoc mh ON lhp.mamonhoc = mh.mamonhoc
       JOIN giangvien gv ON lhp.magiaovien = gv.magiaovien
+      LEFT JOIN phonghoc p ON lhp.maphong = p.maphong
       JOIN hocky hk ON lhp.mahocky = hk.mahocky
       WHERE bd.mssv = ?
     `;
@@ -89,6 +90,8 @@ router.get('/student/:mssv', async (req, res) => {
       query += ' AND lhp.mahocky = ?';
       params.push(mahocky);
     }
+    // Chỉ hiển thị điểm đã khóa (điểm chính thức)
+    query += " AND bd.trangthai = 'dakhoa'";
 
     query += ' ORDER BY hk.mahocky DESC, mh.tenmonhoc ASC';
 
@@ -145,7 +148,7 @@ router.post('/init/:malophocphan', async (req, res) => {
     // Lấy danh sách sinh viên đã đăng ký
     const [students] = await pool.execute(
       `SELECT DISTINCT sv.mssv, sv.hoten 
-       FROM dangky dk
+       FROM dangkyhocphan dk
        JOIN sinhvien sv ON dk.mssv = sv.mssv
        WHERE dk.malophocphan = ? AND dk.trangthai = 'dangky'`,
       [malophocphan]

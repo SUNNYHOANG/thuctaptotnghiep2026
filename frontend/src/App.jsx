@@ -36,6 +36,7 @@ import DrlClassReview from './pages/DrlClassReview';
 import StudentProfile from './pages/StudentProfile';
 import TieuChiDRL from './pages/TieuChiDRL';
 import TeacherClassStudents from './pages/TeacherClassStudents';
+import CTSVPhucKhao from './pages/CTSVPhucKhao';
 import CTSVDonOnline from './pages/CTSVDonOnline';
 import CTSVNhacNho from './pages/CTSVNhacNho';
 import MyActivities from './pages/MyActivities';
@@ -214,6 +215,17 @@ function AppRoutes() {
       <Route path="/ctsv/diem-ren-luyen-tu-danh-gia" element={
         <ProtectedRoute requiredRole="ctsv">
           <DrlClassReview />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/ctsv/quan-ly-diem" element={
+        <ProtectedRoute requiredRole="ctsv">
+          <TeacherGrades />
+        </ProtectedRoute>
+      } />
+      <Route path="/ctsv/duyet-phuc-khao" element={
+        <ProtectedRoute requiredRole="ctsv">
+          <CTSVPhucKhao />
         </ProtectedRoute>
       } />
 

@@ -26,16 +26,16 @@ class Grade {
     return null;
   }
 
-  static async getByClassSection(malophoc) {
+  static async getByClassSection(malophocphan) {
     const [rows] = await pool.execute(
       `SELECT b.*, s.hoten, s.malop, m.tenmonhoc, m.sotinchi
        FROM bangdiem b
        JOIN sinhvien s ON b.mssv = s.mssv
-       JOIN lophoc l ON b.malophoc = l.malophoc
+       JOIN lophocphan l ON b.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
-       WHERE b.malophoc = ?
+       WHERE b.malophocphan = ?
        ORDER BY s.mssv`,
-      [malophoc]
+      [malophocphan]
     );
     return rows;
   }
@@ -44,7 +44,7 @@ class Grade {
     let query = `
        SELECT b.*, m.tenmonhoc, m.sotinchi, l.mahocky, h.tenhocky, h.namhoc
        FROM bangdiem b
-       JOIN lophoc l ON b.malophoc = l.malophoc
+       JOIN lophocphan l ON b.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        LEFT JOIN hocky h ON l.mahocky = h.mahocky
        WHERE b.mssv = ?
@@ -64,7 +64,7 @@ class Grade {
       `SELECT b.*, s.hoten, s.malop, m.tenmonhoc, m.sotinchi, l.mahocky
        FROM bangdiem b
        JOIN sinhvien s ON b.mssv = s.mssv
-       JOIN lophoc l ON b.malophoc = l.malophoc
+       JOIN lophocphan l ON b.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        WHERE b.mabangdiem = ?`,
       [mabangdiem]
@@ -73,13 +73,13 @@ class Grade {
   }
 
   static async createOrUpdate(data) {
-    const { malophoc, mssv, diemchuyencan, diemgiuaky, diemcuoiky, nguoinhap } = data;
+    const { malophocphan, mssv, diemchuyencan, diemgiuaky, diemcuoiky, nguoinhap } = data;
     const diemtongket = this._tinhDiemTongKet(diemchuyencan, diemgiuaky, diemcuoiky);
     const canhbao = this._tinhCanhBao(diemtongket);
 
     const [existing] = await pool.execute(
-      'SELECT mabangdiem, trangthai FROM bangdiem WHERE malophoc = ? AND mssv = ?',
-      [malophoc, mssv]
+      'SELECT mabangdiem, trangthai FROM bangdiem WHERE malophocphan = ? AND mssv = ?',
+      [malophocphan, mssv]
     );
 
     if (existing.length > 0) {
@@ -97,9 +97,9 @@ class Grade {
     }
 
     const [result] = await pool.execute(
-      `INSERT INTO bangdiem (malophoc, mssv, diemchuyencan, diemgiuaky, diemcuoiky, diemtongket, gpa, canhbao, nguoinhap)
+      `INSERT INTO bangdiem (malophocphan, mssv, diemchuyencan, diemgiuaky, diemcuoiky, diemtongket, gpa, canhbao, nguoinhap)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [malophoc, mssv, diemchuyencan ?? null, diemgiuaky ?? null, diemcuoiky ?? null,
+      [malophocphan, mssv, diemchuyencan ?? null, diemgiuaky ?? null, diemcuoiky ?? null,
         diemtongket, diemtongket, canhbao, nguoinhap ?? null]
     );
     return this.getById(result.insertId);
@@ -138,10 +138,10 @@ class Grade {
     return this.getById(mabangdiem);
   }
 
-  static async lock(malophoc, nguoikhoa) {
+  static async lock(malophocphan, nguoikhoa) {
     await pool.execute(
-      `UPDATE bangdiem SET trangthai='dakhoa', ngaykhoa=NOW() WHERE malophoc = ?`,
-      [malophoc]
+      `UPDATE bangdiem SET trangthai='dakhoa', ngaykhoa=NOW() WHERE malophocphan = ?`,
+      [malophocphan]
     );
     return { message: 'Đã khóa điểm lớp học phần' };
   }
@@ -154,14 +154,14 @@ class Grade {
     return rows;
   }
 
-  static async initFromEnrollment(malophoc, nguoinhap) {
+  static async initFromEnrollment(malophocphan, nguoinhap) {
     const [enrollments] = await pool.execute(
-      `SELECT mssv FROM dangkyhocphan WHERE malophoc = ? AND trangthai = 'dangky'`,
-      [malophoc]
+      `SELECT mssv FROM dangkyhocphan WHERE malophocphan = ? AND trangthai = 'dangky'`,
+      [malophocphan]
     );
     let count = 0;
     for (const e of enrollments) {
-      await this.createOrUpdate({ malophoc, mssv: e.mssv, nguoinhap });
+      await this.createOrUpdate({ malophocphan, mssv: e.mssv, nguoinhap });
       count++;
     }
     return { message: `Đã tạo ${count} bảng điểm` };

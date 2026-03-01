@@ -25,33 +25,33 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Get class sections by teacher
-router.get('/teacher/:magiangvien', async (req, res) => {
+// Get class sections by teacher (magiaovien)
+router.get('/teacher/:magiaovien', async (req, res) => {
   try {
-    const { magiangvien } = req.params;
+    const { magiaovien } = req.params;
     const [sections] = await pool.execute(
       `SELECT 
         lhp.malophocphan,
         lhp.mamonhoc,
         mh.tenmonhoc,
         lhp.magiaovien,
-        gv.tengiaovien,
-        lhp.malop,
-        lh.tenlop,
+        gv.hoten AS tengiangvien,
         lhp.mahocky,
         hk.tenhocky,
-        lhp.thoigian,
-        lhp.phonghoc,
-        lhp.soluongsv,
-        lhp.sicham
+        lhp.lichhoc,
+        lhp.maphong,
+        p.tenphong,
+        lhp.soluongtoida,
+        lhp.soluongdadangky,
+        lhp.trangthai
       FROM lophocphan lhp
       JOIN monhoc mh ON lhp.mamonhoc = mh.mamonhoc
-      JOIN giangvien gv ON lhp.magiaovien = gv.magiaovien
-      JOIN lophoc lh ON lhp.malop = lh.malop
+      LEFT JOIN giangvien gv ON lhp.magiaovien = gv.magiaovien
+      LEFT JOIN phonghoc p ON lhp.maphong = p.maphong
       JOIN hocky hk ON lhp.mahocky = hk.mahocky
       WHERE lhp.magiaovien = ?
       ORDER BY hk.mahocky DESC, mh.tenmonhoc ASC`,
-      [magiangvien]
+      [magiaovien]
     );
     res.json(sections);
   } catch (err) {

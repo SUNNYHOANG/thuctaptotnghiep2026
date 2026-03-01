@@ -6,12 +6,14 @@ class FeePayment {
       CREATE TABLE IF NOT EXISTS hocphi_payments (
         id INT AUTO_INCREMENT PRIMARY KEY,
         mssv VARCHAR(50) NOT NULL,
-        malophoc INT NOT NULL,
+        malophocphan INT NOT NULL,
         amount DECIMAL(12,0) NOT NULL,
         paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_fee_enrollment (mssv, malophoc),
+        UNIQUE KEY unique_fee_enrollment (mssv, malophocphan),
         INDEX idx_mssv (mssv),
-        INDEX idx_malophoc (malophoc)
+        INDEX idx_malophocphan (malophocphan),
+        FOREIGN KEY (mssv) REFERENCES sinhvien(mssv) ON DELETE CASCADE,
+        FOREIGN KEY (malophocphan) REFERENCES lophocphan(malophocphan) ON DELETE CASCADE
       )
     `);
   }
@@ -22,18 +24,18 @@ class FeePayment {
       `SELECT 
          d.madangky,
          d.mssv,
-         d.malophoc,
+         d.malophocphan,
          l.mahocky,
          l.lichhoc,
          l.maphong,
          m.tenmonhoc,
          m.sotinchi,
          m.hocphi
-       FROM dsdangky d
-       JOIN lophoc l ON d.malophoc = l.malophoc
+       FROM dangkyhocphan d
+       JOIN lophocphan l ON d.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        LEFT JOIN hocphi_payments p 
-         ON p.mssv = d.mssv AND p.malophoc = d.malophoc
+         ON p.mssv = d.mssv AND p.malophocphan = d.malophocphan
        WHERE d.mssv = ? 
          AND d.trangthai != 'huy'
          AND p.id IS NULL
@@ -62,34 +64,33 @@ class FeePayment {
     return { total, items };
   }
 
-  static async payForEnrollments(mssv, malophocList) {
-    if (!Array.isArray(malophocList) || malophocList.length === 0) {
+  static async payForEnrollments(mssv, malophocphanList) {
+    if (!Array.isArray(malophocphanList) || malophocphanList.length === 0) {
       return { totalPaid: 0 };
     }
     await this.ensureTable();
 
-    // Lấy thông tin học phí cho các lớp học phần cần thanh toán
-    const placeholders = malophocList.map(() => '?').join(',');
+    const placeholders = malophocphanList.map(() => '?').join(',');
     const [rows] = await pool.execute(
-      `SELECT d.mssv, d.malophoc, m.hocphi
-       FROM dsdangky d
-       JOIN lophoc l ON d.malophoc = l.malophoc
+      `SELECT d.mssv, d.malophocphan, m.hocphi
+       FROM dangkyhocphan d
+       JOIN lophocphan l ON d.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        WHERE d.mssv = ?
-         AND d.malophoc IN (${placeholders})
+         AND d.malophocphan IN (${placeholders})
          AND d.trangthai != 'huy'`,
-      [mssv, ...malophocList]
+      [mssv, ...malophocphanList]
     );
 
     let totalPaid = 0;
     for (const row of rows) {
       const amount = Number(row.hocphi) || 0;
-      totalPaid += amount;
       await pool.execute(
-        `INSERT IGNORE INTO hocphi_payments (mssv, malophoc, amount)
+        `INSERT IGNORE INTO hocphi_payments (mssv, malophocphan, amount)
          VALUES (?, ?, ?)`,
-        [row.mssv, row.malophoc, amount]
+        [row.mssv, row.malophocphan, amount]
       );
+      totalPaid += amount;
     }
 
     return { totalPaid };
@@ -101,13 +102,13 @@ class FeePayment {
       `SELECT 
          p.id,
          p.mssv,
-         p.malophoc,
+         p.malophocphan,
          p.amount,
          p.paid_at,
          m.tenmonhoc,
          l.mahocky
        FROM hocphi_payments p
-       JOIN lophoc l ON p.malophoc = l.malophoc
+       JOIN lophocphan l ON p.malophocphan = l.malophocphan
        JOIN monhoc m ON l.mamonhoc = m.mamonhoc
        WHERE p.mssv = ?
        ORDER BY p.paid_at DESC`,
