@@ -35,6 +35,7 @@ const Activities = () => {
   const getStatusBadge = (trangthai) => {
     const badges = {
       'dangmo': { class: 'badge-success', text: 'Đang mở' },
+      'dachot': { class: 'badge-info', text: 'Đã chốt' },
       'dangdienra': { class: 'badge-info', text: 'Đang diễn ra' },
       'daketthuc': { class: 'badge-secondary', text: 'Đã kết thúc' },
       'huy': { class: 'badge-danger', text: 'Đã hủy' }
@@ -94,6 +95,7 @@ const Activities = () => {
             >
               <option value="">Tất cả</option>
               <option value="dangmo">Đang mở</option>
+              <option value="dachot">Đã chốt</option>
               <option value="dangdienra">Đang diễn ra</option>
               <option value="daketthuc">Đã kết thúc</option>
             </select>

@@ -48,15 +48,16 @@ class Activity {
       ngaybatdau,
       ngayketthuc,
       diadiem,
+      magiaovien_pt,
       soluongtoida,
       nguoitao
     } = data;
 
     const [result] = await pool.execute(
       `INSERT INTO hoatdong 
-       (tenhoatdong, maloaihoatdong, mota, ngaybatdau, ngayketthuc, diadiem, soluongtoida, nguoitao)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [tenhoatdong, maloaihoatdong, mota, ngaybatdau, ngayketthuc, diadiem, soluongtoida, nguoitao]
+       (tenhoatdong, maloaihoatdong, mota, ngaybatdau, ngayketthuc, diadiem, magiaovien_pt, soluongtoida, nguoitao)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [tenhoatdong, maloaihoatdong, mota, ngaybatdau, ngayketthuc, diadiem, magiaovien_pt || null, soluongtoida || 100, nguoitao]
     );
 
     return this.getById(result.insertId);

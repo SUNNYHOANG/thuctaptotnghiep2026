@@ -14,3 +14,14 @@
 .ctsv-phuckhao .status-tuchoi { background: #f8d7da; }
 .ctsv-phuckhao .btn-approve { margin-right: 0.5rem; padding: 0.25rem 0.5rem; background: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
 .ctsv-phuckhao .btn-reject { padding: 0.25rem 0.5rem; background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+
+/* CTSV Duyệt đăng ký hoạt động */
+.ctsv-hoatdong-groups { display: flex; flex-direction: column; gap: 1.5rem; }
+.ctsv-hoatdong-group { border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
+.ctsv-hoatdong-group-header { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.75rem 1rem; background: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+.ctsv-hoatdong-group-header h3 { margin: 0; font-size: 1.1rem; flex: 1 1 100%; }
+.ctsv-hoatdong-meta { color: #6c757d; font-size: 0.9rem; }
+.ctsv-hoatdong-export-section { padding-top: 1rem; border-top: 1px solid #eee; }
+.ctsv-phuckhao .mb-3 { margin-bottom: 0.75rem; }
+.ctsv-phuckhao .mt-4 { margin-top: 1.5rem; }
+.ctsv-phuckhao .text-muted { color: #6c757d; font-size: 0.9rem; }

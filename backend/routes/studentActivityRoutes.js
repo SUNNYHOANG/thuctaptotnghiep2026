@@ -1,7 +1,10 @@
 import express from 'express';
 import StudentActivity from '../models/StudentActivity.js';
+import Activity from '../models/Activity.js';
+import { requireRole } from '../middleware/requireRole.js';
 
 const router = express.Router();
+const ctsvOrAdmin = ['admin', 'ctsv'];
 
 // Đăng ký tham gia hoạt động
 router.post('/register', async (req, res) => {
@@ -33,25 +36,64 @@ router.get('/activity/:mahoatdong', async (req, res) => {
   }
 });
 
-// Duyệt đăng ký
-router.post('/:id/approve', async (req, res) => {
+// CTSV/Admin: Lấy danh sách yêu cầu chờ duyệt
+router.get('/ctsv/pending', requireRole(ctsvOrAdmin), async (req, res) => {
   try {
-    const { nguoiduyet, diemcong } = req.body;
-    const registration = await StudentActivity.approve(req.params.id, nguoiduyet, diemcong);
-    res.json(registration);
+    const list = await StudentActivity.getPendingForCTSV();
+    res.json(list);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Từ chối đăng ký
-router.post('/:id/reject', async (req, res) => {
+// CTSV/Admin: Export danh sách SV đăng ký thành công (CSV)
+router.get('/activity/:mahoatdong/export', requireRole(ctsvOrAdmin), async (req, res) => {
   try {
-    const { nguoiduyet, ghichu } = req.body;
-    const registration = await StudentActivity.reject(req.params.id, nguoiduyet, ghichu);
-    res.json(registration);
+    const { mahoatdong } = req.params;
+    const activity = await Activity.getById(mahoatdong);
+    if (!activity) return res.status(404).json({ error: 'Không tìm thấy hoạt động' });
+
+    const list = await StudentActivity.getApprovedByActivity(mahoatdong);
+    const BOM = '\uFEFF';
+    const headers = ['STT', 'MSSV', 'Họ tên', 'Lớp', 'Vai trò', 'Ngày đăng ký', 'Ngày duyệt', 'Trạng thái'];
+    const rows = list.map((r, i) => [
+      i + 1,
+      r.mssv || '',
+      (r.hoten || '').replace(/"/g, '""'),
+      r.malop || '',
+      r.vaitro === 'tochuc' ? 'Tổ chức' : r.vaitro === 'truongnhom' ? 'Trưởng nhóm' : 'Tham gia',
+      r.ngaydangky ? new Date(r.ngaydangky).toLocaleString('vi-VN') : '',
+      r.ngayduyet ? new Date(r.ngayduyet).toLocaleString('vi-VN') : '',
+      'Đăng ký thành công'
+    ]);
+    const csv = [headers.join(','), ...rows.map((row) => row.map((c) => `"${String(c)}"`).join(','))].join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="Danh_sach_dang_ky_thanh_cong_${activity.tenhoatdong || mahoatdong}.csv"`);
+    res.send(BOM + csv);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Duyệt đăng ký (CTSV/Admin)
+router.post('/:id/approve', requireRole(ctsvOrAdmin), async (req, res) => {
+  try {
+    const { nguoiduyet, diemcong } = req.body;
+    const registration = await StudentActivity.approve(req.params.id, nguoiduyet || req.user?.username || req.user?.id || 'ctsv', diemcong);
+    res.json(registration);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Từ chối đăng ký (CTSV/Admin)
+router.post('/:id/reject', requireRole(ctsvOrAdmin), async (req, res) => {
+  try {
+    const { nguoiduyet, ghichu } = req.body;
+    const registration = await StudentActivity.reject(req.params.id, nguoiduyet || req.user?.username || req.user?.id || 'ctsv', ghichu);
+    res.json(registration);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

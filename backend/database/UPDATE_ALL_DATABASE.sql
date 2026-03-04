@@ -315,7 +315,7 @@ CREATE TABLE hoatdong (
     magiaovien_pt   INT DEFAULT NULL COMMENT 'Giảng viên phụ trách',
     soluongtoida    INT DEFAULT 100,
     soluongdadangky INT DEFAULT 0,
-    trangthai       ENUM('dangmo','dangdienra','daketthuc','huy') DEFAULT 'dangmo',
+    trangthai       ENUM('dangmo','dangdienra','daketthuc','huy','dachot') DEFAULT 'dangmo',
     nguoitao        VARCHAR(50),
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

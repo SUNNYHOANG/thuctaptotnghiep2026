@@ -39,6 +39,7 @@ import TeacherClassStudents from './pages/TeacherClassStudents';
 import CTSVPhucKhao from './pages/CTSVPhucKhao';
 import CTSVDonOnline from './pages/CTSVDonOnline';
 import CTSVNhacNho from './pages/CTSVNhacNho';
+import CTSVhoatDong from './pages/CTSVhoatDong';
 import MyActivities from './pages/MyActivities';
 import Activities from './pages/Activities';
 import ActivityDetail from './pages/ActivityDetail';
@@ -226,6 +227,11 @@ function AppRoutes() {
       <Route path="/ctsv/duyet-phuc-khao" element={
         <ProtectedRoute requiredRole="ctsv">
           <CTSVPhucKhao />
+        </ProtectedRoute>
+      } />
+      <Route path="/ctsv/duyet-dang-ky-hoat-dong" element={
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
+          <CTSVhoatDong />
         </ProtectedRoute>
       } />
 

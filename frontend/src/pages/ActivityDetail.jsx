@@ -43,7 +43,7 @@ const ActivityDetail = () => {
         mssv: mssv,
         vaitro: 'thamgia'
       });
-      setMessage({ type: 'success', text: 'Đăng ký thành công! Vui lòng chờ duyệt.' });
+      setMessage({ type: 'success', text: 'Đã gửi yêu cầu đăng ký. Vui lòng chờ CTSV xử lý.' });
       setTimeout(() => {
         navigate('/hoat-dong-cua-toi');
       }, 2000);
@@ -84,7 +84,7 @@ const ActivityDetail = () => {
     );
   }
 
-  const canRegister = activity.trangthai === 'dangmo' && 
+  const canRegister = activity.trangthai === 'dangmo' &&
                      activity.soluongdadangky < activity.soluongtoida;
 
   return (
@@ -96,8 +96,8 @@ const ActivityDetail = () => {
       <div className="card">
         <div className="activity-detail-header">
           <h1>{activity.tenhoatdong}</h1>
-          <span className={`badge badge-${activity.trangthai === 'dangmo' ? 'success' : 'secondary'}`}>
-            {activity.trangthai === 'dangmo' ? 'Đang mở đăng ký' : 'Đã đóng'}
+          <span className={`badge badge-${activity.trangthai === 'dangmo' ? 'success' : activity.trangthai === 'dachot' ? 'info' : 'secondary'}`}>
+            {activity.trangthai === 'dangmo' ? 'Đang mở đăng ký' : activity.trangthai === 'dachot' ? 'Đã chốt danh sách' : 'Đã đóng'}
           </span>
         </div>
 
@@ -163,9 +163,14 @@ const ActivityDetail = () => {
             </div>
           )}
 
-          {!canRegister && activity.trangthai === 'dangmo' && (
+          {!canRegister && activity.trangthai === 'dangmo' && activity.soluongdadangky >= activity.soluongtoida && (
             <div className="alert alert-error">
               Hoạt động đã đủ số lượng đăng ký
+            </div>
+          )}
+          {activity.trangthai === 'dachot' && (
+            <div className="alert alert-info">
+              Hoạt động đã chốt danh sách. Danh sách sinh viên đăng ký thành công đã được công bố.
             </div>
           )}
         </div>
