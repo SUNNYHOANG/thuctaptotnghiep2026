@@ -108,12 +108,26 @@ const MyActivities = () => {
                   <th>Trạng Thái</th>
                   <th>Điểm Cộng</th>
                   <th>Ngày Đăng Ký</th>
+                  <th>Lý do / Ghi chú</th>
+                  <th>STT trong DS duyệt</th>
                   <th>Thao Tác</th>
                 </tr>
               </thead>
               <tbody>
                 {activities.map((activity, index) => {
                   const statusBadge = getStatusBadge(activity.trangthai);
+                  let sttApproved = null;
+                  if (activity.trangthai === 'duocduyet') {
+                    const approved = activities
+                      .filter(
+                        (a) =>
+                          a.mahoatdong === activity.mahoatdong &&
+                          a.trangthai === 'duocduyet'
+                      )
+                      .sort((a, b) => new Date(a.ngayduyet || a.ngaydangky) - new Date(b.ngayduyet || b.ngaydangky));
+                    const idx = approved.findIndex((a) => a.mathamgia === activity.mathamgia);
+                    sttApproved = idx >= 0 ? idx + 1 : null;
+                  }
                   return (
                     <tr key={activity.mathamgia}>
                       <td>{index + 1}</td>
@@ -127,6 +141,12 @@ const MyActivities = () => {
                       </td>
                       <td>{activity.diemcong || 0}</td>
                       <td>{formatDate(activity.ngaydangky)}</td>
+                      <td>
+                        {activity.trangthai === 'tuchoi'
+                          ? activity.ghichu || 'Bị từ chối (không có lý do chi tiết)'
+                          : activity.ghichu || '—'}
+                      </td>
+                      <td>{sttApproved || (activity.trangthai === 'duocduyet' ? '-' : '')}</td>
                       <td>
                         {activity.trangthai === 'dangky' && (
                           <button

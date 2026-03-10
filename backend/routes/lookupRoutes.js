@@ -51,6 +51,20 @@ router.get('/phonghoc', async (req, res) => {
   }
 });
 
+// Lấy sinh viên theo MSSV
+router.get('/student/:mssv', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT mssv, hoten, malop, makhoa FROM sinhvien WHERE mssv = ?',
+      [req.params.mssv]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy sinh viên' });
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Giảng viên/CTSV/Admin: danh sách sinh viên theo lớp
 router.get('/students-by-class', async (req, res) => {
   try {
@@ -87,6 +101,63 @@ router.get('/lop', async (req, res) => {
       'SELECT malop, tenlop FROM lophanhchinh ORDER BY malop'
     );
     res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin báo cáo: thống kê nâng cao (học bổng, DRL, GPA, đạt/rớt %)
+router.get('/report-advanced', async (req, res) => {
+  try {
+    const { mahocky } = req.query;
+    const hk = mahocky || null;
+
+    // Số SV đạt học bổng
+    let hocbongSql = 'SELECT COUNT(DISTINCT mssv) AS cnt FROM sinhvien_hocbong sh JOIN hocbong h ON sh.mahocbong = h.mahocbong WHERE sh.trangthai = ?';
+    const hbParams = ['duyet'];
+    if (hk) {
+      hocbongSql += ' AND h.mahocky = ?';
+      hbParams.push(hk);
+    }
+    const [[hb]] = await pool.execute(hocbongSql, hbParams);
+
+    // DRL: đạt (diemtong >= 50) vs rớt
+    let drlSql = 'SELECT COUNT(*) AS total, SUM(CASE WHEN diemtong >= 50 THEN 1 ELSE 0 END) AS dat FROM diemrenluyen WHERE 1=1';
+    const drlParams = [];
+    if (hk) {
+      drlSql += ' AND mahocky = ?';
+      drlParams.push(hk);
+    }
+    const [[drl]] = await pool.execute(drlSql, drlParams);
+
+    // GPA cao nhất (từ bangdiem nếu có)
+    let gpaSql = 'SELECT MAX(diemtongket) AS maxDiem FROM bangdiem b JOIN lophocphan l ON b.malophocphan = l.malophocphan WHERE 1=1';
+    const gpaParams = [];
+    if (hk) {
+      gpaSql += ' AND l.mahocky = ?';
+      gpaParams.push(hk);
+    }
+    try {
+      const [[gpaRow]] = await pool.execute(gpaSql, gpaParams);
+      var maxGPA = gpaRow?.maxDiem;
+    } catch (_) {
+      var maxGPA = null;
+    }
+
+    const totalDRL = Number(drl?.total) || 0;
+    const datDRL = Number(drl?.dat) || 0;
+    const rotDRL = totalDRL - datDRL;
+
+    res.json({
+      hocbongDat: Number(hb?.cnt) || 0,
+      drlTotal: totalDRL,
+      drlDat: datDRL,
+      drlRot: rotDRL,
+      drlDatPercent: totalDRL > 0 ? Math.round((datDRL / totalDRL) * 100) : 0,
+      drlRotPercent: totalDRL > 0 ? Math.round((rotDRL / totalDRL) * 100) : 0,
+      maxGPA: maxGPA != null ? maxGPA : null,
+      mahocky: hk,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

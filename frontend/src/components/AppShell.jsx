@@ -40,6 +40,7 @@ const AppShell = ({ children }) => {
         { label: 'Khen thưởng / Kỷ luật', path: '/admin/rewards' },
         { label: 'Dịch vụ', path: '/admin/services' },
         { label: 'Báo cáo', path: '/admin/reports' },
+        { label: 'Thông báo', path: '/admin/thong-bao' },
         { label: 'Thông báo học phí', path: '/admin/fee-notifications' }
       ];
     }
@@ -48,7 +49,8 @@ const AppShell = ({ children }) => {
         { label: 'Tổng quan', path: '/giangvien/dashboard' },
         { label: 'Nhập / quản lý điểm', path: '/teacher/grades' },
         { label: 'Sinh viên trong lớp', path: '/giangvien/sinh-vien-lop' },
-        { label: 'Duyệt tự đánh giá DRL', path: '/giangvien/diem-ren-luyen-tu-danh-gia' }
+        { label: 'Duyệt tự đánh giá DRL', path: '/giangvien/diem-ren-luyen-tu-danh-gia' },
+        { label: 'Đăng thông báo', path: '/admin/thong-bao' }
       ];
     }
     if (hasRole('ctsv')) {
@@ -62,7 +64,8 @@ const AppShell = ({ children }) => {
         { label: 'Học bổng', path: '/ctsv/hoc-bong' },
         { label: 'Khen thưởng / Kỷ luật', path: '/ctsv/khen-thuong-ky-luat' },
         { label: 'Điểm rèn luyện', path: '/ctsv/diem-ren-luyen' },
-        { label: 'Tự đánh giá DRL (SV)', path: '/ctsv/diem-ren-luyen-tu-danh-gia' }
+        { label: 'Tự đánh giá DRL (SV)', path: '/ctsv/diem-ren-luyen-tu-danh-gia' },
+        { label: 'Đăng thông báo', path: '/admin/thong-bao' }
       ];
     }
     // sinhvien (default)

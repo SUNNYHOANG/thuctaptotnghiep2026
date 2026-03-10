@@ -96,8 +96,10 @@ export const lookupAPI = {
   getLop: () => api.get('/lookup/lop'),
   getHocKy: () => api.get('/lookup/hocky'),
   getGiangVien: () => api.get('/lookup/giangvien'),
+  getStudentByMssv: (mssv) => api.get(`/lookup/student/${mssv}`),
   getStudentsByClass: (malop) => api.get('/lookup/students-by-class', { params: { malop } }),
   getReportStats: (group) => api.get('/lookup/report-stats', { params: { group } }),
+  getReportAdvanced: (mahocky) => api.get('/lookup/report-advanced', { params: { mahocky } }),
   getAdminStats: () => api.get('/lookup/admin-stats'),
 };
 

@@ -2,6 +2,7 @@ import express from 'express';
 import StudentActivity from '../models/StudentActivity.js';
 import Activity from '../models/Activity.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitActivityApproval } from '../socket.js';
 
 const router = express.Router();
 const ctsvOrAdmin = ['admin', 'ctsv'];
@@ -80,6 +81,7 @@ router.post('/:id/approve', requireRole(ctsvOrAdmin), async (req, res) => {
   try {
     const { nguoiduyet, diemcong } = req.body;
     const registration = await StudentActivity.approve(req.params.id, nguoiduyet || req.user?.username || req.user?.id || 'ctsv', diemcong);
+    emitActivityApproval(registration.mssv, 'duocduyet', registration.tenhoatdong);
     res.json(registration);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -91,6 +93,7 @@ router.post('/:id/reject', requireRole(ctsvOrAdmin), async (req, res) => {
   try {
     const { nguoiduyet, ghichu } = req.body;
     const registration = await StudentActivity.reject(req.params.id, nguoiduyet || req.user?.username || req.user?.id || 'ctsv', ghichu);
+    emitActivityApproval(registration.mssv, 'tuchoi', registration.tenhoatdong);
     res.json(registration);
   } catch (error) {
     res.status(400).json({ error: error.message });

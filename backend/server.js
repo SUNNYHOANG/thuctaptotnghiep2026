@@ -1,7 +1,9 @@
 import express from 'express';
+import http from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pool from './config/database.js';
+import { initSocket } from './socket.js';
 import activityRoutes from './routes/activityRoutes.js';
 import studentActivityRoutes from './routes/studentActivityRoutes.js';
 import scoreRoutes from './routes/scoreRoutes.js';
@@ -118,6 +120,8 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not Found', path: req.originalUrl });
 });
 
-app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+initSocket(httpServer);
+httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

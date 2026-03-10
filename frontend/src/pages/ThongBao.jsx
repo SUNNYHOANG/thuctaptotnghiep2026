@@ -16,7 +16,8 @@ const ThongBao = () => {
     try {
       setLoading(true);
       const res = await thongBaoAPI.getAll({ malop: user?.malop });
-      setNotifications(res.data || []);
+      const data = res.data;
+      setNotifications(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading notifications:', error);
     } finally {
@@ -35,10 +36,10 @@ const ThongBao = () => {
       ) : (
         <div className="notifications-list">
           {notifications.map(notif => (
-            <div key={notif.id} className="notification-card">
+            <div key={notif.mathongbao || notif.id} className="notification-card">
               <div className="notif-header">
                 <h3>{notif.tieude}</h3>
-                <span className="date">{new Date(notif.tao).toLocaleDateString('vi-VN')}</span>
+                <span className="date">{new Date(notif.ngaytao || notif.tao).toLocaleDateString('vi-VN')}</span>
               </div>
               <div className="notif-body">
                 <p>{notif.noidung}</p>

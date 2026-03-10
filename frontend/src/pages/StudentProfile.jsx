@@ -55,7 +55,8 @@ const StudentProfile = () => {
 
   return (
     <div className="page-card student-profile">
-      <h1>Hồ sơ cá nhân (Lý lịch)</h1>
+      <h1>Hồ sơ cá nhân (Lý lịch sinh viên)</h1>
+      <p style={{ color: '#666', marginBottom: 16 }}>Sinh viên có quyền xem, sửa và cập nhật thông tin cá nhân.</p>
       {message && <div className="message">{message}</div>}
       {!edit ? (
         <div className="profile-view">
@@ -63,19 +64,31 @@ const StudentProfile = () => {
           <p><strong>Họ tên:</strong> {profile.hoten}</p>
           <p><strong>Lớp:</strong> {profile.malop || '—'}</p>
           <p><strong>Khoa:</strong> {profile.makhoa || '—'}</p>
-          <button type="button" className="btn primary" onClick={() => setEdit(true)}>Chỉnh sửa</button>
+          <div className="form-actions" style={{ marginTop: 16 }}>
+            <button type="button" className="btn primary" onClick={() => setEdit(true)}>Chỉnh sửa</button>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSave} className="profile-form">
-          <label>Họ tên</label>
-          <input value={form.hoten} onChange={(e) => setForm((f) => ({ ...f, hoten: e.target.value }))} />
-          <label>Lớp</label>
-          <input value={form.malop} onChange={(e) => setForm((f) => ({ ...f, malop: e.target.value }))} />
-          <label>Khoa</label>
-          <input value={form.makhoa} onChange={(e) => setForm((f) => ({ ...f, makhoa: e.target.value }))} />
+          <div style={{ marginBottom: 12 }}>
+            <label>MSSV</label>
+            <input value={profile.mssv} readOnly disabled style={{ background: '#f5f5f5' }} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label>Họ tên</label>
+            <input value={form.hoten} onChange={(e) => setForm((f) => ({ ...f, hoten: e.target.value }))} required />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label>Lớp</label>
+            <input value={form.malop} onChange={(e) => setForm((f) => ({ ...f, malop: e.target.value }))} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label>Khoa</label>
+            <input value={form.makhoa} onChange={(e) => setForm((f) => ({ ...f, makhoa: e.target.value }))} />
+          </div>
           <div className="form-actions">
             <button type="submit" className="btn primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu'}</button>
-            <button type="button" className="btn secondary" onClick={() => setEdit(false)}>Hủy</button>
+            <button type="button" className="btn secondary" onClick={() => { setEdit(false); setForm({ hoten: profile.hoten, malop: profile.malop, makhoa: profile.makhoa }); }}>Hủy</button>
           </div>
         </form>
       )}

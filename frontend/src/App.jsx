@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -19,6 +20,7 @@ import AdminScholarships from './pages/AdminScholarships';
 import AdminRewards from './pages/AdminRewards';
 import AdminServices from './pages/AdminServices';
 import AdminReports from './pages/AdminReports';
+import AdminThongBao from './pages/AdminThongBao';
 import AdminFeeNotifications from './pages/AdminFeeNotifications';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentGrades from './pages/StudentGrades';
@@ -185,6 +187,11 @@ function AppRoutes() {
           <AdminReports />
         </ProtectedRoute>
       } />
+      <Route path="/admin/thong-bao" element={
+        <ProtectedRoute allowedRoles={['admin', 'ctsv', 'giangvien']}>
+          <AdminThongBao />
+        </ProtectedRoute>
+      } />
 
       <Route path="/admin/fee-notifications" element={
         <ProtectedRoute requiredRole="admin">
@@ -326,9 +333,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <AppRoutes />
-      </Router>
+      <SocketProvider>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AppRoutes />
+        </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 }

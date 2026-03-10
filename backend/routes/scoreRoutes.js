@@ -1,6 +1,7 @@
 import express from 'express';
 import Score from '../models/Score.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitDrlScore } from '../socket.js';
 
 const router = express.Router();
 
@@ -53,6 +54,7 @@ router.put('/update', requireRole(['admin', 'giangvien', 'ctsv']), async (req, r
   try {
     const { mssv, mahocky, ...data } = req.body;
     const score = await Score.updateScore(mssv, mahocky, data);
+    if (score && mssv) emitDrlScore(mssv, score.diemtong, score.xeploai);
     res.json(score);
   } catch (error) {
     res.status(500).json({ error: error.message });

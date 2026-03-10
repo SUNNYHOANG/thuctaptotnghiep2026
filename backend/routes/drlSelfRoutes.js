@@ -2,6 +2,7 @@ import express from 'express';
 import SelfEvaluation from '../models/SelfEvaluation.js';
 import { requireRole } from '../middleware/requireRole.js';
 import Score from '../models/Score.js';
+import { emitDrlScore } from '../socket.js';
 
 const router = express.Router();
 
@@ -110,12 +111,13 @@ router.put('/:id/review', requireRole(['admin', 'giangvien', 'ctsv']), async (re
       const diemkyluat =
         Number(updated.diem_noi_quy || 0) + Number(updated.diem_khen_thuong_ky_luat || 0);
 
-      await Score.updateScore(mssv, mahocky, {
+      const saved = await Score.updateScore(mssv, mahocky, {
         diemhoatdong,
         diemhoctap,
         diemkyluat,
         ghichu: `Điểm chính thức (CTSV duyệt). Tổng điểm: ${finalTotal}`,
       });
+      if (saved) emitDrlScore(mssv, saved.diemtong, saved.xeploai);
     }
     res.json(updated);
   } catch (error) {

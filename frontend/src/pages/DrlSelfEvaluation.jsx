@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { drlSelfAPI } from '../api/api';
+import { drlSelfAPI, lookupAPI, scoreAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+
+const BIEU_MAU_DRL_URL = import.meta.env.VITE_BIEU_MAU_DRL_URL || '/docs/bieu-mau-tu-danh-gia-DRL.pdf';
 
 const DrlSelfEvaluation = () => {
   const { user } = useAuth();
+  const [hockyList, setHockyList] = useState([]);
   const [mahocky, setMahocky] = useState('');
+  const [diemChinhThuc, setDiemChinhThuc] = useState(null);
   const [form, setForm] = useState({
     diem_ythuc_hoc_tap: '',
     diem_noi_quy: '',
@@ -19,8 +23,18 @@ const DrlSelfEvaluation = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    lookupAPI.getHocKy().then((r) => setHockyList(r.data || []));
+  }, []);
+
+  useEffect(() => {
     if (user?.mssv && mahocky) {
       loadCurrent();
+      scoreAPI.getByStudentAndSemester(user.mssv, mahocky)
+        .then((r) => setDiemChinhThuc(r.data))
+        .catch(() => setDiemChinhThuc(null));
+    } else {
+      setCurrent(null);
+      setDiemChinhThuc(null);
     }
   }, [user?.mssv, mahocky]);
 
@@ -104,20 +118,27 @@ const DrlSelfEvaluation = () => {
   return (
     <div className="container">
       <div className="card">
-        <div className="card-header">
+        <div className="card-header" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
           <h1 className="card-title">Tự đánh giá điểm rèn luyện</h1>
           <div className="d-flex gap-2 align-center">
-            <label className="form-label" style={{ marginBottom: 0 }}>
-              Mã học kỳ
-            </label>
-            <input
+            <label className="form-label" style={{ marginBottom: 0 }}>Học kỳ</label>
+            <select
               className="form-control"
-              style={{ width: 120 }}
+              style={{ width: 180 }}
               value={mahocky}
               onChange={(e) => setMahocky(e.target.value)}
-              placeholder="vd: 1"
-            />
+            >
+              <option value="">-- Chọn học kỳ --</option>
+              {hockyList.map((h) => (
+                <option key={h.mahocky} value={h.mahocky}>{h.tenhocky} (Mã: {h.mahocky})</option>
+              ))}
+            </select>
           </div>
+        </div>
+        <div style={{ marginBottom: 16, padding: 12, background: '#f8f9fa', borderRadius: 8 }}>
+          <strong>📎 Biểu mẫu tự đánh giá:</strong>{' '}
+          <a href={BIEU_MAU_DRL_URL} target="_blank" rel="noopener noreferrer">Tải biểu mẫu tại đây</a>
+          {' '}(mở đường dẫn → điền biểu mẫu → quay lại đây nộp điểm).
         </div>
 
         {loading ? (
@@ -216,6 +237,11 @@ const DrlSelfEvaluation = () => {
                 />
               </div>
 
+              {diemChinhThuc && (
+                <div className="alert alert-success" style={{ marginBottom: 12 }}>
+                  <strong>Điểm rèn luyện đã được đánh giá (học kỳ này):</strong> {diemChinhThuc.diemtong} – Xếp loại: {diemChinhThuc.xeploai || '—'}
+                </div>
+              )}
               {current && (
                 <div className="alert alert-info">
                   Trạng thái hiện tại: <strong>{statusLabel(current)}</strong>
