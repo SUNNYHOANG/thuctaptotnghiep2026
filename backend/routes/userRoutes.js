@@ -49,7 +49,23 @@ router.get('/students/profile/:mssv', async (req, res) => {
       return res.status(403).json({ error: 'Chỉ được xem hồ sơ của chính mình' });
     }
     const [rows] = await pool.execute(
-      'SELECT mssv, hoten, malop, makhoa, created_at, updated_at FROM sinhvien WHERE mssv = ?',
+      `SELECT 
+        mssv,
+        hoten,
+        malop,
+        makhoa,
+        diachi,
+        ngaysinh,
+        quequan,
+        tinhtrang,
+        gioitinh,
+        khoahoc,
+        bacdaotao,
+        nganh,
+        created_at,
+        updated_at
+      FROM sinhvien
+      WHERE mssv = ?`,
       [mssv]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy sinh viên' });
@@ -59,7 +75,7 @@ router.get('/students/profile/:mssv', async (req, res) => {
   }
 });
 
-// Sinh viên: cập nhật hồ sơ (chỉ hoten, malop, makhoa); admin có thể sửa bất kỳ
+// Sinh viên: cập nhật hồ sơ; admin/ctsv có thể sửa bất kỳ
 router.put('/students/profile/:mssv', async (req, res) => {
   try {
     const { mssv } = req.params;
@@ -67,28 +83,68 @@ router.put('/students/profile/:mssv', async (req, res) => {
     if (user.role === 'sinhvien' && user.mssv !== mssv) {
       return res.status(403).json({ error: 'Chỉ được sửa hồ sơ của chính mình' });
     }
-    const { hoten, malop, makhoa } = req.body || {};
+
+    const {
+      hoten,
+      malop,
+      makhoa,
+      diachi,
+      ngaysinh,
+      quequan,
+      tinhtrang,
+      gioitinh,
+      khoahoc,
+      bacdaotao,
+      nganh,
+    } = req.body || {};
+
     const updates = [];
     const values = [];
-    if (hoten !== undefined) {
-      updates.push('hoten = ?');
-      values.push(hoten);
-    }
-    if (malop !== undefined) {
-      updates.push('malop = ?');
-      values.push(malop);
-    }
-    if (makhoa !== undefined) {
-      updates.push('makhoa = ?');
-      values.push(makhoa);
-    }
+
+    const addIfDefined = (fieldName, value) => {
+      if (value !== undefined) {
+        updates.push(`${fieldName} = ?`);
+        values.push(value);
+      }
+    };
+
+    addIfDefined('hoten', hoten);
+    addIfDefined('malop', malop);
+    addIfDefined('makhoa', makhoa);
+    addIfDefined('diachi', diachi);
+    addIfDefined('ngaysinh', ngaysinh);
+    addIfDefined('quequan', quequan);
+    addIfDefined('tinhtrang', tinhtrang);
+    addIfDefined('gioitinh', gioitinh);
+    addIfDefined('khoahoc', khoahoc);
+    addIfDefined('bacdaotao', bacdaotao);
+    addIfDefined('nganh', nganh);
+
     if (updates.length === 0) {
       return res.status(400).json({ error: 'Không có dữ liệu cập nhật' });
     }
+
     values.push(mssv);
     await pool.execute(`UPDATE sinhvien SET ${updates.join(', ')} WHERE mssv = ?`, values);
+
     const [rows] = await pool.execute(
-      'SELECT mssv, hoten, malop, makhoa, created_at, updated_at FROM sinhvien WHERE mssv = ?',
+      `SELECT 
+        mssv,
+        hoten,
+        malop,
+        makhoa,
+        diachi,
+        ngaysinh,
+        quequan,
+        tinhtrang,
+        gioitinh,
+        khoahoc,
+        bacdaotao,
+        nganh,
+        created_at,
+        updated_at
+      FROM sinhvien
+      WHERE mssv = ?`,
       [mssv]
     );
     res.json(rows[0]);

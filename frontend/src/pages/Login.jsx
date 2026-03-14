@@ -174,9 +174,9 @@ const Login = () => {
       <div className="login-main">
         <div className="login-card">
           <div className="login-card-left">
-            <div className="login-card-header">
+          <div className="login-card-header">
               <h1>Đăng nhập hệ thống</h1>
-              <p>Chọn loại tài khoản để xem giao diện & phân quyền.</p>
+              <p>Quản lý công tác sinh viên & điểm rèn luyện trong một nơi.</p>
             </div>
 
             <div className="login-inner-panel">
@@ -235,10 +235,6 @@ const Login = () => {
                   />
                 </div>
 
-                <p className="login-demo-note">
-                  Đây là bản demo giao diện frontend, chưa kết nối với backend thực tế.
-                </p>
-
                 <button
                   type="submit"
                   className="btn btn-primary btn-block login-submit"
@@ -271,44 +267,6 @@ const Login = () => {
               )}
             </div>
 
-            <div className="login-sample-box">
-              {userType === 'student' ? (
-                <>
-                  <h4>Thông tin đăng nhập mẫu (Sinh viên)</h4>
-                  <p><strong>MSSV:</strong> 20123456</p>
-                  <p><strong>Mật khẩu:</strong> 123456</p>
-                </>
-              ) : (
-                <>
-                  <h4>Thông tin đăng nhập mẫu (Nhân sự)</h4>
-                  <p><strong>Username:</strong> admin</p>
-                  <p><strong>Mật khẩu:</strong> admin123</p>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="login-card-right">
-            <h3>4 phân quyền chính</h3>
-            <ul>
-              <li>
-                <strong>Sinh viên</strong> – tự đánh giá DRL, xem hoạt động, học bổng, hồ sơ cá nhân.
-              </li>
-              <li>
-                <strong>Giảng viên (CVHT)</strong> – nhập điểm rèn luyện, quản lý sinh viên lớp.
-              </li>
-              <li>
-                <strong>Phòng CTSV</strong> – duyệt đơn online, quản lý DRL & khen thưởng / kỷ luật.
-              </li>
-              <li>
-                <strong>Admin</strong> – phân quyền, quản lý người dùng, hoạt động, báo cáo thống kê.
-              </li>
-            </ul>
-            <div className="login-right-note">
-              <p className="login-hint">
-                Lưu ý: Chọn role rồi bấm đăng nhập để chuyển sang giao diện tương ứng.
-              </p>
-            </div>
           </div>
         </div>
       </div>

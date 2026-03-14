@@ -36,9 +36,10 @@ export function emitActivityApproval(mssv, status, tenhoatdong) {
     mssv,
     status, // 'duocduyet' | 'tuchoi'
     tenhoatdong,
-    message: status === 'duocduyet'
-      ? `Đăng ký tham gia "${tenhoatdong}" đã được duyệt.`
-      : `Đăng ký tham gia "${tenhoatdong}" bị từ chối.`,
+    message:
+      status === 'duocduyet'
+        ? `Đăng ký tham gia "${tenhoatdong}" đã được duyệt.`
+        : `Đăng ký tham gia "${tenhoatdong}" bị từ chối.`,
   });
 }
 
@@ -49,5 +50,20 @@ export function emitDrlScore(mssv, diemtong, xeploai) {
     diemtong,
     xeploai,
     message: `Điểm rèn luyện đã được cập nhật: ${diemtong} - Xếp loại: ${xeploai || '—'}`,
+  });
+}
+
+/** Gửi thông báo khen thưởng / kỷ luật */
+export function emitRewardDiscipline(mssv, loai, noidung) {
+  const isReward = loai === 'khenthuong';
+  const isWarning = loai === 'canhcao';
+
+  const title = isReward ? 'Khen thưởng' : isWarning ? 'Cảnh cáo' : 'Kỷ luật';
+
+  emitToStudent(mssv, 'reward_discipline', {
+    mssv,
+    loai,
+    noidung,
+    message: `${title}: ${noidung}`,
   });
 }

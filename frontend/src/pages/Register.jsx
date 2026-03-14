@@ -118,12 +118,13 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h1>Đăng Ký</h1>
-          <p>Tạo tài khoản mới</p>
-        </div>
+    <div className="auth-page">
+      <div className="auth-main">
+        <div className="auth-card">
+          <div className="auth-card-header">
+            <h1>Tạo tài khoản</h1>
+            <p>Đăng ký nhanh cho sinh viên, giảng viên hoặc quản trị viên.</p>
+          </div>
 
         {error && (
           <div className="alert alert-error">
@@ -137,7 +138,7 @@ const Register = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form register-form">
           <div className="form-group">
             <label className="form-label">Vai trò *</label>
             <select
@@ -166,56 +167,60 @@ const Register = () => {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Tên đăng nhập *</label>
-            <input
-              type="text"
-              name="username"
-              className="form-control"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="Nhập tên đăng nhập"
-            />
-          </div>
+          <div className="form-row two-cols">
+            <div className="form-group">
+              <label className="form-label">Tên đăng nhập *</label>
+              <input
+                type="text"
+                name="username"
+                className="form-control"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                placeholder="Nhập tên đăng nhập"
+              />
+            </div>
 
-          <div className="form-group">
-            <label className="form-label">Email *</label>
-            <input
-              type="email"
-              name="email"
-              className="form-control"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Nhập email"
-            />
+            <div className="form-group">
+              <label className="form-label">Email *</label>
+              <input
+                type="email"
+                name="email"
+                className="form-control"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="Nhập email"
+              />
+            </div>
           </div>
 
           {formData.role === 'sinhvien' && (
             <>
-              <div className="form-group">
-                <label className="form-label">Mã sinh viên *</label>
-                <input
-                  type="text"
-                  name="mssv"
-                  className="form-control"
-                  value={formData.mssv}
-                  onChange={handleChange}
-                  required
-                  placeholder="Nhập mã sinh viên"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Mã lớp</label>
-                <input
-                  type="text"
-                  name="malop"
-                  className="form-control"
-                  value={formData.malop}
-                  onChange={handleChange}
-                  placeholder="Nhập mã lớp"
-                />
+              <div className="form-row two-cols">
+                <div className="form-group">
+                  <label className="form-label">Mã sinh viên *</label>
+                  <input
+                    type="text"
+                    name="mssv"
+                    className="form-control"
+                    value={formData.mssv}
+                    onChange={handleChange}
+                    required
+                    placeholder="Nhập mã sinh viên"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Mã lớp</label>
+                  <input
+                    type="text"
+                    name="malop"
+                    className="form-control"
+                    value={formData.malop}
+                    onChange={handleChange}
+                    placeholder="Nhập mã lớp"
+                  />
+                </div>
               </div>
             </>
           )}
@@ -235,29 +240,31 @@ const Register = () => {
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label">Mã khoa</label>
-            <input
-              type="text"
-              name="makhoa"
-              className="form-control"
-              value={formData.makhoa}
-              onChange={handleChange}
-              placeholder="Nhập mã khoa"
-            />
-          </div>
+          <div className="form-row two-cols">
+            <div className="form-group">
+              <label className="form-label">Mã khoa</label>
+              <input
+                type="text"
+                name="makhoa"
+                className="form-control"
+                value={formData.makhoa}
+                onChange={handleChange}
+                placeholder="Nhập mã khoa"
+              />
+            </div>
 
-          <div className="form-group">
-            <label className="form-label">Mật khẩu *</label>
-            <input
-              type="password"
-              name="password"
-              className="form-control"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-            />
+            <div className="form-group">
+              <label className="form-label">Mật khẩu *</label>
+              <input
+                type="password"
+                name="password"
+                className="form-control"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+              />
+            </div>
           </div>
 
           <div className="form-group">
@@ -291,6 +298,7 @@ const Register = () => {
           </p>
         </div>
       </div>
+    </div>
     </div>
   );
 };

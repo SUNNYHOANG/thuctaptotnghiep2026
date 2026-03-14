@@ -1,6 +1,175 @@
-.student-profile .profile-view p { margin: 0.5rem 0; }
-.student-profile .profile-form { max-width: 400px; }
-.student-profile .profile-form label { display: block; margin-top: 0.75rem; }
-.student-profile .profile-form input { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
-.student-profile .form-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
-.student-profile .message { margin: 0.5rem 0; padding: 0.5rem; background: var(--surface-2, #f0f0f0); border-radius: 6px; }
+.student-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.student-profile__header {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.student-profile__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2f80ed, #56ccf2);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.student-profile__header-info h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.student-profile__subtitle {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.student-profile__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.student-profile__message {
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  background: #f0f4ff;
+  color: #1f3b8f;
+  font-size: 0.9rem;
+}
+
+.student-profile__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.student-profile__section {
+  border-radius: 12px;
+  padding: 1.25rem 1.1rem;
+  background: #fafafa;
+  border: 1px solid #e4e4e4;
+}
+
+.student-profile__section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.student-profile__hint {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.student-profile__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem 1.5rem;
+}
+
+.student-profile__grid--readonly .value {
+  color: #555;
+}
+
+.student-profile__field label {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #777;
+  margin-bottom: 0.15rem;
+}
+
+.student-profile__field .value {
+  font-size: 0.95rem;
+}
+
+.student-profile__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.student-profile__form .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem 1.5rem;
+}
+
+.student-profile__form .form-item label {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+  color: #555;
+}
+
+.student-profile__form .form-item input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  font-size: 0.92rem;
+}
+
+.student-profile__form .form-item input:disabled {
+  background: #f5f5f5;
+  color: #777;
+}
+
+.student-profile__actions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.student-profile__footer-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.student-profile__footer-actions .btn {
+  min-width: 150px;
+}
+
+.student-profile .btn {
+  border-radius: 6px;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.9rem;
+}
+
+.student-profile .btn.primary {
+  background: #2f80ed;
+  border: none;
+  color: #fff;
+}
+
+.student-profile .btn.secondary {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+@media (max-width: 640px) {
+  .student-profile__header {
+    align-items: flex-start;
+  }
+
+  .student-profile__meta {
+    flex-direction: column;
+  }
+}

@@ -21,4 +21,15 @@ SELECT t.tenloai, t.mota FROM (
 ) t
 WHERE NOT EXISTS (SELECT 1 FROM loaihoatdong);
 
+-- 3. Bổ sung đầy đủ trường hồ sơ sinh viên (chạy trên bảng sinhvien đã tồn tại)
+ALTER TABLE sinhvien
+  ADD COLUMN diachi VARCHAR(255) NULL AFTER makhoa,
+  ADD COLUMN ngaysinh DATE NULL AFTER diachi,
+  ADD COLUMN quequan VARCHAR(255) NULL AFTER ngaysinh,
+  ADD COLUMN tinhtrang VARCHAR(100) NULL DEFAULT 'Đang học' AFTER quequan,
+  ADD COLUMN gioitinh VARCHAR(20) NULL AFTER tinhtrang,
+  ADD COLUMN khoahoc VARCHAR(50) NULL AFTER gioitinh,
+  ADD COLUMN bacdaotao VARCHAR(100) NULL AFTER khoahoc,
+  ADD COLUMN nganh VARCHAR(255) NULL AFTER bacdaotao;
+
 SELECT '✅ UPDATE_PATCH_COMPLETE: Đã cập nhật database hoàn chỉnh.' AS Result;

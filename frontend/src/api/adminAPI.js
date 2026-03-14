@@ -1,9 +1,8 @@
-
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export const adminAPIEndpoints = {
@@ -50,6 +49,10 @@ export const adminAPIEndpoints = {
   updateReward: (id, data) => fetch(`${API_BASE}/khen-thuong-ky-luat/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify(data) }).then(r => r.json()),
   deleteReward: (id) => fetch(`${API_BASE}/khen-thuong-ky-luat/${id}`, { method: 'DELETE', headers: { ...getAuthHeaders() } }).then(r => r.json()),
 
+  // Students (danh sách sinh viên)
+  getAllStudents: () =>
+    fetch(`${API_BASE}/users/students/all`, { headers: { ...getAuthHeaders() } }).then((r) => r.json()),
+
   // Services (Dịch vụ)
   getServices: (filters = {}) => fetch(`${API_BASE}/dich-vu?${new URLSearchParams(filters)}`, { headers: { ...getAuthHeaders() } }).then(r => r.json()),
   getServiceById: (id) => fetch(`${API_BASE}/dich-vu/${id}`, { headers: { ...getAuthHeaders() } }).then(r => r.json()),
@@ -60,3 +63,5 @@ export const adminAPIEndpoints = {
   // Dashboard Stats
   getStats: () => fetch(`${API_BASE}/lookup/admin-stats`, { headers: { ...getAuthHeaders() } }).then(r => r.json()),
 };
+
+export { API_BASE, getAuthHeaders };

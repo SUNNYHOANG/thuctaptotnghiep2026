@@ -1,6 +1,7 @@
 import express from 'express';
 import KhenThuongKyLuat from '../models/KhenThuongKyLuat.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitRewardDiscipline } from '../socket.js';
 
 const router = express.Router();
 
@@ -38,6 +39,12 @@ router.post('/', requireRole(['admin', 'giangvien', 'ctsv']), async (req, res) =
   try {
     const data = { ...req.body, nguoilap: req.headers['x-user-id'] || req.body.nguoilap };
     const row = await KhenThuongKyLuat.create(data);
+
+    // Gửi thông báo realtime đến đúng sinh viên
+    if (row?.mssv && row?.loai && row?.noidung) {
+      emitRewardDiscipline(row.mssv, row.loai, row.noidung);
+    }
+
     res.status(201).json(row);
   } catch (err) {
     res.status(400).json({ error: err.message });

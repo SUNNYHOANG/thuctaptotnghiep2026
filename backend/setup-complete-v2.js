@@ -60,8 +60,18 @@ async function setup() {
         hoten VARCHAR(255) NOT NULL,
         malop VARCHAR(50),
         makhoa VARCHAR(50),
+        -- Thông tin hồ sơ mở rộng
+        diachi VARCHAR(255) DEFAULT NULL,
+        ngaysinh DATE DEFAULT NULL,
+        quequan VARCHAR(255) DEFAULT NULL,
+        tinhtrang VARCHAR(100) DEFAULT 'Đang học',
+        gioitinh VARCHAR(20) DEFAULT NULL,
+        khoahoc VARCHAR(50) DEFAULT NULL,
+        bacdaotao VARCHAR(100) DEFAULT NULL,
+        nganh VARCHAR(255) DEFAULT NULL,
         password VARCHAR(255) DEFAULT '123456',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (malop) REFERENCES lophoc(malop) ON DELETE SET NULL,
         FOREIGN KEY (makhoa) REFERENCES khoa(makhoa) ON DELETE SET NULL
       )`,

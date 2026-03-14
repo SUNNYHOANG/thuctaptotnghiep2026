@@ -1,3 +1,14 @@
+@keyframes authFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* ============ New full-page login layout ============ */
 
 .login-page {
@@ -32,6 +43,7 @@
     0 0 0 1px rgba(145, 168, 255, 0.18);
   display: flex;
   gap: 2.75rem;
+  animation: authFadeUp 0.6s ease-out;
 }
 
 .login-card-left,
@@ -213,6 +225,12 @@
   gap: 1.5rem;
 }
 
+.form-row.two-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -247,20 +265,97 @@
   cursor: not-allowed;
 }
 
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(40, 180, 255, 0.35) 0, transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(0, 255, 209, 0.25) 0, transparent 50%),
+    linear-gradient(135deg, #050b1b 0%, #020615 40%, #031b3a 75%, #041a33 100%);
+}
+
+.auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 3.5rem 2.75rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 720px;
+  border-radius: 24px;
+  padding: 2.2rem 2.4rem 2.5rem;
+  background:
+    linear-gradient(145deg, rgba(7, 17, 44, 0.98), rgba(9, 21, 58, 0.98)),
+    radial-gradient(circle at 0 0, rgba(50, 140, 255, 0.4), transparent 55%);
+  box-shadow:
+    0 28px 68px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(145, 168, 255, 0.2);
+  color: #edf3ff;
+  animation: authFadeUp 0.6s ease-out;
+}
+
+.auth-card-header h1 {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.7rem;
+}
+
+.auth-card-header p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #a5b4e6;
+}
+
+.register-form .form-label {
+  color: #c5cff9;
+}
+
+.register-form .form-control {
+  background: rgba(12, 23, 56, 0.9);
+  border-color: rgba(84, 110, 214, 0.75);
+  color: #e8eeff;
+}
+
+.register-form .form-control::placeholder {
+  color: #6d7bb6;
+}
+
+.register-form .form-control:focus {
+  border-color: #35c3ff;
+  background-color: rgba(6, 14, 40, 0.95);
+  box-shadow: 0 0 0 1px rgba(114, 206, 255, 0.5);
+}
+
+.auth-footer {
+  margin-top: 1.4rem;
+  border-top: 1px solid rgba(64, 79, 134, 0.7);
+  padding-top: 0.75rem;
+  text-align: right;
+}
+
+.auth-footer p {
+  color: #d1d7ff;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
 .auth-footer p {
   color: #666;
   margin: 0;
 }
 
 .auth-link {
-  color: #002244;
+  color: #4fd1ff;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s;
 }
 
 .auth-link:hover {
-  color: #003366;
+  color: #ffffff;
   text-decoration: underline;
 }
 

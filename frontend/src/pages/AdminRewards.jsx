@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { khenThuongKyLuatAPI } from '../api/api';
-import { thongBaoAPI } from '../api/api';
-import { lookupAPI } from '../api/api';
+import { khenThuongKyLuatAPI, thongBaoAPI, lookupAPI } from '../api/api';
+import { adminAPIEndpoints } from '../api/adminAPI';
 
 const LOAI_LABEL = { khenthuong: 'Khen thưởng', kyluat: 'Kỷ luật', canhcao: 'Cảnh cáo' };
 
@@ -33,8 +32,7 @@ const AdminRewards = () => {
     // Lấy tất cả sinh viên để chọn MSSV từ database
     const fetchStudents = async () => {
       try {
-        const res = await fetch(`${API_BASE}/users/students/all`, { headers: { ...getAuthHeaders() } });
-        const data = await res.json();
+        const data = await adminAPIEndpoints.getAllStudents();
         setStudents(Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Không thể tải danh sách sinh viên', err);
