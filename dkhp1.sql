@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th3 14, 2026 lúc 02:46 AM
+-- Thời gian đã tạo: Th3 20, 2026 lúc 08:01 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -44,47 +44,25 @@ CREATE TABLE `bangdiem` (
   `ngaykhoa` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Đang đổ dữ liệu cho bảng `bangdiem`
---
-
-INSERT INTO `bangdiem` (`mabangdiem`, `malophocphan`, `mssv`, `diemchuyencan`, `diemgiuaky`, `diemcuoiky`, `diemtongket`, `gpa`, `trangthai`, `canhbao`, `ghichu`, `nguoinhap`, `ngaynhap`, `ngaykhoa`) VALUES
-(1, 1, '20123456', 9.00, 8.00, 8.50, NULL, NULL, 'dangnhap', NULL, NULL, NULL, '2026-03-01 04:27:39', NULL),
-(2, 1, '20123457', 8.00, 7.00, 7.50, NULL, NULL, 'dangnhap', NULL, NULL, NULL, '2026-03-01 04:27:39', NULL),
-(3, 2, '20123458', 9.00, 9.00, 9.00, NULL, NULL, 'dakhoa', NULL, NULL, NULL, '2026-03-01 04:27:39', '2026-03-08 01:29:26'),
-(4, 3, '20123456', 10.00, 8.00, 9.00, 8.80, 3.52, 'dakhoa', NULL, NULL, NULL, '2026-03-01 05:17:26', '2026-03-01 05:18:28'),
-(6, 2, '20123456', 10.00, 9.00, 9.00, 9.10, 3.64, 'dakhoa', NULL, NULL, NULL, '2026-03-08 01:27:07', '2026-03-08 01:29:26'),
-(8, 3, '20123457', 9.00, 8.00, 10.00, 9.30, 3.72, 'dakhoa', NULL, NULL, NULL, '2026-03-08 01:43:50', '2026-03-08 01:44:08');
-
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `dangkyhocphan`
+-- Cấu trúc bảng cho bảng `config`
 --
 
-CREATE TABLE `dangkyhocphan` (
-  `madangky` int(11) NOT NULL,
-  `mssv` varchar(50) NOT NULL,
-  `malophocphan` int(11) NOT NULL,
-  `trangthai` enum('dangky','huy') DEFAULT 'dangky',
-  `ngaydangky` timestamp NOT NULL DEFAULT current_timestamp(),
-  `ghichu` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `config` (
+  `id` int(11) NOT NULL,
+  `config_key` varchar(100) NOT NULL,
+  `config_value` varchar(255) DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `dangkyhocphan`
+-- Đang đổ dữ liệu cho bảng `config`
 --
 
-INSERT INTO `dangkyhocphan` (`madangky`, `mssv`, `malophocphan`, `trangthai`, `ngaydangky`, `ghichu`) VALUES
-(1, '20123456', 1, 'huy', '2026-03-01 04:27:39', NULL),
-(2, '20123457', 1, 'dangky', '2026-03-01 04:27:39', NULL),
-(3, '20123458', 2, 'dangky', '2026-03-01 04:27:39', NULL),
-(4, '20123456', 3, 'dangky', '2026-03-01 05:17:12', NULL),
-(5, '20123456', 2, 'dangky', '2026-03-08 01:25:23', NULL),
-(6, '20123457', 3, 'dangky', '2026-03-08 01:43:12', NULL),
-(7, '2254810304', 2, 'huy', '2026-03-13 16:56:49', NULL),
-(8, '2254810304', 4, 'dangky', '2026-03-13 17:04:09', NULL),
-(9, '2254810304', 3, 'dangky', '2026-03-13 17:04:44', NULL);
+INSERT INTO `config` (`id`, `config_key`, `config_value`, `updated_at`) VALUES
+(1, 'hocky_dang_mo_dang_ky', '1', '2026-03-14 04:57:59');
 
 -- --------------------------------------------------------
 
@@ -111,7 +89,8 @@ CREATE TABLE `dichvu_sinhvien` (
 --
 
 INSERT INTO `dichvu_sinhvien` (`madon`, `mssv`, `maloaidichvu`, `trangthai`, `noidung_yeucau`, `ketqua`, `file_ketqua`, `ngaygui`, `ngayduyet`, `nguoiduyet`, `ghichu`) VALUES
-(1, '20123457', 2, 'duyet', 'xuất bản điểm giúp tôi', 'ok', NULL, '2026-03-08 01:47:00', '2026-03-08 08:47:27', '2', 'heheheh');
+(1, '20123457', 2, 'duyet', 'xuất bản điểm giúp tôi', 'ok', NULL, '2026-03-08 01:47:00', '2026-03-08 08:47:27', '2', 'heheheh'),
+(2, '20123456', 3, 'tuchoi', 'Xin yêu cầu ở KTX', 'Chưa thể đăng ký được em nhé', NULL, '2026-03-14 03:52:15', '2026-03-14 10:54:30', '1', '');
 
 -- --------------------------------------------------------
 
@@ -139,8 +118,11 @@ CREATE TABLE `diemrenluyen` (
 --
 
 INSERT INTO `diemrenluyen` (`madiemrenluyen`, `mssv`, `mahocky`, `diemhoatdong`, `diemhoctap`, `diemkyluat`, `diemtong`, `xeploai`, `ghichu`, `nguoitao`, `created_at`, `updated_at`) VALUES
-(1, '20123456', 1, 16, 10, 13, 39, 'Chưa đạt', 'Điểm chính thức (CTSV duyệt). Tổng điểm: 39', NULL, '2026-03-01 04:52:48', '2026-03-01 04:52:48'),
-(2, '20123456', 2, 0, 0, 20, 20, 'Chưa đạt', NULL, NULL, '2026-03-08 01:34:34', '2026-03-08 01:34:34');
+(1, '20123456', 1, 0, 0, 20, 20, 'Chưa đạt', 'Điểm chính thức (CTSV duyệt). Tổng điểm: 39', NULL, '2026-03-01 04:52:48', '2026-03-20 18:29:51'),
+(5, '20123456', 3, 10, 6, 19, 79, 'Khá', 'CTSV: tốt', NULL, '2026-03-20 17:32:40', '2026-03-20 18:38:10'),
+(6, '20123456', 4, 0, 0, 0, 95, 'Xuất sắc', 'CTSV: tốt', NULL, '2026-03-20 18:02:56', '2026-03-20 18:27:37'),
+(8, '20123456', 2, 0, 0, 20, 20, 'Chưa đạt', NULL, NULL, '2026-03-20 18:29:29', '2026-03-20 18:29:29'),
+(9, '20123459', 3, 0, 0, 0, 45, 'Chưa đạt', 'CTSV: fail', NULL, '2026-03-20 18:56:59', '2026-03-20 18:56:59');
 
 -- --------------------------------------------------------
 
@@ -167,17 +149,21 @@ CREATE TABLE `drl_tudanhgia` (
   `nhan_xet_ctsv` text DEFAULT NULL,
   `nguoi_duyet_ctsv` varchar(50) DEFAULT NULL,
   `ngay_duyet_ctsv` datetime DEFAULT NULL,
-  `trangthai` enum('choduyet','daduyet','bituchoi') DEFAULT 'choduyet',
-  `ngay_tao` timestamp NOT NULL DEFAULT current_timestamp()
+  `trangthai` enum('choduyet','daduyet','bituchoi','chokhoaduyet') NOT NULL DEFAULT 'choduyet',
+  `ngay_tao` timestamp NOT NULL DEFAULT current_timestamp(),
+  `diem_khoa` int(11) DEFAULT NULL,
+  `nhan_xet_khoa` text DEFAULT NULL,
+  `nguoi_duyet_khoa` varchar(50) DEFAULT NULL,
+  `ngay_duyet_khoa` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `drl_tudanhgia`
 --
 
-INSERT INTO `drl_tudanhgia` (`id`, `mssv`, `mahocky`, `diem_ythuc_hoc_tap`, `diem_noi_quy`, `diem_hoat_dong`, `diem_cong_dong`, `diem_khen_thuong_ky_luat`, `tong_diem`, `nhan_xet_sv`, `diem_cvht`, `nhan_xet_cvht`, `nguoi_duyet_cvht`, `ngay_duyet_cvht`, `diem_ctsv`, `nhan_xet_ctsv`, `nguoi_duyet_ctsv`, `ngay_duyet_ctsv`, `trangthai`, `ngay_tao`) VALUES
-(1, '20123456', 1, 10, 7, 7, 9, 6, 39, '', 39, 'duyệt', '3', '2026-03-01 11:51:49', 39, 'duyệt cuối', '2', '2026-03-01 11:52:48', 'daduyet', '2026-03-01 04:43:53'),
-(2, '20123456', 2, 10, 7, 7, 9, 6, 39, '', 39, 'mày bịp à', '1', '2026-03-08 08:34:51', 39, 'ok', '1', '2026-03-08 08:35:36', 'daduyet', '2026-03-08 01:28:15');
+INSERT INTO `drl_tudanhgia` (`id`, `mssv`, `mahocky`, `diem_ythuc_hoc_tap`, `diem_noi_quy`, `diem_hoat_dong`, `diem_cong_dong`, `diem_khen_thuong_ky_luat`, `tong_diem`, `nhan_xet_sv`, `diem_cvht`, `nhan_xet_cvht`, `nguoi_duyet_cvht`, `ngay_duyet_cvht`, `diem_ctsv`, `nhan_xet_ctsv`, `nguoi_duyet_ctsv`, `ngay_duyet_ctsv`, `trangthai`, `ngay_tao`, `diem_khoa`, `nhan_xet_khoa`, `nguoi_duyet_khoa`, `ngay_duyet_khoa`) VALUES
+(5, '20123456', 3, 9, 25, 11, 22, 7, 74, '......................', 79, 'tốt', 'nguyenvanc', '2026-03-21 01:36:39', 79, 'tốt', 'ctsv', '2026-03-21 01:38:10', 'daduyet', '2026-03-20 18:35:57', 67, 'jjjjjjjj', 'khoa_cntt', '2026-03-21 01:37:16'),
+(6, '20123459', 3, 9, 6, 12, 24, 10, 61, '......................', 78, 'tốt mà', 'tranthid', '2026-03-21 01:55:35', 45, 'fail', 'ctsv', '2026-03-21 01:56:59', 'daduyet', '2026-03-20 18:55:02', 88, 'gggg', 'khoa_qtkd', '2026-03-21 01:56:17');
 
 -- --------------------------------------------------------
 
@@ -318,7 +304,8 @@ CREATE TABLE `khenthuong_kyluat` (
 --
 
 INSERT INTO `khenthuong_kyluat` (`id`, `mssv`, `mahocky`, `loai`, `noidung`, `hinhthuc`, `soquyetdinh`, `ngayquyetdinh`, `nguoilap`, `ghichu`, `created_at`) VALUES
-(1, '20123458', 1, 'canhcao', 'ngu lắm nha', 'kiểm điểm', '124', '2026-03-13', NULL, '', '2026-03-13 15:59:17');
+(1, '20123458', 1, 'canhcao', 'Nợ môn trên 10 tín', 'kiểm điểm', '124', '2026-03-12', NULL, '', '2026-03-13 15:59:17'),
+(2, '20123456', 3, 'khenthuong', 'KHEN THUONG HK1', 'HK1', '23', '2026-02-20', NULL, '', '2026-03-14 07:36:25');
 
 -- --------------------------------------------------------
 
@@ -414,22 +401,6 @@ CREATE TABLE `log_suadiem` (
   `lydo` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Đang đổ dữ liệu cho bảng `log_suadiem`
---
-
-INSERT INTO `log_suadiem` (`id`, `mabangdiem`, `loaidiem`, `giatricu`, `giatrimoi`, `nguoisua`, `ngaysua`, `lydo`) VALUES
-(1, 4, 'diemchuyencan', NULL, 10.00, 'system', '2026-03-01 05:17:57', 'Sửa điểm'),
-(2, 4, 'diemgiuaky', NULL, 8.00, 'system', '2026-03-01 05:17:57', 'Sửa điểm'),
-(3, 4, 'diemcuoiky', NULL, 9.00, 'system', '2026-03-01 05:17:57', 'Sửa điểm'),
-(4, 6, 'diemchuyencan', NULL, 10.00, 'system', '2026-03-08 01:27:23', 'Sửa điểm'),
-(5, 6, 'diemgiuaky', NULL, 8.00, 'system', '2026-03-08 01:27:23', 'Sửa điểm'),
-(6, 6, 'diemcuoiky', NULL, 9.00, 'system', '2026-03-08 01:27:23', 'Sửa điểm'),
-(7, 6, 'diemgiuaky', 8.00, 9.00, 'system', '2026-03-08 01:29:06', 'Sửa điểm'),
-(8, 8, 'diemchuyencan', NULL, 9.00, 'system', '2026-03-08 01:44:04', 'Sửa điểm'),
-(9, 8, 'diemgiuaky', NULL, 8.00, 'system', '2026-03-08 01:44:04', 'Sửa điểm'),
-(10, 8, 'diemcuoiky', NULL, 10.00, 'system', '2026-03-08 01:44:04', 'Sửa điểm');
-
 -- --------------------------------------------------------
 
 --
@@ -470,19 +441,18 @@ CREATE TABLE `lophocphan` (
   `soluongdadangky` int(11) DEFAULT 0,
   `trangthai` enum('dangmo','dong','huy') DEFAULT 'dangmo',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `ngaymodangky` datetime DEFAULT NULL COMMENT 'Th???i ??i???m m??? ????ng k??',
+  `ngaykhoadangky` datetime DEFAULT NULL COMMENT 'H???t h???n ????ng k??'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `lophocphan`
 --
 
-INSERT INTO `lophocphan` (`malophocphan`, `mamonhoc`, `mahocky`, `magiaovien`, `maphong`, `lichhoc`, `sogiohoc`, `soluongtoida`, `soluongdadangky`, `trangthai`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 1, 'A101', 'Thứ 2 - 7h30', 45, 60, 0, 'dangmo', '2026-03-01 04:27:39', '2026-03-01 04:27:39'),
-(2, 2, 1, 2, 'A102', 'Thứ 3 - 9h30', 45, 60, 1, 'dangmo', '2026-03-01 04:27:39', '2026-03-13 17:04:37'),
-(3, 3, 3, 1, 'B201', 'Thứ 4 - 13h30', 45, 40, 3, 'dangmo', '2026-03-01 04:27:39', '2026-03-13 17:04:44'),
-(4, 2, 1, 1, 'A101', '9h', NULL, 60, 1, 'dangmo', '2026-03-01 04:59:02', '2026-03-13 17:04:09'),
-(5, 1, 1, 2, 'A102', '7h', NULL, 60, 0, 'dangmo', '2026-03-01 04:59:29', '2026-03-01 04:59:29');
+INSERT INTO `lophocphan` (`malophocphan`, `mamonhoc`, `mahocky`, `magiaovien`, `maphong`, `lichhoc`, `sogiohoc`, `soluongtoida`, `soluongdadangky`, `trangthai`, `created_at`, `updated_at`, `ngaymodangky`, `ngaykhoadangky`) VALUES
+(6, 2, 3, 1, 'A101', 'T2 9h', NULL, 60, 0, 'dangmo', '2026-03-14 04:57:48', '2026-03-14 04:57:48', NULL, NULL),
+(7, 1, 3, 2, 'B201', 't7 9h', NULL, 60, 0, 'dangmo', '2026-03-14 04:59:18', '2026-03-14 04:59:18', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -556,15 +526,6 @@ CREATE TABLE `phuckhao` (
   `ngaygui` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Đang đổ dữ liệu cho bảng `phuckhao`
---
-
-INSERT INTO `phuckhao` (`maphuckhao`, `mabangdiem`, `mssv`, `malophocphan`, `lydo`, `trangthai`, `ketqua`, `nguoiduyet`, `ngayduyet`, `ngaygui`) VALUES
-(1, 4, '20123456', 1, 'sai điẻm', 'chapnhan', 'em kiểm tra lại cách tính cho chuẩn nhé', NULL, '2026-03-01 12:33:22', '2026-03-01 05:32:57'),
-(3, 2, '20123456', 2, 'sai điểm rồi ìa', 'chapnhan', 'ok', NULL, '2026-03-08 08:32:56', '2026-03-08 01:31:27'),
-(4, 3, '20123457', 2, 'hehehe', 'cho', NULL, NULL, NULL, '2026-03-08 01:44:54');
-
 -- --------------------------------------------------------
 
 --
@@ -594,7 +555,7 @@ CREATE TABLE `sinhvien` (
 --
 
 INSERT INTO `sinhvien` (`mssv`, `hoten`, `malop`, `makhoa`, `diachi`, `ngaysinh`, `quequan`, `tinhtrang`, `gioitinh`, `khoahoc`, `bacdaotao`, `nganh`, `password`, `created_at`, `updated_at`) VALUES
-('20123456', 'Trần Minh Quân', 'CNTT01', 'CNTT', 'HCM', '2004-08-03', 'HCM', 'Đang học', 'Nam', '2022', 'Đại học', 'CNTT', '123456', '2026-03-01 04:27:39', '2026-03-13 15:58:13'),
+('20123456', 'Trần Minh Quân', 'CNTT01', 'CNTT', 'HCM', '2004-08-02', 'HCM', 'Đang học', 'Nam', '2022', 'Đại học', 'CNTT', '123456', '2026-03-01 04:27:39', '2026-03-17 09:34:49'),
 ('20123457', 'Lê Thị Hà', 'CNTT01', 'CNTT', NULL, NULL, NULL, 'Đang học', NULL, NULL, NULL, NULL, '123456', '2026-03-01 04:27:39', '2026-03-01 04:27:39'),
 ('20123458', 'Nguyễn Văn A', 'CNTT02', 'CNTT', NULL, NULL, NULL, 'Đang học', NULL, NULL, NULL, NULL, '123456', '2026-03-01 04:27:39', '2026-03-01 04:27:39'),
 ('20123459', 'Phạm Thị B', 'QTKD01', 'QTKD', NULL, NULL, NULL, 'Đang học', NULL, NULL, NULL, NULL, '123456', '2026-03-01 04:27:39', '2026-03-01 04:27:39'),
@@ -646,7 +607,8 @@ INSERT INTO `thamgiahoatdong` (`mathamgia`, `mahoatdong`, `mssv`, `vaitro`, `tra
 (4, 6, '20123456', 'thamgia', 'duocduyet', 0, NULL, '2026-03-03 18:01:31', '2026-03-04 01:02:20', 'ctsv', '2026-03-03 18:01:31', '2026-03-03 18:02:20'),
 (5, 6, '20123457', 'thamgia', 'dangky', 0, NULL, '2026-03-03 18:01:58', NULL, NULL, '2026-03-03 18:01:58', '2026-03-03 18:01:58'),
 (7, 8, '20123457', 'thamgia', 'duocduyet', 0, NULL, '2026-03-08 01:39:20', '2026-03-08 08:40:09', 'ctsv', '2026-03-08 01:39:20', '2026-03-08 01:40:09'),
-(8, 8, '2254810304', 'thamgia', 'dangky', 0, NULL, '2026-03-13 17:16:11', NULL, NULL, '2026-03-13 17:16:11', '2026-03-13 17:16:11');
+(8, 8, '2254810304', 'thamgia', 'dangky', 0, NULL, '2026-03-13 17:16:11', NULL, NULL, '2026-03-13 17:16:11', '2026-03-13 17:16:11'),
+(9, 8, '20123456', 'thamgia', 'dangky', 0, NULL, '2026-03-14 03:50:46', NULL, NULL, '2026-03-14 03:50:46', '2026-03-14 03:50:46');
 
 -- --------------------------------------------------------
 
@@ -674,7 +636,11 @@ CREATE TABLE `thongbao` (
 INSERT INTO `thongbao` (`mathongbao`, `tieude`, `noidung`, `loai`, `malop`, `mahocky`, `han_xem`, `guiemail`, `nguoitao`, `ngaytao`) VALUES
 (1, 'hii', 'hhhhhh', 'lichthi', NULL, NULL, '2026-03-04', 0, '2', '2026-03-03 18:05:37'),
 (2, 'hehehe', 'alo alo', 'lichthi', NULL, NULL, '2026-03-19', 0, '2', '2026-03-10 16:50:08'),
-(3, 'Thông báo Cảnh cáo', '[MSSV 20123458] Bạn đã nhận Cảnh cáo: ngu lắm nha', 'lop', 'CNTT02', NULL, NULL, 0, '2', '2026-03-13 15:59:17');
+(3, 'Thông báo Cảnh cáo', '[MSSV 20123458] Bạn đã nhận Cảnh cáo: ngu lắm nha', 'lop', 'CNTT02', NULL, NULL, 0, '2', '2026-03-13 15:59:17'),
+(4, 'Lịch thi GDTC Bóng chuyền', 'THI CUỐI KỲ I', 'truong', NULL, NULL, '2025-04-23', 0, '1', '2026-03-14 03:55:26'),
+(5, 'Nhắc nhở hoàn thành BHYT', 'BHYT', 'truong', NULL, NULL, '2025-03-20', 0, '2', '2026-03-14 06:47:56'),
+(6, 'Thực hiện đánh giá điểm rèn luyện Hk1', 'ĐRL', 'lop', 'QTKD01', NULL, '2026-03-19', 0, '2', '2026-03-14 07:27:20'),
+(7, 'Thông báo Khen thưởng', '[MSSV 20123456] Bạn đã nhận Khen thưởng: KHEN THUONG HK1', 'lop', 'CNTT01', NULL, NULL, 0, '1', '2026-03-14 07:36:25');
 
 -- --------------------------------------------------------
 
@@ -716,21 +682,24 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `hoten` varchar(255) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `role` enum('admin','giangvien','ctsv') NOT NULL,
+  `role` enum('admin','giangvien','ctsv','khoa') NOT NULL DEFAULT 'giangvien',
   `magiaovien` int(11) DEFAULT NULL,
   `status` enum('active','inactive') DEFAULT 'active',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `makhoa` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `password`, `hoten`, `email`, `role`, `magiaovien`, `status`, `created_at`) VALUES
-(1, 'admin', 'admin123', 'Quản Trị Viên', 'admin@hva.edu.vn', 'admin', NULL, 'active', '2026-03-01 04:27:39'),
-(2, 'ctsv', 'ctsv123', 'Phòng CTSV', 'ctsv@hva.edu.vn', 'ctsv', NULL, 'active', '2026-03-01 04:27:39'),
-(3, 'nguyenvanc', 'password123', 'TS. Nguyễn Văn C', 'nguyenvanc@hva.edu.vn', 'giangvien', 1, 'active', '2026-03-01 04:27:39'),
-(4, 'tranthid', 'password123', 'TS. Trần Thị D', 'tranthid@hva.edu.vn', 'giangvien', 2, 'active', '2026-03-01 04:27:39');
+INSERT INTO `users` (`id`, `username`, `password`, `hoten`, `email`, `role`, `magiaovien`, `status`, `created_at`, `makhoa`) VALUES
+(1, 'admin', 'admin123', 'Quản Trị Viên', 'admin@hva.edu.vn', 'admin', NULL, 'active', '2026-03-01 04:27:39', NULL),
+(2, 'ctsv', 'ctsv123', 'Phòng CTSV', 'ctsv@hva.edu.vn', 'ctsv', NULL, 'active', '2026-03-01 04:27:39', NULL),
+(3, 'nguyenvanc', 'password123', 'TS. Nguyễn Văn C', 'nguyenvanc@hva.edu.vn', 'giangvien', 1, 'active', '2026-03-01 04:27:39', 'CNTT'),
+(4, 'tranthid', 'password123', 'TS. Trần Thị D', 'tranthid@hva.edu.vn', 'giangvien', 2, 'active', '2026-03-01 04:27:39', 'QTKD'),
+(5, 'khoa_cntt', '123456', 'Ban Quản Lý Khoa CNTT', 'khoa.cntt@hva.edu.vn', 'khoa', NULL, 'active', '2026-03-20 17:21:13', 'CNTT'),
+(6, 'khoa_qtkd', '123456', 'Ban Quản Lý Khoa QTKD', 'khoa.qtkd@hva.edu.vn', 'khoa', NULL, 'active', '2026-03-20 17:21:13', 'QTKD');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -746,13 +715,11 @@ ALTER TABLE `bangdiem`
   ADD KEY `idx_malophocphan` (`malophocphan`);
 
 --
--- Chỉ mục cho bảng `dangkyhocphan`
+-- Chỉ mục cho bảng `config`
 --
-ALTER TABLE `dangkyhocphan`
-  ADD PRIMARY KEY (`madangky`),
-  ADD UNIQUE KEY `unique_dangky` (`mssv`,`malophocphan`),
-  ADD KEY `idx_mssv` (`mssv`),
-  ADD KEY `idx_malophocphan` (`malophocphan`);
+ALTER TABLE `config`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `config_key` (`config_key`);
 
 --
 -- Chỉ mục cho bảng `dichvu_sinhvien`
@@ -948,28 +915,28 @@ ALTER TABLE `bangdiem`
   MODIFY `mabangdiem` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
--- AUTO_INCREMENT cho bảng `dangkyhocphan`
+-- AUTO_INCREMENT cho bảng `config`
 --
-ALTER TABLE `dangkyhocphan`
-  MODIFY `madangky` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+ALTER TABLE `config`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `dichvu_sinhvien`
 --
 ALTER TABLE `dichvu_sinhvien`
-  MODIFY `madon` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `madon` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `diemrenluyen`
 --
 ALTER TABLE `diemrenluyen`
-  MODIFY `madiemrenluyen` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `madiemrenluyen` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT cho bảng `drl_tudanhgia`
 --
 ALTER TABLE `drl_tudanhgia`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT cho bảng `giangvien`
@@ -1005,7 +972,7 @@ ALTER TABLE `hocphi_payments`
 -- AUTO_INCREMENT cho bảng `khenthuong_kyluat`
 --
 ALTER TABLE `khenthuong_kyluat`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `loaihoatdong`
@@ -1029,7 +996,7 @@ ALTER TABLE `log_suadiem`
 -- AUTO_INCREMENT cho bảng `lophocphan`
 --
 ALTER TABLE `lophocphan`
-  MODIFY `malophocphan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `malophocphan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT cho bảng `monhoc`
@@ -1053,13 +1020,13 @@ ALTER TABLE `sinhvien_hocbong`
 -- AUTO_INCREMENT cho bảng `thamgiahoatdong`
 --
 ALTER TABLE `thamgiahoatdong`
-  MODIFY `mathamgia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `mathamgia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT cho bảng `thongbao`
 --
 ALTER TABLE `thongbao`
-  MODIFY `mathongbao` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `mathongbao` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT cho bảng `tieuchi_diemrenluyen`
@@ -1071,7 +1038,7 @@ ALTER TABLE `tieuchi_diemrenluyen`
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
@@ -1083,13 +1050,6 @@ ALTER TABLE `users`
 ALTER TABLE `bangdiem`
   ADD CONSTRAINT `bangdiem_ibfk_1` FOREIGN KEY (`malophocphan`) REFERENCES `lophocphan` (`malophocphan`) ON DELETE CASCADE,
   ADD CONSTRAINT `bangdiem_ibfk_2` FOREIGN KEY (`mssv`) REFERENCES `sinhvien` (`mssv`) ON DELETE CASCADE;
-
---
--- Các ràng buộc cho bảng `dangkyhocphan`
---
-ALTER TABLE `dangkyhocphan`
-  ADD CONSTRAINT `dangkyhocphan_ibfk_1` FOREIGN KEY (`mssv`) REFERENCES `sinhvien` (`mssv`) ON DELETE CASCADE,
-  ADD CONSTRAINT `dangkyhocphan_ibfk_2` FOREIGN KEY (`malophocphan`) REFERENCES `lophocphan` (`malophocphan`) ON DELETE CASCADE;
 
 --
 -- Các ràng buộc cho bảng `dichvu_sinhvien`
