@@ -12,6 +12,17 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  // Gửi makhoa và role trong header để backend có thể phân quyền
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.role) config.headers['x-user-role'] = user.role;
+      if (user.makhoa) config.headers['x-user-makhoa'] = user.makhoa;
+      if (user.id) config.headers['x-user-id'] = user.id;
+      if (user.username) config.headers['x-user-username'] = user.username;
+    } catch {}
+  }
   return config;
 });
 
@@ -94,6 +105,7 @@ export const studentProfileAPI = {
 export const lookupAPI = {
   getTieuChiDRL: () => api.get('/lookup/tieu-chi-drl'),
   getLop: () => api.get('/lookup/lop'),
+  getLopByKhoa: (makhoa) => api.get('/lookup/lop-by-khoa', { params: makhoa ? { makhoa } : {} }),
   getHocKy: () => api.get('/lookup/hocky'),
   getGiangVien: () => api.get('/lookup/giangvien'),
   getStudentByMssv: (mssv) => api.get(`/lookup/student/${mssv}`),
@@ -149,6 +161,15 @@ export const drlSelfAPI = {
   getByClassAndSemester: (malop, mahocky) =>
     api.get(`/drl-self/class/${malop}/semester/${mahocky}`),
   review: (id, data) => api.put(`/drl-self/${id}/review`, data),
+  manage: (filters = {}) => api.get('/drl-self/manage', { params: filters }),
+  getKhoaList: () => api.get('/drl-self/manage/khoa-list'),
+  parseExcel: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/drl-self/parse-excel', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 export default api;

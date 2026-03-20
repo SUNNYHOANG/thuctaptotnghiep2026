@@ -8,7 +8,8 @@ function getRoleName(role) {
     admin: 'Quản trị viên',
     giangvien: 'Giảng viên',
     ctsv: 'Phòng CTSV',
-    sinhvien: 'Sinh viên'
+    sinhvien: 'Sinh viên',
+    khoa: 'Ban Quản Lý Khoa'
   };
   return roles[role] || role || 'Người dùng';
 }
@@ -19,11 +20,14 @@ function getInitials(name) {
   return parts.map((p) => p[0]?.toUpperCase()).join('') || 'U';
 }
 
+const LOGO_HVA = '/logo-hva.png'; // Đặt file logo Học viện Hàng không VN tại frontend/public/logo-hva.png
+
 const AppShell = ({ children }) => {
   const { user, logout, hasRole, hasAnyRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   const navItems = useMemo(() => {
     if (hasRole('admin')) {
@@ -33,15 +37,12 @@ const AppShell = ({ children }) => {
         { label: 'Môn học', path: '/admin/courses' },
         { label: 'Mở/Đóng đăng ký', path: '/admin/course-availability' },
         { label: 'Hoạt động', path: '/admin/activities' },
-        { label: 'Điểm danh khuôn mặt', path: '/admin/face-attendance' },
-        { label: 'Lịch sử điểm danh', path: '/admin/attendance' },
         { label: 'Điểm rèn luyện', path: '/admin/scores' },
         { label: 'Học bổng', path: '/admin/scholarships' },
         { label: 'Khen thưởng / Kỷ luật', path: '/admin/rewards' },
         { label: 'Dịch vụ', path: '/admin/services' },
         { label: 'Báo cáo', path: '/admin/reports' },
-        { label: 'Thông báo', path: '/admin/thong-bao' },
-        { label: 'Thông báo học phí', path: '/admin/fee-notifications' }
+        { label: 'Thông báo', path: '/admin/thong-bao' }
       ];
     }
     if (hasRole('giangvien')) {
@@ -64,8 +65,16 @@ const AppShell = ({ children }) => {
         { label: 'Học bổng', path: '/ctsv/hoc-bong' },
         { label: 'Khen thưởng / Kỷ luật', path: '/ctsv/khen-thuong-ky-luat' },
         { label: 'Điểm rèn luyện', path: '/ctsv/diem-ren-luyen' },
+        { label: 'Quản lý điểm rèn luyện', path: '/ctsv/quan-ly-diem-ren-luyen' },
         { label: 'Tự đánh giá DRL (SV)', path: '/ctsv/diem-ren-luyen-tu-danh-gia' },
         { label: 'Đăng thông báo', path: '/admin/thong-bao' }
+      ];
+    }
+    if (hasRole('khoa')) {
+      return [
+        { label: 'Tổng quan', path: '/khoa/dashboard' },
+        { label: 'Duyệt Phiếu DRL', path: '/khoa/drl-review' },
+        { label: 'Danh Sách Sinh Viên', path: '/khoa/students' },
       ];
     }
     // sinhvien (default)
@@ -73,7 +82,6 @@ const AppShell = ({ children }) => {
       { label: 'Trang chủ', path: '/' },
       { label: 'Dashboard', path: '/dashboard' },
       { label: 'Hồ sơ cá nhân', path: '/ho-so-ca-nhan' },
-      { label: 'Đăng ký môn học', path: '/dang-ky-mon-hoc' },
       { label: 'Điểm rèn luyện', path: '/diem-ren-luyen' },
       { label: 'Tự đánh giá DRL', path: '/diem-ren-luyen/tu-danh-gia' },
       { label: 'Tiêu chí đánh giá DRL', path: '/tieu-chi-drl' },
@@ -84,7 +92,6 @@ const AppShell = ({ children }) => {
       { label: 'Phúc khảo điểm', path: '/phuc-khao' },
       { label: 'Khen thưởng / Kỷ luật', path: '/khen-thuong-ky-luat' },
       { label: 'Dịch vụ', path: '/dich-vu' },
-      { label: 'Học phí', path: '/hoc-phi' },
       { label: 'Học bổng', path: '/hoc-bong' },
       { label: 'Thông báo', path: '/thong-bao' }
     ];
@@ -96,9 +103,7 @@ const AppShell = ({ children }) => {
       ['/admin/dashboard', 'Bảng điều khiển'],
       ['/giangvien/dashboard', 'Bảng điều khiển'],
       ['/ctsv/dashboard', 'Bảng điều khiển'],
-      ['/dang-ky-mon-hoc', 'Đăng ký môn học'],
       ['/diem-ren-luyen', 'Điểm rèn luyện'],
-      ['/hoc-phi', 'Học phí'],
       ['/thong-bao', 'Thông báo']
     ];
     const found = map.find(([p]) => location.pathname.startsWith(p));
@@ -114,12 +119,23 @@ const AppShell = ({ children }) => {
     <div className="app-shell">
       <aside className={`app-sidebar ${mobileNavOpen ? 'open' : ''}`} aria-label="Điều hướng">
         <div className="app-sidebar__top">
-          <div className="app-brand" onClick={() => navigate(hasRole('admin') ? '/admin/dashboard' : '/')}>
-            <div className="app-brand__mark">SV</div>
-            <div className="app-brand__text">
-              <div className="app-brand__title">QL Công tác SV</div>
-              <div className="app-brand__subtitle">Điểm rèn luyện</div>
-            </div>
+          <div className="app-brand" onClick={() => navigate(hasRole('admin') ? '/admin/dashboard' : hasRole('khoa') ? '/khoa/dashboard' : '/')}>
+            {!logoError ? (
+              <img
+                src={LOGO_HVA}
+                alt="Học viện Hàng không Việt Nam"
+                className="app-brand__logo"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <>
+                <div className="app-brand__mark">SV</div>
+                <div className="app-brand__text">
+                  <div className="app-brand__title">QL Công tác SV</div>
+                  <div className="app-brand__subtitle">Điểm rèn luyện</div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -154,7 +170,10 @@ const AppShell = ({ children }) => {
           >
             ☰
           </button>
-          <div className="app-topbar__title">{title}</div>
+          <div className="app-topbar__brand">
+            <img src={LOGO_HVA} alt="HVA" className="app-topbar__logo" onError={(e) => { e.target.style.display = 'none'; }} />
+            <span className="app-topbar__title">{title}</span>
+          </div>
           <div className="app-topbar__spacer" />
           <div className="app-user">
             <div className="app-user__meta">

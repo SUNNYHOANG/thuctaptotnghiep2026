@@ -69,8 +69,19 @@ class Course {
   }
 
   static async getAvailableForRegistration(mahocky) {
-    const [rows] = await pool.execute(
-      `SELECT l.malophocphan, l.magiaovien, l.lichhoc, l.maphong, l.soluongtoida, 
+    const sqlWithDates = `SELECT l.malophocphan, l.magiaovien, l.lichhoc, l.maphong, l.soluongtoida, 
+              l.soluongdadangky, l.ngaymodangky, l.ngaykhoadangky,
+              m.mamonhoc, m.tenmonhoc, m.sotinchi, m.hocphi,
+              g.hoten AS tengiangvien, p.tenphong
+       FROM lophocphan l
+       JOIN monhoc m ON l.mamonhoc = m.mamonhoc
+       LEFT JOIN giangvien g ON l.magiaovien = g.magiaovien
+       LEFT JOIN phonghoc p ON l.maphong = p.maphong
+       WHERE l.mahocky = ? AND l.trangthai = 'dangmo'
+         AND (l.ngaymodangky IS NULL OR NOW() >= l.ngaymodangky)
+         AND (l.ngaykhoadangky IS NULL OR NOW() <= l.ngaykhoadangky)
+       ORDER BY m.tenmonhoc`;
+    const sqlWithoutDates = `SELECT l.malophocphan, l.magiaovien, l.lichhoc, l.maphong, l.soluongtoida, 
               l.soluongdadangky, m.mamonhoc, m.tenmonhoc, m.sotinchi, m.hocphi,
               g.hoten AS tengiangvien, p.tenphong
        FROM lophocphan l
@@ -78,10 +89,17 @@ class Course {
        LEFT JOIN giangvien g ON l.magiaovien = g.magiaovien
        LEFT JOIN phonghoc p ON l.maphong = p.maphong
        WHERE l.mahocky = ? AND l.trangthai = 'dangmo'
-       ORDER BY m.tenmonhoc`,
-      [mahocky]
-    );
-    return rows;
+       ORDER BY m.tenmonhoc`;
+    try {
+      const [rows] = await pool.execute(sqlWithDates, [mahocky]);
+      return rows;
+    } catch (err) {
+      if (err.code === 'ER_BAD_FIELD_ERROR' || err.message?.includes('ngaymodangky')) {
+        const [rows] = await pool.execute(sqlWithoutDates, [mahocky]);
+        return rows;
+      }
+      throw err;
+    }
   }
 }
 

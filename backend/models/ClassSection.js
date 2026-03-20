@@ -92,7 +92,9 @@ class ClassSection {
       'lichhoc',
       'sogiohoc',
       'soluongtoida',
-      'trangthai'
+      'trangthai',
+      'ngaymodangky',
+      'ngaykhoadangky'
     ];
     const fields = [];
     const values = [];

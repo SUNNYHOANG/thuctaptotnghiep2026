@@ -1,7 +1,42 @@
 import express from 'express';
+import pool from '../config/database.js';
 import Course from '../models/Course.js';
+import { requireRole } from '../middleware/requireRole.js';
 
 const router = express.Router();
+
+/** Học kỳ đang mở đăng ký (chỉ 1 học kỳ) - cho sinh viên */
+router.get('/current-registration-semester', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      "SELECT config_value FROM config WHERE config_key = 'hocky_dang_mo_dang_ky' LIMIT 1"
+    ).catch(() => [[]]);
+    const row = rows && rows[0];
+    const mahocky = row?.config_value != null && row?.config_value !== '' ? parseInt(row.config_value, 10) : null;
+    return res.json({ data: mahocky != null && !isNaN(mahocky) ? { mahocky } : null });
+  } catch (err) {
+    return res.json({ data: null });
+  }
+});
+
+/** Admin: đặt học kỳ đang mở đăng ký (chỉ 1 học kỳ) */
+router.post('/set-current-registration-semester', requireRole(['admin']), async (req, res) => {
+  try {
+    const { mahocky } = req.body;
+    await pool.execute(
+      "INSERT INTO config (config_key, config_value) VALUES ('hocky_dang_mo_dang_ky', ?) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)",
+      [mahocky != null ? String(mahocky) : null]
+    );
+    const [rows] = await pool.execute(
+      "SELECT config_value FROM config WHERE config_key = 'hocky_dang_mo_dang_ky' LIMIT 1"
+    );
+    const row = rows && rows[0];
+    const value = row?.config_value != null && row?.config_value !== '' ? parseInt(row.config_value, 10) : null;
+    return res.json({ data: value != null && !isNaN(value) ? { mahocky: value } : null });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 router.get('/', async (req, res) => {
   try {

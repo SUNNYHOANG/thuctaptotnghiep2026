@@ -53,18 +53,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/init-class-section/:malophoc', async (req, res) => {
-  try {
-    const result = await Grade.initFromEnrollment(
-      req.params.malophoc,
-      req.headers['x-user-id'] || 'system'
-    );
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
 router.put('/:id', async (req, res) => {
   try {
     const row = await Grade.updateGrade(

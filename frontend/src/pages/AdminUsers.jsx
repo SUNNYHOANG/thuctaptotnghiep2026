@@ -15,6 +15,7 @@ const AdminUsers = () => {
     hoten: '',
     email: '',
     role: 'giangvien',
+    makhoa: '',
     status: 'active'
   });
 
@@ -42,15 +43,20 @@ const AdminUsers = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = { ...formData };
+      // Chỉ gửi makhoa nếu role là 'khoa'
+      if (payload.role !== 'khoa') {
+        delete payload.makhoa;
+      }
       if (editingId) {
-        await adminAPIEndpoints.updateUser(editingId, formData);
+        await adminAPIEndpoints.updateUser(editingId, payload);
         alert('Cập nhật thành công');
       } else {
-        await adminAPIEndpoints.createUser(formData);
+        await adminAPIEndpoints.createUser(payload);
         alert('Thêm người dùng thành công');
       }
       setShowModal(false);
-      setFormData({ username: '', password: '', hoten: '', email: '', role: 'giangvien', status: 'active' });
+      setFormData({ username: '', password: '', hoten: '', email: '', role: 'giangvien', makhoa: '', status: 'active' });
       setEditingId(null);
       fetchUsers();
     } catch (err) {
@@ -59,7 +65,7 @@ const AdminUsers = () => {
   };
 
   const handleEdit = (user) => {
-    setFormData(user);
+    setFormData({ ...user, makhoa: user.makhoa || '', password: '' });
     setEditingId(user.id);
     setShowModal(true);
   };
@@ -78,8 +84,21 @@ const AdminUsers = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ username: '', password: '', hoten: '', email: '', role: 'giangvien', status: 'active' });
+    setFormData({ username: '', password: '', hoten: '', email: '', role: 'giangvien', makhoa: '', status: 'active' });
   };
+
+  const getRoleBadgeColor = (role) => {
+    const colors = {
+      admin: '#e74c3c',
+      giangvien: '#3498db',
+      ctsv: '#9b59b6',
+      khoa: '#e67e22',
+    };
+    return colors[role] || '#95a5a6';
+  };
+
+  // Hiển thị cột makhoa khi filter role='khoa'
+  const showMakhoaColumn = filters.role === 'khoa' || !filters.role;
 
   return (
     <div className="admin-page">
@@ -87,27 +106,27 @@ const AdminUsers = () => {
 
       {/* Tabs */}
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', borderBottom: '2px solid #ddd', paddingBottom: '10px' }}>
-        <button 
-          onClick={() => setUserType('staff')} 
-          style={{ 
-            padding: '10px 20px', 
-            background: userType === 'staff' ? '#3498db' : '#ecf0f1', 
+        <button
+          onClick={() => setUserType('staff')}
+          style={{
+            padding: '10px 20px',
+            background: userType === 'staff' ? '#3498db' : '#ecf0f1',
             color: userType === 'staff' ? 'white' : 'black',
-            border: 'none', 
-            borderRadius: '4px', 
+            border: 'none',
+            borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: 'bold'
           }}>
-          👔 Cán Bộ (Admin/GV)
+          👔 Cán Bộ (Admin/GV/CTSV/Khoa)
         </button>
-        <button 
-          onClick={() => setUserType('students')} 
-          style={{ 
-            padding: '10px 20px', 
-            background: userType === 'students' ? '#27ae60' : '#ecf0f1', 
+        <button
+          onClick={() => setUserType('students')}
+          style={{
+            padding: '10px 20px',
+            background: userType === 'students' ? '#27ae60' : '#ecf0f1',
             color: userType === 'students' ? 'white' : 'black',
-            border: 'none', 
-            borderRadius: '4px', 
+            border: 'none',
+            borderRadius: '4px',
             cursor: 'pointer',
             fontWeight: 'bold'
           }}>
@@ -123,6 +142,8 @@ const AdminUsers = () => {
               <option value="">Tất cả vai trò</option>
               <option value="admin">Admin</option>
               <option value="giangvien">Giảng viên</option>
+              <option value="ctsv">CTSV</option>
+              <option value="khoa">Khoa</option>
             </select>
             <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
               <option value="">Tất cả trạng thái</option>
@@ -154,6 +175,9 @@ const AdminUsers = () => {
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Họ Tên</th>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Email</th>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Vai Trò</th>
+                    {showMakhoaColumn && (
+                      <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Mã Khoa</th>
+                    )}
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Trạng Thái</th>
                     <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #ddd' }}>Hành Động</th>
                   </>
@@ -176,10 +200,13 @@ const AdminUsers = () => {
                       <td style={{ padding: '10px' }}>{user.hoten || '-'}</td>
                       <td style={{ padding: '10px' }}>{user.email || '-'}</td>
                       <td style={{ padding: '10px' }}>
-                        <span style={{ background: user.role === 'admin' ? '#e74c3c' : '#3498db', color: 'white', padding: '4px 8px', borderRadius: '4px' }}>
+                        <span style={{ background: getRoleBadgeColor(user.role), color: 'white', padding: '4px 8px', borderRadius: '4px' }}>
                           {user.role}
                         </span>
                       </td>
+                      {showMakhoaColumn && (
+                        <td style={{ padding: '10px' }}>{user.makhoa || '-'}</td>
+                      )}
                       <td style={{ padding: '10px' }}>
                         <span style={{ background: user.status === 'active' ? '#27ae60' : '#95a5a6', color: 'white', padding: '4px 8px', borderRadius: '4px' }}>
                           {user.status}
@@ -212,7 +239,7 @@ const AdminUsers = () => {
       {/* Modal */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', padding: '30px', borderRadius: '8px', width: '90%', maxWidth: '500px' }}>
+          <div style={{ background: 'white', padding: '30px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3>{editingId ? 'Cập Nhật Người Dùng' : 'Thêm Người Dùng'}</h3>
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '15px' }}>
@@ -238,8 +265,25 @@ const AdminUsers = () => {
                 <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
                   <option value="admin">Admin</option>
                   <option value="giangvien">Giảng Viên</option>
+                  <option value="ctsv">CTSV</option>
+                  <option value="khoa">Khoa</option>
                 </select>
               </div>
+              {/* Field makhoa bắt buộc khi role='khoa' */}
+              {formData.role === 'khoa' && (
+                <div style={{ marginBottom: '15px' }}>
+                  <label>Mã Khoa <span style={{ color: 'red' }}>*</span></label>
+                  <input
+                    type="text"
+                    value={formData.makhoa}
+                    onChange={(e) => setFormData({ ...formData, makhoa: e.target.value })}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                    placeholder="Nhập mã khoa (vd: CNTT, QTKD)"
+                    required
+                  />
+                  <small style={{ color: '#666' }}>Mã khoa phải tồn tại trong hệ thống sinh viên</small>
+                </div>
+              )}
               <div style={{ marginBottom: '15px' }}>
                 <label>Trạng Thái</label>
                 <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>

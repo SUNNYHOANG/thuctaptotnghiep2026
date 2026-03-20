@@ -45,9 +45,7 @@ const AdminDashboard = () => {
     { id: 5, name: 'Quản lý học bổng', icon: '🏆', path: '/admin/scholarships', color: '#8e44ad' },
     { id: 6, name: 'Quản lý khen thưởng', icon: '⭐', path: '/admin/rewards', color: '#2980b9' },
     { id: 7, name: 'Quản lý dịch vụ', icon: '🛠️', path: '/admin/services', color: '#c0392b' },
-    { id: 8, name: 'Thông báo học phí', icon: '💰', path: '/admin/fee-notifications', color: '#16a085' },
-    { id: 9, name: 'Lịch sử điểm danh (khuôn mặt)', icon: '📸', path: '/admin/attendance', color: '#9b59b6' },
-    { id: 10, name: 'Báo cáo & thống kê', icon: '📈', path: '/admin/reports', color: '#27ae60' }
+    { id: 8, name: 'Báo cáo & thống kê', icon: '📈', path: '/admin/reports', color: '#27ae60' }
   ];
 
   return (

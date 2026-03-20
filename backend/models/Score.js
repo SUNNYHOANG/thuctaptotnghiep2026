@@ -95,6 +95,37 @@ class Score {
     return rows;
   }
 
+  // Cập nhật điểm chính thức từ CTSV (diem_ctsv là điểm tổng cuối cùng)
+  static async updateScoreFromCtsv(mssv, mahocky, diemCtsv, ghichu = null) {
+    const diemtong = Math.min(100, Math.max(0, Number(diemCtsv) || 0));
+    let xeploai = 'Chưa đạt';
+    if (diemtong >= 90) xeploai = 'Xuất sắc';
+    else if (diemtong >= 80) xeploai = 'Tốt';
+    else if (diemtong >= 70) xeploai = 'Khá';
+    else if (diemtong >= 60) xeploai = 'Trung bình';
+    else if (diemtong >= 50) xeploai = 'Yếu';
+
+    const [existing] = await pool.execute(
+      'SELECT * FROM diemrenluyen WHERE mssv = ? AND mahocky = ?',
+      [mssv, mahocky]
+    );
+
+    if (existing.length > 0) {
+      await pool.execute(
+        `UPDATE diemrenluyen SET diemtong = ?, xeploai = ?, ghichu = ? WHERE mssv = ? AND mahocky = ?`,
+        [diemtong, xeploai, ghichu, mssv, mahocky]
+      );
+    } else {
+      await pool.execute(
+        `INSERT INTO diemrenluyen (mssv, mahocky, diemhoatdong, diemhoctap, diemkyluat, diemtong, xeploai, ghichu)
+         VALUES (?, ?, 0, 0, 0, ?, ?, ?)`,
+        [mssv, mahocky, diemtong, xeploai, ghichu]
+      );
+    }
+
+    return this.getByStudentAndSemester(mssv, mahocky);
+  }
+
   // Cập nhật điểm thủ công (cho admin)
   static async updateScore(mssv, mahocky, data) {
     const diemhoatdong = data.diemhoatdong == null ? 0 : data.diemhoatdong;

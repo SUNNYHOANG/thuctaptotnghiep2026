@@ -10,14 +10,12 @@ router.get('/admin-stats', async (req, res) => {
     const [students] = await pool.execute('SELECT COUNT(*) as cnt FROM sinhvien');
     const [teachers] = await pool.execute('SELECT COUNT(*) as cnt FROM giangvien');
     const [courses] = await pool.execute('SELECT COUNT(*) as cnt FROM monhoc');
-    const [enrollments] = await pool.execute('SELECT COUNT(*) as cnt FROM dangkyhocphan');
     
     res.json({
       totalUsers: users[0].cnt,
       totalStudents: students[0].cnt,
       totalTeachers: teachers[0].cnt,
-      totalCourses: courses[0].cnt,
-      totalEnrollments: enrollments[0].cnt
+      totalCourses: courses[0].cnt
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -94,13 +92,55 @@ router.get('/tieu-chi-drl', async (req, res) => {
   }
 });
 
-// Danh sách lớp (lớp hành chính - để GV chọn lớp xem SV)
+// Danh sách lớp theo khoa (GV chỉ thấy lớp của khoa mình)
+router.get('/lop-by-khoa', async (req, res) => {
+  try {
+    const { makhoa } = req.query;
+    let rows = [];
+    const table = await (async () => {
+      try { await pool.execute('SELECT 1 FROM lophanhchinh LIMIT 1'); return 'lophanhchinh'; }
+      catch { return 'lophoc'; }
+    })();
+    if (makhoa) {
+      [rows] = await pool.execute(
+        `SELECT malop, tenlop FROM ${table} WHERE makhoa = ? ORDER BY malop`,
+        [makhoa]
+      );
+      // fallback: lọc qua bảng sinhvien nếu bảng lớp không có cột makhoa
+      if (rows.length === 0) {
+        [rows] = await pool.execute(
+          `SELECT DISTINCT s.malop, l.tenlop FROM sinhvien s
+           LEFT JOIN ${table} l ON s.malop = l.malop
+           WHERE s.makhoa = ? ORDER BY s.malop`,
+          [makhoa]
+        );
+      }
+    } else {
+      [rows] = await pool.execute(`SELECT malop, tenlop FROM ${table} ORDER BY malop`);
+    }
+    res.json({ data: rows || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Danh sách lớp (lớp hành chính - để GV/CTSV chọn lớp gửi thông báo)
+// Hỗ trợ cả bảng lophanhchinh (UPDATE_ALL_DATABASE) và lophoc (setup-complete-v2)
 router.get('/lop', async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      'SELECT malop, tenlop FROM lophanhchinh ORDER BY malop'
-    );
-    res.json({ data: rows });
+    let rows = [];
+    try {
+      [rows] = await pool.execute(
+        'SELECT malop, tenlop FROM lophanhchinh ORDER BY malop'
+      );
+    } catch (e) {
+      if (e.code === 'ER_NO_SUCH_TABLE' || e.message?.includes('lophanhchinh')) {
+        [rows] = await pool.execute(
+          'SELECT malop, tenlop FROM lophoc ORDER BY malop'
+        );
+      } else throw e;
+    }
+    res.json({ data: rows || [] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

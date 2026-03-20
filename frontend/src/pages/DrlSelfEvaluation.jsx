@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { drlSelfAPI, lookupAPI, scoreAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 
-const BIEU_MAU_DRL_URL = import.meta.env.VITE_BIEU_MAU_DRL_URL || '/docs/bieu-mau-tu-danh-gia-DRL.pdf';
+const BIEU_MAU_DRL_URL = import.meta.env.VITE_BIEU_MAU_DRL_URL || '/docs/bieu-mau-tu-danh-gia-DRL.xlsx';
 
 const DrlSelfEvaluation = () => {
   const { user } = useAuth();
@@ -21,6 +21,8 @@ const DrlSelfEvaluation = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [parsing, setParsing] = useState(false);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     lookupAPI.getHocKy().then((r) => setHockyList(r.data || []));
@@ -66,6 +68,33 @@ const DrlSelfEvaluation = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset input để có thể upload lại cùng file
+    e.target.value = '';
+    setParsing(true);
+    setMessage('');
+    try {
+      const res = await drlSelfAPI.parseExcel(file);
+      const d = res.data;
+      setForm((prev) => ({
+        ...prev,
+        diem_ythuc_hoc_tap: d.diem_ythuc_hoc_tap ?? prev.diem_ythuc_hoc_tap,
+        diem_noi_quy: d.diem_noi_quy ?? prev.diem_noi_quy,
+        diem_hoat_dong: d.diem_hoat_dong ?? prev.diem_hoat_dong,
+        diem_cong_dong: d.diem_cong_dong ?? prev.diem_cong_dong,
+        diem_khen_thuong_ky_luat: d.diem_khen_thuong_ky_luat ?? prev.diem_khen_thuong_ky_luat,
+        nhan_xet_sv: d.nhan_xet_sv || prev.nhan_xet_sv,
+      }));
+      setMessage('✅ Đã đọc điểm từ file Excel. Kiểm tra lại rồi nhấn "Gửi phiếu tự đánh giá".');
+    } catch (err) {
+      setMessage('❌ ' + (err.response?.data?.error || 'Không thể đọc file Excel. Vui lòng kiểm tra đúng biểu mẫu.'));
+    } finally {
+      setParsing(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user?.mssv || !mahocky) {
@@ -103,13 +132,17 @@ const DrlSelfEvaluation = () => {
     (Number(form.diem_khen_thuong_ky_luat) || 0);
 
   const isLocked =
-    current?.trangthai === 'daduyet' && current?.nguoi_duyet_ctsv != null;
+    (current?.trangthai === 'daduyet' && current?.nguoi_duyet_ctsv != null) ||
+    current?.trangthai === 'chokhoaduyet';
   const canEdit = !isLocked;
 
   const statusLabel = (row) => {
     if (!row) return '';
+    if (row.trangthai === 'bituchoi' && row.nguoi_duyet_khoa != null) return 'Bị Khoa từ chối';
     if (row.trangthai === 'bituchoi') return 'Bị từ chối (vui lòng chỉnh sửa và gửi lại)';
     if (row.trangthai === 'choduyet') return 'Chờ Giảng viên/CVHT duyệt';
+    if (row.trangthai === 'chokhoaduyet') return 'Chờ Khoa duyệt';
+    if (row.trangthai === 'daduyet' && row.nguoi_duyet_khoa != null && row.nguoi_duyet_ctsv == null) return 'Chờ Phòng CTSV duyệt cuối';
     if (row.trangthai === 'daduyet' && row.nguoi_duyet_ctsv == null) return 'Chờ Phòng CTSV duyệt cuối';
     if (row.trangthai === 'daduyet' && row.nguoi_duyet_ctsv != null) return 'Đã duyệt cuối (điểm chính thức đã ghi nhận)';
     return String(row.trangthai);
@@ -135,10 +168,33 @@ const DrlSelfEvaluation = () => {
             </select>
           </div>
         </div>
-        <div style={{ marginBottom: 16, padding: 12, background: '#f8f9fa', borderRadius: 8 }}>
-          <strong>📎 Biểu mẫu tự đánh giá:</strong>{' '}
-          <a href={BIEU_MAU_DRL_URL} target="_blank" rel="noopener noreferrer">Tải biểu mẫu tại đây</a>
-          {' '}(mở đường dẫn → điền biểu mẫu → quay lại đây nộp điểm).
+        <div style={{ marginBottom: 16, padding: 12, background: '#f8f9fa', borderRadius: 8, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+          <div>
+            <strong>📎 Biểu mẫu tự đánh giá:</strong>{' '}
+            <a href={BIEU_MAU_DRL_URL} target="_blank" rel="noopener noreferrer">Tải biểu mẫu (.xlsx)</a>
+            {' '}→ điền điểm từng mục → upload lại bên dưới.
+          </div>
+          {canEdit && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                style={{ display: 'none' }}
+                onChange={handleExcelUpload}
+              />
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ whiteSpace: 'nowrap' }}
+                disabled={parsing || !mahocky}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {parsing ? '⏳ Đang đọc...' : '📤 Upload biểu mẫu đã điền'}
+              </button>
+              {!mahocky && <span style={{ fontSize: '0.85em', color: '#888' }}>Chọn học kỳ trước</span>}
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -194,7 +250,7 @@ const DrlSelfEvaluation = () => {
                   value={form.diem_cong_dong}
                   onChange={handleChange}
                   min="0"
-                  max="10"
+                  max="25"
                   disabled={!canEdit}
                 />
               </div>
@@ -237,6 +293,21 @@ const DrlSelfEvaluation = () => {
                 />
               </div>
 
+              {/* Khi CTSV đã chốt điểm chính thức, hiển thị diem_ctsv nổi bật */}
+              {current?.trangthai === 'daduyet' && current?.nguoi_duyet_ctsv != null && current?.diem_ctsv != null && (
+                <div className="alert alert-success" style={{ marginBottom: 12, border: '2px solid #27ae60' }}>
+                  <strong>✅ Điểm rèn luyện chính thức (CTSV đã chốt):</strong>{' '}
+                  <span style={{ fontSize: '1.2em', fontWeight: 'bold', color: '#27ae60' }}>
+                    {current.diem_ctsv}
+                  </span>
+                  {current.nhan_xet_ctsv && (
+                    <div style={{ marginTop: 6, color: '#555' }}>
+                      <strong>Ghi chú:</strong> {current.nhan_xet_ctsv}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {diemChinhThuc && (
                 <div className="alert alert-success" style={{ marginBottom: 12 }}>
                   <strong>Điểm rèn luyện đã được đánh giá (học kỳ này):</strong> {diemChinhThuc.diemtong} – Xếp loại: {diemChinhThuc.xeploai || '—'}
@@ -245,6 +316,11 @@ const DrlSelfEvaluation = () => {
               {current && (
                 <div className="alert alert-info">
                   Trạng thái hiện tại: <strong>{statusLabel(current)}</strong>
+                  {current.trangthai === 'bituchoi' && current.nguoi_duyet_khoa != null && current.nhan_xet_khoa && (
+                    <div style={{ marginTop: 8, color: '#c0392b' }}>
+                      <strong>Lý do Khoa từ chối:</strong> {current.nhan_xet_khoa}
+                    </div>
+                  )}
                   {current.diem_cvht != null && (
                     <>
                       {' – '}Điểm CVHT: <strong>{current.diem_cvht}</strong>
@@ -253,6 +329,16 @@ const DrlSelfEvaluation = () => {
                   {current.nhan_xet_cvht && (
                     <div style={{ marginTop: 8 }}>
                       <strong>Nhận xét CVHT:</strong> {current.nhan_xet_cvht}
+                    </div>
+                  )}
+                  {current.diem_khoa != null && (
+                    <div style={{ marginTop: 8 }}>
+                      <strong>Điểm Khoa:</strong> {current.diem_khoa}
+                    </div>
+                  )}
+                  {current.nhan_xet_khoa && current.trangthai !== 'bituchoi' && (
+                    <div style={{ marginTop: 8 }}>
+                      <strong>Nhận xét Khoa:</strong> {current.nhan_xet_khoa}
                     </div>
                   )}
                   {current.nhan_xet_ctsv && (

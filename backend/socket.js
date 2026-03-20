@@ -3,8 +3,10 @@ import { Server } from 'socket.io';
 let io = null;
 
 export function initSocket(httpServer) {
+  const allowedOrigin = process.env.FRONTEND_URL || (process.env.NODE_ENV !== 'production' ? true : 'http://localhost:5173');
+
   io = new Server(httpServer, {
-    cors: { origin: process.env.FRONTEND_URL || 'http://localhost:5173' },
+    cors: { origin: allowedOrigin },
     path: '/socket.io',
   });
   io.on('connection', (socket) => {

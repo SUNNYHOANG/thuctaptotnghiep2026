@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 
 const DrlClassReview = () => {
   const { user } = useAuth();
+  const isGV = user?.role === 'giangvien';
+  const isCTSV = user?.role === 'ctsv';
   const [malop, setMalop] = useState('');
   const [mahocky, setMahocky] = useState('');
   const [hockyList, setHockyList] = useState([]);
@@ -22,8 +24,12 @@ const DrlClassReview = () => {
 
   useEffect(() => {
     lookupAPI.getHocKy().then((r) => setHockyList(r.data || [])).catch(() => {});
-    lookupAPI.getLop().then((r) => setLopList(r.data?.data || r.data || [])).catch(() => {});
-  }, []);
+    // GV chỉ load lớp thuộc khoa mình; CTSV/admin load tất cả
+    const makhoa = isGV ? user?.makhoa : null;
+    lookupAPI.getLopByKhoa(makhoa)
+      .then((r) => setLopList(r.data?.data || r.data || []))
+      .catch(() => lookupAPI.getLop().then((r) => setLopList(r.data?.data || r.data || [])));
+  }, [isGV, user?.makhoa]);
 
   useEffect(() => {
     setMessage('');
@@ -72,11 +78,10 @@ const DrlClassReview = () => {
     e.preventDefault();
     if (!selected) return;
     try {
-      const isCTSV = user?.role === 'ctsv';
       const payload = isCTSV
         ? {
-            // CTSV duyệt cuối: dùng diem_ctsv/nhan_xet_ctsv
-            trangthai: reviewForm.trangthai,
+            // CTSV duyệt cuối: luôn daduyet, dùng diem_ctsv/nhan_xet_ctsv
+            trangthai: 'daduyet',
             diem_ctsv: reviewForm.diem_ctsv === '' ? null : Number(reviewForm.diem_ctsv),
             nhan_xet_ctsv: reviewForm.nhan_xet_ctsv,
           }
@@ -99,6 +104,7 @@ const DrlClassReview = () => {
     if (!row) return '';
     if (row.trangthai === 'bituchoi') return 'Bị từ chối';
     if (row.trangthai === 'choduyet') return 'Chờ GV duyệt';
+    if (row.trangthai === 'chokhoaduyet') return 'Chờ Khoa duyệt';
     if (row.trangthai === 'daduyet' && row.nguoi_duyet_ctsv == null) return 'Chờ CTSV duyệt cuối';
     if (row.trangthai === 'daduyet' && row.nguoi_duyet_ctsv != null) return 'Đã duyệt cuối';
     return String(row.trangthai);
@@ -109,8 +115,13 @@ const DrlClassReview = () => {
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">
-            Duyệt tự đánh giá điểm rèn luyện ({user?.role === 'ctsv' ? 'CTSV' : user?.role === 'admin' ? 'Admin' : 'Giảng viên'})
+            Duyệt tự đánh giá điểm rèn luyện ({isCTSV ? 'CTSV' : user?.role === 'admin' ? 'Admin' : 'Giảng viên'})
           </h1>
+          {isGV && user?.makhoa && (
+            <p style={{ color: '#2563eb', fontWeight: 500, marginBottom: 8, marginTop: 4 }}>
+              🏛️ Khoa: <strong>{user.makhoa}</strong> — chỉ hiển thị sinh viên thuộc khoa này
+            </p>
+          )}
           <div className="d-flex gap-2 align-center flex-wrap">
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Học kỳ *</label>
@@ -129,14 +140,14 @@ const DrlClassReview = () => {
               </select>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Lớp (tùy chọn)</label>
+              <label className="form-label">{isGV ? 'Lọc theo lớp' : 'Lớp (tùy chọn)'}</label>
               <select
                 className="form-control"
-                style={{ width: 160 }}
+                style={{ width: 180 }}
                 value={malop}
                 onChange={(e) => setMalop(e.target.value)}
               >
-                <option value="">{user?.role === 'admin' || user?.role === 'ctsv' ? 'Tất cả lớp' : '-- Chọn lớp --'}</option>
+                <option value="">{isCTSV || user?.role === 'admin' ? 'Tất cả lớp' : 'Tất cả lớp trong khoa'}</option>
                 {(Array.isArray(lopList) ? lopList : []).map((l) => (
                   <option key={typeof l === 'object' ? l.malop : l} value={typeof l === 'object' ? l.malop : l}>
                     {typeof l === 'object' ? (l.tenlop || l.malop) : l}
@@ -149,7 +160,9 @@ const DrlClassReview = () => {
             </button>
           </div>
           <p className="text-muted mt-2 mb-0" style={{ fontSize: '0.9rem' }}>
-            Admin/CTSV: chọn học kỳ và &quot;Tất cả lớp&quot; để xem mọi phiếu sinh viên đã gửi. Giảng viên: chọn thêm lớp của sinh viên.
+            {isGV
+              ? 'Chọn học kỳ và lớp để xem phiếu sinh viên cần duyệt. Chỉ hiển thị sinh viên thuộc khoa của bạn.'
+              : 'Admin/CTSV: chọn học kỳ và "Tất cả lớp" để xem mọi phiếu sinh viên đã gửi.'}
           </p>
         </div>
 
@@ -164,6 +177,7 @@ const DrlClassReview = () => {
                   <th>Họ tên</th>
                   <th>Tổng điểm SV</th>
                   <th>Điểm CVHT</th>
+                  {(isCTSV || user?.role === 'admin') && <th>Điểm Khoa</th>}
                   <th>Trạng thái</th>
                 </tr>
               </thead>
@@ -178,12 +192,15 @@ const DrlClassReview = () => {
                     <td>{row.hoten}</td>
                     <td>{row.tong_diem}</td>
                     <td>{row.diem_cvht ?? '-'}</td>
+                    {(isCTSV || user?.role === 'admin') && (
+                      <td>{row.diem_khoa ?? '-'}</td>
+                    )}
                     <td>{statusLabel(row)}</td>
                   </tr>
                 ))}
                 {rows.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: 16 }}>
+                    <td colSpan={(isCTSV || user?.role === 'admin') ? 6 : 5} style={{ textAlign: 'center', padding: 16 }}>
                       Chưa có phiếu tự đánh giá cho lớp/học kỳ này.
                     </td>
                   </tr>
@@ -200,21 +217,66 @@ const DrlClassReview = () => {
                   <strong>MSSV:</strong> {selected.mssv} • <strong>Tổng điểm SV:</strong>{' '}
                   {selected.tong_diem}
                 </p>
-                <div className="form-group">
-                  <label className="form-label">Trạng thái</label>
-                  <select
-                    name="trangthai"
-                    className="form-control"
-                    value={reviewForm.trangthai}
-                    onChange={handleReviewChange}
-                  >
-                    <option value="daduyet">{user?.role === 'ctsv' ? 'Duyệt cuối' : 'Duyệt (chuyển CTSV)'}</option>
-                    <option value="bituchoi">Từ chối</option>
-                    <option value="choduyet">Chờ duyệt</option>
-                  </select>
+
+                {/* Chi tiết điểm từng mục */}
+                <div style={{ background: '#f8f9fa', borderRadius: 6, padding: 12, marginBottom: 12 }}>
+                  <strong>Chi tiết điểm tự đánh giá:</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 16px', marginTop: 8, fontSize: 13 }}>
+                    <span>1. Ý thức học tập (tối đa 20đ):</span><span><strong>{selected.diem_ythuc_hoc_tap ?? '-'}</strong></span>
+                    <span>2. Chấp hành nội quy (tối đa 25đ):</span><span><strong>{selected.diem_noi_quy ?? '-'}</strong></span>
+                    <span>3. Tham gia hoạt động (tối đa 20đ):</span><span><strong>{selected.diem_hoat_dong ?? '-'}</strong></span>
+                    <span>4. Công tác cộng đồng (tối đa 25đ):</span><span><strong>{selected.diem_cong_dong ?? '-'}</strong></span>
+                    <span>5. Khen thưởng / Kỷ luật (tối đa 10đ):</span><span><strong>{selected.diem_khen_thuong_ky_luat ?? '-'}</strong></span>
+                  </div>
+                  {selected.nhan_xet_sv && (
+                    <div style={{ marginTop: 8, borderTop: '1px solid #dee2e6', paddingTop: 8 }}>
+                      <strong>Nhận xét của SV:</strong> {selected.nhan_xet_sv}
+                    </div>
+                  )}
                 </div>
-                {user?.role === 'ctsv' ? (
+
+                {/* Thông tin duyệt của Khoa (CTSV xem) */}
+                {isCTSV && (selected.diem_khoa != null || selected.nhan_xet_khoa) && (
+                  <div style={{ background: '#fff3cd', borderRadius: 6, padding: 12, marginBottom: 12 }}>
+                    <strong>Đánh giá của Khoa:</strong>
+                    {selected.diem_khoa != null && (
+                      <div style={{ marginTop: 4 }}>Điểm Khoa: <strong>{selected.diem_khoa}</strong></div>
+                    )}
+                    {selected.nhan_xet_khoa && (
+                      <div style={{ marginTop: 4 }}>Nhận xét: {selected.nhan_xet_khoa}</div>
+                    )}
+                  </div>
+                )}
+                {user?.role !== 'ctsv' && (
+                  <div className="form-group">
+                    <label className="form-label">Trạng thái</label>
+                    <select
+                      name="trangthai"
+                      className="form-control"
+                      value={reviewForm.trangthai}
+                      onChange={handleReviewChange}
+                    >
+                      <option value="daduyet">Duyệt (chuyển CTSV)</option>
+                      <option value="bituchoi">Từ chối</option>
+                      <option value="choduyet">Chờ duyệt</option>
+                    </select>
+                  </div>
+                )}
+                {isCTSV ? (
                   <>
+                    {/* Hiển thị thông tin duyệt của Khoa cho CTSV xem */}
+                    {selected?.diem_khoa != null && (
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#e67e22' }}>Điểm Khoa đã chấm</label>
+                        <input type="number" className="form-control" value={selected.diem_khoa} readOnly style={{ background: '#fef9f0' }} />
+                      </div>
+                    )}
+                    {selected?.nhan_xet_khoa && (
+                      <div className="form-group">
+                        <label className="form-label" style={{ color: '#e67e22' }}>Nhận xét của Khoa</label>
+                        <textarea className="form-control" style={{ minHeight: 80, background: '#fef9f0' }} value={selected.nhan_xet_khoa} readOnly />
+                      </div>
+                    )}
                     <div className="form-group">
                       <label className="form-label">Điểm CTSV chốt (điểm chính thức)</label>
                       <input
@@ -264,8 +326,8 @@ const DrlClassReview = () => {
                     </div>
                   </>
                 )}
-                <button className="btn btn-primary" type="submit">
-                  Lưu duyệt phiếu
+                <button className="btn btn-primary" type="submit" style={isCTSV ? { background: '#15803d', borderColor: '#15803d' } : {}}>
+                  {isCTSV ? '✅ Duyệt & Chốt điểm rèn luyện' : 'Lưu duyệt phiếu'}
                 </button>
               </form>
             ) : (

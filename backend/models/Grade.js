@@ -153,19 +153,6 @@ class Grade {
     );
     return rows;
   }
-
-  static async initFromEnrollment(malophocphan, nguoinhap) {
-    const [enrollments] = await pool.execute(
-      `SELECT mssv FROM dangkyhocphan WHERE malophocphan = ? AND trangthai = 'dangky'`,
-      [malophocphan]
-    );
-    let count = 0;
-    for (const e of enrollments) {
-      await this.createOrUpdate({ malophocphan, mssv: e.mssv, nguoinhap });
-      count++;
-    }
-    return { message: `Đã tạo ${count} bảng điểm` };
-  }
 }
 
 export default Grade;

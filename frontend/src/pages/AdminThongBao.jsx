@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { thongBaoAPI } from '../api/api';
 import { lookupAPI } from '../api/api';
+import { useAuth } from '../context/AuthContext';
 
 const LOAI_OPTIONS = [
   { value: 'truong', label: 'Toàn trường' },
@@ -11,6 +12,10 @@ const LOAI_OPTIONS = [
 ];
 
 const AdminThongBao = () => {
+  const { user } = useAuth();
+  const isGV = user?.role === 'giangvien';
+  const makhoa = user?.makhoa || null;
+
   const [list, setList] = useState([]);
   const [lopList, setLopList] = useState([]);
   const [hockyList, setHockyList] = useState([]);
@@ -28,15 +33,25 @@ const AdminThongBao = () => {
 
   useEffect(() => {
     load();
-    lookupAPI.getLop().then((r) => setLopList(r.data || []));
-    lookupAPI.getHocKy().then((r) => setHockyList(r.data || []));
-  }, []);
+    // GV chỉ load lớp thuộc khoa mình
+    const fetchLop = isGV && makhoa ? lookupAPI.getLopByKhoa(makhoa) : lookupAPI.getLop();
+    fetchLop.then((r) => setLopList(r.data?.data ?? r.data ?? [])).catch(() => setLopList([]));
+    lookupAPI.getHocKy().then((r) => setHockyList(r.data || [])).catch(() => setHockyList([]));
+  }, [isGV, makhoa]);
+
+  // GV chỉ thấy thông báo toàn trường hoặc thông báo lớp thuộc khoa mình
+  const displayList = useMemo(() => {
+    if (!isGV || !makhoa) return list;
+    const khoaLopSet = new Set((Array.isArray(lopList) ? lopList : []).map((l) => typeof l === 'object' ? l.malop : l));
+    return list.filter((r) => r.loai !== 'lop' || !r.malop || khoaLopSet.has(r.malop));
+  }, [list, isGV, makhoa, lopList]);
 
   const load = async () => {
     try {
       setLoading(true);
       const res = await thongBaoAPI.getAll({});
-      setList(Array.isArray(res.data) ? res.data : res.data?.data ?? []);
+      let data = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
+      setList(data);
     } catch (err) {
       setList([]);
     } finally {
@@ -111,6 +126,11 @@ const AdminThongBao = () => {
     <div className="admin-page">
       <h2>📢 Quản Lý Thông Báo & Tin Tức</h2>
       <p>GV và CTSV đăng thông báo, sinh viên xem tại mục Thông báo.</p>
+      {isGV && makhoa && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: '#eff6ff', borderRadius: 6, color: '#2563eb', fontSize: 14 }}>
+          🏛️ Khoa: <strong>{makhoa}</strong> — danh sách lớp chỉ hiển thị lớp thuộc khoa này
+        </div>
+      )}
       <div style={{ marginBottom: 16 }}>
         <button onClick={openCreate} style={{ background: '#27ae60', color: 'white', padding: '10px 20px', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
           ➕ Đăng thông báo
@@ -131,7 +151,7 @@ const AdminThongBao = () => {
               </tr>
             </thead>
             <tbody>
-              {list.map((r) => (
+              {displayList.map((r) => (
                 <tr key={r.mathongbao} style={{ borderBottom: '1px solid #eee' }}>
                   <td style={{ padding: 10 }}>{r.tieude}</td>
                   <td style={{ padding: 10 }}>{LOAI_OPTIONS.find((o) => o.value === r.loai)?.label || r.loai}</td>
@@ -145,7 +165,7 @@ const AdminThongBao = () => {
               ))}
             </tbody>
           </table>
-          {list.length === 0 && <p>Chưa có thông báo.</p>}
+          {displayList.length === 0 && <p>Chưa có thông báo.</p>}
         </div>
       )}
 
@@ -172,13 +192,20 @@ const AdminThongBao = () => {
               </div>
               {form.loai === 'lop' && (
                 <div style={{ marginBottom: 12 }}>
-                  <label>Lớp</label>
-                  <select value={form.malop} onChange={(e) => setForm((f) => ({ ...f, malop: e.target.value }))} style={{ width: '100%', padding: 8 }}>
-                    <option value="">-- Tất cả --</option>
-                    {lopList.map((l) => (
+                  <label>Chọn lớp gửi tới *</label>
+                  <select
+                    value={form.malop || ''}
+                    onChange={(e) => setForm((f) => ({ ...f, malop: e.target.value }))}
+                    style={{ width: '100%', padding: 8, marginTop: 4 }}
+                  >
+                    <option value="">-- Chọn lớp --</option>
+                    {(Array.isArray(lopList) ? lopList : []).map((l) => (
                       <option key={l.malop} value={l.malop}>{l.tenlop || l.malop}</option>
                     ))}
                   </select>
+                  {Array.isArray(lopList) && lopList.length === 0 && (
+                    <p style={{ margin: '4px 0 0', fontSize: 12, color: '#666' }}>Chưa có danh sách lớp. Kiểm tra bảng lophoc/lophanhchinh trong database.</p>
+                  )}
                 </div>
               )}
               <div style={{ marginBottom: 12 }}>

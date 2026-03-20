@@ -109,6 +109,7 @@ const Login = () => {
       if (role === 'admin') navigate('/admin/dashboard');
       else if (role === 'giangvien') navigate('/giangvien/dashboard');
       else if (role === 'ctsv') navigate('/ctsv/dashboard');
+      else if (role === 'khoa') navigate('/khoa/dashboard');
       else navigate('/');
     } catch (err) {
       const msg =
@@ -159,6 +160,8 @@ const Login = () => {
         navigate('/giangvien/dashboard');
       } else if (role === 'ctsv') {
         navigate('/ctsv/dashboard');
+      } else if (role === 'khoa') {
+        navigate('/khoa/dashboard');
       } else {
         navigate('/');
       }

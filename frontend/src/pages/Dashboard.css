@@ -21,6 +21,91 @@
   margin-top: 2rem;
 }
 
+/* Sinh viên: layout sidebar + main */
+.dashboard-content--layout {
+  display: flex;
+  gap: 1.5rem;
+  grid-template-columns: unset;
+  margin-top: 1.5rem;
+  align-items: flex-start;
+}
+.dashboard-sidebar {
+  flex-shrink: 0;
+  width: 220px;
+}
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+}
+.dashboard-section {
+  margin-top: 0;
+}
+.dashboard-section-title {
+  color: #002244;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.dashboard-section-desc {
+  color: #666;
+  margin-bottom: 1.25rem;
+}
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.dashboard-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+}
+.dashboard-card:hover {
+  border-color: #002244;
+  box-shadow: 0 4px 12px rgba(0, 34, 68, 0.1);
+  transform: translateY(-2px);
+}
+.dashboard-card__icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.dashboard-card__body {
+  flex: 1;
+  min-width: 0;
+}
+.dashboard-card__title {
+  font-size: 1rem;
+  color: #002244;
+  margin: 0 0 0.25rem 0;
+}
+.dashboard-card__desc {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+.dashboard-card__arrow {
+  color: #002244;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+@media (max-width: 768px) {
+  .dashboard-content--layout {
+    flex-direction: column;
+  }
+  .dashboard-sidebar {
+    width: 100%;
+  }
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 .user-info-card h2,
 .features-card h2 {
   color: #002244;

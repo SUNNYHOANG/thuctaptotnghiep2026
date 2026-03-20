@@ -7,10 +7,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import CourseRegistration from './pages/CourseRegistration';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminAttendance from './pages/AdminAttendance';
-import FaceAttendance from './pages/FaceAttendance';
 import AdminUsers from './pages/AdminUsers';
 import AdminCourses from './pages/AdminCourses';
 import AdminCourseAvailability from './pages/AdminCourseAvailability';
@@ -21,7 +18,6 @@ import AdminRewards from './pages/AdminRewards';
 import AdminServices from './pages/AdminServices';
 import AdminReports from './pages/AdminReports';
 import AdminThongBao from './pages/AdminThongBao';
-import AdminFeeNotifications from './pages/AdminFeeNotifications';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentGrades from './pages/StudentGrades';
 import TeacherGrades from './pages/TeacherGrades';
@@ -46,6 +42,10 @@ import MyActivities from './pages/MyActivities';
 import Activities from './pages/Activities';
 import ActivityDetail from './pages/ActivityDetail';
 import PhucKhao from './pages/PhucKhao';
+import KhoaDashboard from './pages/KhoaDashboard';
+import KhoaDrlReview from './pages/KhoaDrlReview';
+import KhoaStudentList from './pages/KhoaStudentList';
+import CTSVDrlManager from './pages/CTSVDrlManager';
 import './index.css';
 
 function AppRoutes() {
@@ -67,11 +67,6 @@ function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/hoc-phi" element={
-        <ProtectedRoute>
-          <Dashboard feeTabInit="online" />
         </ProtectedRoute>
       } />
       
@@ -128,18 +123,6 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      <Route path="/admin/face-attendance" element={
-        <ProtectedRoute requiredRole="admin">
-          <FaceAttendance />
-        </ProtectedRoute>
-      } />
-
-      <Route path="/admin/attendance" element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminAttendance />
-        </ProtectedRoute>
-      } />
-
       <Route path="/admin/courses" element={
         <ProtectedRoute requiredRole="admin">
           <AdminCourses />
@@ -190,12 +173,6 @@ function AppRoutes() {
       <Route path="/admin/thong-bao" element={
         <ProtectedRoute allowedRoles={['admin', 'ctsv', 'giangvien']}>
           <AdminThongBao />
-        </ProtectedRoute>
-      } />
-
-      <Route path="/admin/fee-notifications" element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminFeeNotifications />
         </ProtectedRoute>
       } />
       
@@ -259,16 +236,15 @@ function AppRoutes() {
           <Scores />
         </ProtectedRoute>
       } />
+      <Route path="/ctsv/quan-ly-diem-ren-luyen" element={
+        <ProtectedRoute requiredRole="ctsv">
+          <CTSVDrlManager />
+        </ProtectedRoute>
+      } />
       
       <Route path="/sinhvien/dashboard" element={
         <ProtectedRoute requiredRole="sinhvien">
           <Dashboard />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/dang-ky-mon-hoc" element={
-        <ProtectedRoute requiredRole="sinhvien">
-          <CourseRegistration />
         </ProtectedRoute>
       } />
       
@@ -326,6 +302,23 @@ function AppRoutes() {
       
       {/* Default redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* Khoa routes */}
+      <Route path="/khoa/dashboard" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/drl-review" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaDrlReview />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/students" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaStudentList />
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }

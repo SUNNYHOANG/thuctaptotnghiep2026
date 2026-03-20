@@ -2,7 +2,17 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  // Gửi makhoa và role trong header để backend phân quyền
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.role) headers['x-user-role'] = user.role;
+      if (user.makhoa) headers['x-user-makhoa'] = user.makhoa;
+    } catch {}
+  }
+  return headers;
 }
 
 export const adminAPIEndpoints = {
@@ -17,6 +27,8 @@ export const adminAPIEndpoints = {
   getCourses: (filters = {}) => fetch(`${API_BASE}/courses?${new URLSearchParams(filters)}`, { headers: { ...getAuthHeaders() } }).then(r => r.json()),
   getCourseById: (id) => fetch(`${API_BASE}/courses/${id}`, { headers: { ...getAuthHeaders() } }).then(r => r.json()),
   getAvailableCoursesForRegistration: (mahocky) => fetch(`${API_BASE}/courses/available-for-registration/${mahocky}`, { headers: { ...getAuthHeaders() } }).then(r => r.json()),
+  getCurrentRegistrationSemester: () => fetch(`${API_BASE}/courses/current-registration-semester`, { headers: { ...getAuthHeaders() } }).then(r => r.json()),
+  setCurrentRegistrationSemester: (mahocky) => fetch(`${API_BASE}/courses/set-current-registration-semester`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify({ mahocky }) }).then(r => r.json()),
   createCourse: (data) => fetch(`${API_BASE}/courses`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify(data) }).then(r => r.json()),
   updateCourse: (id, data) => fetch(`${API_BASE}/courses/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: JSON.stringify(data) }).then(r => r.json()),
   deleteCourse: (id) => fetch(`${API_BASE}/courses/${id}`, { method: 'DELETE', headers: { ...getAuthHeaders() } }).then(r => r.json()),

@@ -34,8 +34,12 @@ const AdminCourseAvailability = () => {
     soluongtoida: 60,
     magiaovien: '',
     maphong: '',
-    trangthai: 'dangmo'
+    trangthai: 'dangmo',
+    ngaymodangky: '',
+    ngaykhoadangky: ''
   });
+  const [currentOpenSemester, setCurrentOpenSemester] = useState(null);
+  const [savingOpenSemester, setSavingOpenSemester] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -109,6 +113,26 @@ const AdminCourseAvailability = () => {
       setHocKyList(resp?.data || []);
     } catch (err) {
       console.error('Error loading hoc ky list:', err);
+    }
+  };
+
+  useEffect(() => {
+    adminAPIEndpoints.getCurrentRegistrationSemester().then((r) => {
+      const v = r?.data?.mahocky;
+      setCurrentOpenSemester(v != null ? v : '');
+    }).catch(() => setCurrentOpenSemester(''));
+  }, []);
+
+  const saveOpenSemester = async () => {
+    try {
+      setSavingOpenSemester(true);
+      const mahocky = currentOpenSemester === '' || currentOpenSemester == null ? null : Number(currentOpenSemester);
+      await adminAPIEndpoints.setCurrentRegistrationSemester(mahocky);
+      alert(mahocky != null ? `Đã mở đăng ký học kỳ ${mahocky} cho sinh viên.` : 'Đã bỏ đặt học kỳ mở đăng ký.');
+    } catch (err) {
+      alert('Lỗi: ' + (err.message || 'Không lưu được'));
+    } finally {
+      setSavingOpenSemester(false);
     }
   };
 
@@ -213,6 +237,18 @@ const AdminCourseAvailability = () => {
     }
   };
 
+  const toDatetimeLocal = (v) => {
+    if (!v) return '';
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day}T${h}:${min}`;
+  };
+
   const startEditSection = (course) => {
     setEditingSection(course.malophocphan);
     setEditForm({
@@ -221,7 +257,9 @@ const AdminCourseAvailability = () => {
       soluongtoida: course.soluongtoida || 60,
       magiaovien: course.magiaovien || '',
       maphong: course.maphong || '',
-      trangthai: course.trangthai || 'dangmo'
+      trangthai: course.trangthai || 'dangmo',
+      ngaymodangky: toDatetimeLocal(course.ngaymodangky),
+      ngaykhoadangky: toDatetimeLocal(course.ngaykhoadangky)
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -235,7 +273,23 @@ const AdminCourseAvailability = () => {
         soluongtoida: editForm.soluongtoida || 60,
         magiaovien: editForm.magiaovien || null,
         maphong: editForm.maphong || null,
-        trangthai: editForm.trangthai || 'dangmo'
+        trangthai: editForm.trangthai || 'dangmo',
+        ngaymodangky: (() => {
+          if (!editForm.ngaymodangky) return null;
+          const d = new Date(editForm.ngaymodangky);
+          if (isNaN(d.getTime())) return null;
+          const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+          const h = String(d.getHours()).padStart(2, '0'), min = String(d.getMinutes()).padStart(2, '0');
+          return `${y}-${m}-${day} ${h}:${min}:00`;
+        })(),
+        ngaykhoadangky: (() => {
+          if (!editForm.ngaykhoadangky) return null;
+          const d = new Date(editForm.ngaykhoadangky);
+          if (isNaN(d.getTime())) return null;
+          const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+          const h = String(d.getHours()).padStart(2, '0'), min = String(d.getMinutes()).padStart(2, '0');
+          return `${y}-${m}-${day} ${h}:${min}:00`;
+        })()
       };
       await classSectionAPIEndpoints.update(editingSection, payload);
       alert('Cập nhật lớp học phần thành công');
@@ -274,6 +328,29 @@ const AdminCourseAvailability = () => {
       <h2>⚙️ Quản Lý Mở/Đóng Đăng Ký Môn Học</h2>
       
       {error && <div className="error-message">{error}</div>}
+
+      <div className="open-semester-box" style={{ marginBottom: 20, padding: 16, background: '#f0f7ff', borderRadius: 8, border: '1px solid #b3d9ff' }}>
+        <h3 style={{ marginTop: 0 }}>📅 Học kỳ đang mở đăng ký (sinh viên chỉ được đăng ký 1 học kỳ)</h3>
+        <div className="form-row" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <label style={{ minWidth: 120 }}>Chọn học kỳ mở đăng ký:</label>
+          <select
+            value={currentOpenSemester ?? ''}
+            onChange={e => setCurrentOpenSemester(e.target.value === '' ? '' : e.target.value)}
+            style={{ padding: 8, minWidth: 200 }}
+          >
+            <option value="">-- Không mở học kỳ nào --</option>
+            {hocKyList.map(hk => (
+              <option key={hk.mahocky} value={hk.mahocky}>{hk.tenhocky} {hk.namhoc ? `(${hk.namhoc})` : ''}</option>
+            ))}
+          </select>
+          <button type="button" className="btn-save" onClick={saveOpenSemester} disabled={savingOpenSemester}>
+            {savingOpenSemester ? 'Đang lưu...' : 'Lưu'}
+          </button>
+        </div>
+        <p style={{ margin: '8px 0 0', fontSize: 13, color: '#555' }}>
+          Sinh viên chỉ thấy và đăng ký môn trong học kỳ được chọn. Đặt thời hạn đăng ký từng lớp ở form sửa bên dưới (vd: 3 ngày).
+        </p>
+      </div>
 
       <div className="forms-row">
         {/* New section form */}
@@ -414,6 +491,24 @@ const AdminCourseAvailability = () => {
                 <option value="dong">Đã Đóng</option>
                 <option value="huy">Đã Hủy</option>
               </select>
+            </div>
+            <div className="form-row">
+              <label>Thời gian mở đăng ký:</label>
+              <input
+                type="datetime-local"
+                value={editForm.ngaymodangky}
+                onChange={e => setEditForm({ ...editForm, ngaymodangky: e.target.value })}
+              />
+              <small style={{ display: 'block', color: '#666' }}>Để trống = mở ngay</small>
+            </div>
+            <div className="form-row">
+              <label>Hết hạn đăng ký:</label>
+              <input
+                type="datetime-local"
+                value={editForm.ngaykhoadangky}
+                onChange={e => setEditForm({ ...editForm, ngaykhoadangky: e.target.value })}
+              />
+              <small style={{ display: 'block', color: '#666' }}>VD: 3 ngày sau khi mở. Để trống = không giới hạn</small>
             </div>
             <div className="edit-actions">
               <button

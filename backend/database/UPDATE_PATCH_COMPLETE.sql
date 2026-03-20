@@ -1,14 +1,12 @@
 -- ============================================================
 -- CẬP NHẬT DATABASE - CHẠY TRÊN DB ĐÃ TỒN TẠI
--- Áp dụng các thay đổi để hệ thống chạy hoàn chỉnh
--- Chạy: node run-update-patch.js  HOẶC  mysql -u root -p dkhp1 < database/UPDATE_PATCH_COMPLETE.sql
 -- ============================================================
 
--- 1. Thêm trạng thái 'dachot' vào hoatdong (chốt danh sách đăng ký)
+-- 1. Thêm trạng thái 'dachot' vào hoatdong
 ALTER TABLE hoatdong
 MODIFY COLUMN trangthai ENUM('dangmo','dangdienra','daketthuc','huy','dachot') DEFAULT 'dangmo';
 
--- 2. Đảm bảo loaihoatdong có dữ liệu (chỉ thêm khi bảng trống)
+-- 2. Đảm bảo loaihoatdong có dữ liệu
 INSERT INTO loaihoatdong (tenloai, mota)
 SELECT t.tenloai, t.mota FROM (
   SELECT 'Hoạt động tình nguyện' AS tenloai, 'Các hoạt động tình nguyện, từ thiện' AS mota
@@ -21,15 +19,43 @@ SELECT t.tenloai, t.mota FROM (
 ) t
 WHERE NOT EXISTS (SELECT 1 FROM loaihoatdong);
 
--- 3. Bổ sung đầy đủ trường hồ sơ sinh viên (chạy trên bảng sinhvien đã tồn tại)
-ALTER TABLE sinhvien
-  ADD COLUMN diachi VARCHAR(255) NULL AFTER makhoa,
-  ADD COLUMN ngaysinh DATE NULL AFTER diachi,
-  ADD COLUMN quequan VARCHAR(255) NULL AFTER ngaysinh,
-  ADD COLUMN tinhtrang VARCHAR(100) NULL DEFAULT 'Đang học' AFTER quequan,
-  ADD COLUMN gioitinh VARCHAR(20) NULL AFTER tinhtrang,
-  ADD COLUMN khoahoc VARCHAR(50) NULL AFTER gioitinh,
-  ADD COLUMN bacdaotao VARCHAR(100) NULL AFTER khoahoc,
-  ADD COLUMN nganh VARCHAR(255) NULL AFTER bacdaotao;
+-- ============================================================
+-- 3. Bổ sung trường hồ sơ sinh viên (chỉ thêm khi chưa tồn tại)
+-- ============================================================
 
-SELECT '✅ UPDATE_PATCH_COMPLETE: Đã cập nhật database hoàn chỉnh.' AS Result;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS diachi VARCHAR(255) NULL AFTER makhoa;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS ngaysinh DATE NULL AFTER diachi;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS quequan VARCHAR(255) NULL AFTER ngaysinh;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS tinhtrang VARCHAR(100) NULL DEFAULT 'Đang học' AFTER quequan;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS gioitinh VARCHAR(20) NULL AFTER tinhtrang;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS khoahoc VARCHAR(50) NULL AFTER gioitinh;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS bacdaotao VARCHAR(100) NULL AFTER khoahoc;
+ALTER TABLE sinhvien ADD COLUMN IF NOT EXISTS nganh VARCHAR(255) NULL AFTER bacdaotao;
+
+-- ============================================================
+-- 4. Đăng ký môn học: thời hạn đăng ký
+-- ============================================================
+
+ALTER TABLE lophocphan 
+ADD COLUMN IF NOT EXISTS ngaymodangky DATETIME NULL COMMENT 'Thời điểm mở đăng ký';
+
+ALTER TABLE lophocphan 
+ADD COLUMN IF NOT EXISTS ngaykhoadangky DATETIME NULL COMMENT 'Hết hạn đăng ký';
+
+-- ============================================================
+-- 5. Bảng cấu hình học kỳ đang mở đăng ký
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS config (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  config_key VARCHAR(100) NOT NULL UNIQUE,
+  config_value VARCHAR(255) NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT INTO config (config_key, config_value) 
+VALUES ('hocky_dang_mo_dang_ky', NULL)
+ON DUPLICATE KEY UPDATE config_key = config_key;
+
+-- ============================================================
+SELECT 'UPDATE_PATCH_COMPLETE: Đã cập nhật database hoàn chỉnh.' AS Result;

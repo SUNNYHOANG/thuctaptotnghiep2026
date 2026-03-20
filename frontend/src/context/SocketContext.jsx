@@ -11,6 +11,8 @@ export function SocketProvider({ children }) {
   const [socket, setSocket] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
+  const timeoutsRef = React.useRef([]);
+
   useEffect(() => {
     // Chỉ kết nối socket khi đã đăng nhập sinh viên
     if (!user?.mssv || user?.role !== 'sinhvien') {
@@ -25,10 +27,17 @@ export function SocketProvider({ children }) {
     setSocket(s);
 
     const pushNotification = (type, message) => {
-      setNotifications((prev) => [...prev.slice(-4), { id: Date.now(), type, message }]);
+      const id = Date.now();
+      setNotifications((prev) => [...prev.slice(-4), { id, type, message }]);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('realtime-notification', { detail: { type, message } }));
       }
+
+      // Tự động ẩn sau 2 giây
+      const timeout = window.setTimeout(() => {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+      }, 2000);
+      timeoutsRef.current.push(timeout);
     };
 
     s.on('activity_approval', (data) => {
@@ -57,6 +66,10 @@ export function SocketProvider({ children }) {
 
     return () => {
       s.disconnect();
+      setNotifications([]);
+      // Clear any pending timeouts to avoid state updates after unmount
+      timeoutsRef.current.forEach((t) => window.clearTimeout(t));
+      timeoutsRef.current = [];
     };
   }, [user?.mssv, user?.role]);
 

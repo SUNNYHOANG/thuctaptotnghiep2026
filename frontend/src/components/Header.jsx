@@ -69,12 +69,10 @@ const Header = () => {
                   <li><Link to="/">Trang Chủ</Link></li>
                   {user?.role === 'sinhvien' && (
                     <>
-                      <li><Link to="/dang-ky-mon-hoc">Đăng Ký Môn Học</Link></li>
                       <li><Link to="/diem-ren-luyen">Điểm Rèn Luyện</Link></li>
                       <li><Link to="/nrl-tracker">Tra Cứu Ngày Rèn Luyện</Link></li>
                       <li><Link to="/khen-thuong-ky-luat">Khen Thưởng & Kỷ Luật</Link></li>
                       <li><Link to="/dich-vu">Dịch Vụ</Link></li>
-                      <li><Link to="/hoc-phi">Học Phí</Link></li>
                       <li><Link to="/hoc-bong">Học Bổng</Link></li>
                       <li><Link to="/thong-bao">Thông Báo</Link></li>
                     </>

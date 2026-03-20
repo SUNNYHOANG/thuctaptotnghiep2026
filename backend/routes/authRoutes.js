@@ -6,7 +6,7 @@ const router = express.Router();
 async function selectStaffByUsernameAndPassword(username, password) {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, role, magiaovien, status FROM users WHERE username = ? AND password = ? AND status = ?',
+      'SELECT id, username, hoten, role, magiaovien, makhoa, status FROM users WHERE username = ? AND password = ? AND status = ?',
       [username, password, 'active']
     );
     return rows;
@@ -14,7 +14,7 @@ async function selectStaffByUsernameAndPassword(username, password) {
     // Một số schema cũ không có cột `status`
     if (error && error.code === 'ER_BAD_FIELD_ERROR') {
       const [rows] = await pool.execute(
-        'SELECT id, username, hoten, role, magiaovien FROM users WHERE username = ? AND password = ?',
+        'SELECT id, username, hoten, role, magiaovien, makhoa FROM users WHERE username = ? AND password = ?',
         [username, password]
       );
       return rows;
@@ -26,14 +26,14 @@ async function selectStaffByUsernameAndPassword(username, password) {
 async function selectStaffByUsernameForFaceLogin(username) {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, role, magiaovien, status FROM users WHERE username = ? AND status = ?',
+      'SELECT id, username, hoten, role, magiaovien, makhoa, status FROM users WHERE username = ? AND status = ?',
       [username, 'active']
     );
     return rows;
   } catch (error) {
     if (error && error.code === 'ER_BAD_FIELD_ERROR') {
       const [rows] = await pool.execute(
-        'SELECT id, username, hoten, role, magiaovien FROM users WHERE username = ?',
+        'SELECT id, username, hoten, role, magiaovien, makhoa FROM users WHERE username = ?',
         [username]
       );
       return rows;
@@ -45,14 +45,14 @@ async function selectStaffByUsernameForFaceLogin(username) {
 async function selectStaffById(id) {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, role, magiaovien, status FROM users WHERE id = ?',
+      'SELECT id, username, hoten, role, magiaovien, makhoa, status FROM users WHERE id = ?',
       [id]
     );
     return rows;
   } catch (error) {
     if (error && error.code === 'ER_BAD_FIELD_ERROR') {
       const [rows] = await pool.execute(
-        'SELECT id, username, hoten, role, magiaovien FROM users WHERE id = ?',
+        'SELECT id, username, hoten, role, magiaovien, makhoa FROM users WHERE id = ?',
         [id]
       );
       return rows;

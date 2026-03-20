@@ -15,8 +15,6 @@ const RoleBasedNavigation = () => {
     { label: 'Quản Lý Môn Học', path: '/admin/courses' },
     { label: 'Mở/Đóng Đăng Ký', path: '/admin/course-availability' },
     { label: 'Quản Lý Hoạt Động', path: '/admin/activities' },
-    { label: 'Điểm Danh Khuôn Mặt', path: '/admin/face-attendance' },
-    { label: 'Lịch Sử Điểm Danh', path: '/admin/attendance' },
     { label: 'Báo Cáo', path: '/admin/reports' },
   ];
 
@@ -39,7 +37,6 @@ const RoleBasedNavigation = () => {
   const studentNavItems = [
     { label: 'Trang Chủ', path: '/' },
     { label: 'Điểm Rèn Luyện', path: '/diem-ren-luyen' },
-    { label: 'Học Phí', path: '/hoc-phi' },
     { label: 'Dịch Vụ', path: '/dich-vu' },
   ];
 

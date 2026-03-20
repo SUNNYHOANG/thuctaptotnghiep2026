@@ -19,10 +19,6 @@ flask>=3.0
 flask-cors>=4.0
 Pillow>=10.0
 
-# NOTE (Windows/Python 3.11):
-# `face_recognition` phụ thuộc `dlib` và thường yêu cầu CMake + MSVC để build trên Windows.
-# App `app.py` đã hỗ trợ backend `lbph` (OpenCV-only) để chạy được mà không cần dlib.
-opencv-contrib-python>=4.8
 pandas>=2.0
 streamlit>=1.0
 watchdog>=2.0
