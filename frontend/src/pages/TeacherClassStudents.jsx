@@ -51,6 +51,18 @@ const TeacherClassStudents = () => {
       .finally(() => setLoading(false));
   }, [selectedLop, isGV, makhoa]);
 
+  // GV không có makhoa: cảnh báo
+  if (isGV && !makhoa) {
+    return (
+      <div className="page-card teacher-class-students">
+        <h1>Quản lý sinh viên trong lớp</h1>
+        <div style={{ padding: '16px', background: '#fff3cd', borderRadius: 6, color: '#856404', border: '1px solid #ffc107' }}>
+          ⚠️ Tài khoản giảng viên của bạn chưa được gán khoa. Vui lòng liên hệ quản trị viên để cập nhật thông tin khoa.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-card teacher-class-students">
       <h1>Quản lý sinh viên trong lớp</h1>

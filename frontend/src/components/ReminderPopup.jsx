@@ -84,23 +84,30 @@ const ReminderPopup = () => {
             {allReminders.length === 0 ? (
               <div className="reminder-bell-dropdown__empty">Chưa có thông báo nào.</div>
             ) : (
-              <ul className="reminder-bell-dropdown__list">
-                {allReminders.map((r) => {
-                  const isRead = getReadIds().includes(r.mathongbao);
-                  return (
-                    <li key={r.mathongbao} className={`reminder-bell-item ${isRead ? 'read' : 'unread'}`}>
-                      <div className="reminder-bell-item__title">{r.tieude}</div>
-                      <div className="reminder-bell-item__meta">
-                        {r.ngaytao ? new Date(r.ngaytao).toLocaleString('vi-VN') : ''}
-                        {!isRead && <span className="reminder-bell-item__dot" />}
-                      </div>
-                      {r.noidung && (
-                        <div className="reminder-bell-item__body">{r.noidung}</div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+              <>
+                <ul className="reminder-bell-dropdown__list">
+                  {allReminders.map((r) => {
+                    const isRead = getReadIds().includes(r.mathongbao);
+                    return (
+                      <li key={r.mathongbao} className={`reminder-bell-item ${isRead ? 'read' : 'unread'}`}>
+                        <div className="reminder-bell-item__title">{r.tieude}</div>
+                        <div className="reminder-bell-item__meta">
+                          {r.ngaytao ? new Date(r.ngaytao).toLocaleString('vi-VN') : ''}
+                          {!isRead && <span className="reminder-bell-item__dot" />}
+                        </div>
+                        {r.noidung && (
+                          <div className="reminder-bell-item__body">{r.noidung}</div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                {allReminders.length > 2 && (
+                  <div className="reminder-bell-dropdown__hint">
+                    ↕ Cuộn để xem thêm {allReminders.length - 2} thông báo
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

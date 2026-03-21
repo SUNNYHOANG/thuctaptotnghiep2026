@@ -35,30 +35,42 @@ const AppShell = ({ children }) => {
       return [
         { label: 'Tổng quan', path: '/admin/dashboard' },
         { label: 'Người dùng', path: '/admin/users' },
-        { label: 'Môn học', path: '/admin/courses' },
+        { label: 'Quản lý khoa', path: '/admin/khoa' },
+        { label: 'Quản lý môn học', path: '/admin/courses' },
+        { label: 'Quản lý học kỳ', path: '/admin/hoc-ky' },
         { label: 'Mở/Đóng đăng ký', path: '/admin/course-availability' },
         { label: 'Hoạt động', path: '/admin/activities' },
+        { label: 'Duyệt đăng ký hoạt động', path: '/ctsv/duyet-dang-ky-hoat-dong' },
         { label: 'Điểm rèn luyện', path: '/admin/scores' },
+        { label: 'Duyệt phiếu DRL theo lớp', path: '/ctsv/diem-ren-luyen-tu-danh-gia' },
+        { label: 'Thống kê DRL', path: '/ctsv/thong-ke-drl' },
+        { label: 'Tiêu chí DRL', path: '/admin/tieu-chi-drl' },
         { label: 'Học bổng', path: '/admin/scholarships' },
         { label: 'Khen thưởng / Kỷ luật', path: '/admin/rewards' },
-        { label: 'Dịch vụ', path: '/admin/services' },
+        { label: 'Duyệt đơn online', path: '/ctsv/duyet-don-online' },
+        { label: 'Duyệt phúc khảo', path: '/ctsv/duyet-phuc-khao' },
+        { label: 'Gửi nhắc nhở', path: '/ctsv/nhac-nho' },
         { label: 'Báo cáo', path: '/admin/reports' },
+        { label: 'Nhật ký hệ thống', path: '/admin/audit-log' },
         { label: 'Thông báo', path: '/admin/thong-bao' }
       ];
     }
     if (hasRole('giangvien')) {
       return [
         { label: 'Tổng quan', path: '/giangvien/dashboard' },
+        { label: 'Hồ sơ cá nhân', path: '/giangvien/ho-so' },
         { label: 'Nhập / quản lý điểm', path: '/teacher/grades' },
+        { label: 'Thống kê điểm lớp', path: '/giangvien/thong-ke-diem-lop' },
         { label: 'Sinh viên trong lớp', path: '/giangvien/sinh-vien-lop' },
         { label: 'Duyệt tự đánh giá DRL', path: '/giangvien/diem-ren-luyen-tu-danh-gia' },
+        { label: 'Phúc khảo lớp', path: '/giangvien/phuc-khao' },
+        { label: 'Khen thưởng / Kỷ luật', path: '/giangvien/khen-thuong' },
         { label: 'Đăng thông báo', path: '/admin/thong-bao' }
       ];
     }
     if (hasRole('ctsv')) {
       return [
         { label: 'Tổng quan', path: '/ctsv/dashboard' },
-        // { label: 'Quản lý điểm (kiểm tra & khóa)', path: '/ctsv/quan-ly-diem' },
         { label: 'Duyệt đơn online', path: '/ctsv/duyet-don-online' },
         { label: 'Duyệt đơn phúc khảo', path: '/ctsv/duyet-phuc-khao' },
         { label: 'Duyệt đăng ký hoạt động', path: '/ctsv/duyet-dang-ky-hoat-dong' },
@@ -67,7 +79,9 @@ const AppShell = ({ children }) => {
         { label: 'Khen thưởng / Kỷ luật', path: '/ctsv/khen-thuong-ky-luat' },
         { label: 'Điểm rèn luyện', path: '/ctsv/diem-ren-luyen' },
         { label: 'Quản lý điểm rèn luyện', path: '/ctsv/quan-ly-diem-ren-luyen' },
+        { label: 'Thống kê DRL', path: '/ctsv/thong-ke-drl' },
         { label: 'Tự đánh giá DRL (SV)', path: '/ctsv/diem-ren-luyen-tu-danh-gia' },
+        { label: 'Xuất báo cáo', path: '/ctsv/bao-cao' },
         { label: 'Đăng thông báo', path: '/admin/thong-bao' }
       ];
     }
@@ -76,6 +90,10 @@ const AppShell = ({ children }) => {
         { label: 'Tổng quan', path: '/khoa/dashboard' },
         { label: 'Duyệt Phiếu DRL', path: '/khoa/drl-review' },
         { label: 'Danh Sách Sinh Viên', path: '/khoa/students' },
+        { label: 'Thống kê DRL', path: '/khoa/drl-stats' },
+        { label: 'Khen thưởng / Kỷ luật', path: '/khoa/khen-thuong' },
+        { label: 'Học bổng', path: '/khoa/hoc-bong' },
+        { label: 'Thông báo nội bộ', path: '/khoa/thong-bao' },
       ];
     }
     // sinhvien (default)

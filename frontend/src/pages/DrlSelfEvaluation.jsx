@@ -25,7 +25,7 @@ const DrlSelfEvaluation = () => {
   const fileInputRef = React.useRef(null);
 
   useEffect(() => {
-    lookupAPI.getHocKy().then((r) => setHockyList(r.data || []));
+    lookupAPI.getHocKyDangMo().then((r) => setHockyList(r.data || []));
   }, []);
 
   useEffect(() => {

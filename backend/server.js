@@ -20,6 +20,11 @@ import thongBaoRoutes from './routes/thongBaoRoutes.js';
 import drlSelfRoutes from './routes/drlSelfRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import nrlRoutes from './routes/nrlRoutes.js';
+import khoaRoutes from './routes/khoaRoutes.js';
+import hocKyRoutes from './routes/hocKyRoutes.js';
+import auditLogRoutes from './routes/auditLogRoutes.js';
+import donOnlineRoutes from './routes/donOnlineRoutes.js';
+import tieuChiDrlRoutes from './routes/tieuChiDrlRoutes.js';
 import { parseUser } from './middleware/parseUser.js';
 
 dotenv.config();
@@ -32,6 +37,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(parseUser);
+// Serve file upload tĩnh
+app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -51,6 +58,11 @@ app.use('/api/thong-bao', thongBaoRoutes);
 app.use('/api/thongbao', thongBaoRoutes);
 app.use('/api/drl-self', drlSelfRoutes);
 app.use('/api/nrl', nrlRoutes);
+app.use('/api/khoa', khoaRoutes);
+app.use('/api/hocky', hocKyRoutes);
+app.use('/api/audit-log', auditLogRoutes);
+app.use('/api/don-online', donOnlineRoutes);
+app.use('/api/tieu-chi-drl', tieuChiDrlRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

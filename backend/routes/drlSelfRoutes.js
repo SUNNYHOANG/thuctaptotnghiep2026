@@ -147,6 +147,76 @@ router.get(
   }
 );
 
+// CTSV/Admin: Xuất danh sách DRL ra Excel
+router.get('/export-excel', requireRole(['admin', 'ctsv']), async (req, res) => {
+  try {
+    const { mahocky, makhoa, malop, trangthai } = req.query;
+    let query = `
+      SELECT t.mssv, s.hoten, s.malop, s.makhoa,
+             h.tenhocky, h.namhoc,
+             t.tong_diem, t.diem_cvht, t.diem_khoa, t.diem_ctsv,
+             t.trangthai, t.nguoi_duyet_ctsv, t.ngay_duyet_ctsv
+      FROM drl_tudanhgia t
+      JOIN sinhvien s ON t.mssv = s.mssv
+      LEFT JOIN hocky h ON t.mahocky = h.mahocky
+      WHERE 1=1
+    `;
+    const params = [];
+    if (mahocky)   { query += ' AND t.mahocky = ?';   params.push(mahocky); }
+    if (makhoa)    { query += ' AND s.makhoa = ?';    params.push(makhoa); }
+    if (malop)     { query += ' AND s.malop = ?';     params.push(malop); }
+    if (trangthai) { query += ' AND t.trangthai = ?'; params.push(trangthai); }
+    query += ' ORDER BY s.makhoa, s.malop, s.mssv';
+
+    const [rows] = await pool.execute(query, params);
+
+    const STATUS_LABEL = {
+      choduyet: 'Chờ GV duyệt',
+      chokhoaduyet: 'Chờ Khoa duyệt',
+      daduyet: 'Đã chốt',
+      bituchoi: 'Bị từ chối',
+    };
+
+    const wsData = [
+      ['MSSV', 'Họ tên', 'Lớp', 'Khoa', 'Học kỳ', 'Điểm SV', 'Điểm CVHT', 'Điểm Khoa', 'Điểm CTSV (chính thức)', 'Trạng thái', 'Người chốt', 'Ngày chốt'],
+      ...rows.map((r) => [
+        r.mssv,
+        r.hoten,
+        r.malop,
+        r.makhoa,
+        r.tenhocky ? `${r.tenhocky} - ${r.namhoc}` : (r.mahocky || ''),
+        r.tong_diem ?? '',
+        r.diem_cvht ?? '',
+        r.diem_khoa ?? '',
+        r.diem_ctsv ?? '',
+        STATUS_LABEL[r.trangthai] || r.trangthai,
+        r.nguoi_duyet_ctsv ?? '',
+        r.ngay_duyet_ctsv ? new Date(r.ngay_duyet_ctsv).toLocaleDateString('vi-VN') : '',
+      ]),
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Độ rộng cột
+    ws['!cols'] = [
+      { wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 10 },
+      { wch: 22 }, { wch: 10 }, { wch: 12 }, { wch: 12 },
+      { wch: 22 }, { wch: 18 }, { wch: 16 }, { wch: 14 },
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'DRL');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    const filename = `DRL_${mahocky || 'tatca'}_${makhoa || ''}_${malop || ''}.xlsx`.replace(/_{2,}/g, '_');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // CTSV: Quản lý tổng hợp tất cả phiếu DRL (lọc theo khoa, lớp, học kỳ, trạng thái)
 router.get('/manage', requireRole(['admin', 'ctsv']), async (req, res) => {
   try {

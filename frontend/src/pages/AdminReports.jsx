@@ -151,14 +151,21 @@ const AdminReports = () => {
             <thead>
               <tr style={{ background: '#f5f5f5' }}>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Lớp</th>
+                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Khoa</th>
                 <th style={{ padding: '10px', textAlign: 'right', borderBottom: '1px solid #ddd' }}>Số SV</th>
               </tr>
             </thead>
             <tbody>
-              {byLop.map((r) => (
-                <tr key={r.name} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '10px' }}>{r.name}</td>
-                  <td style={{ padding: '10px', textAlign: 'right' }}>{r.total}</td>
+              {byLop.length === 0 ? (
+                <tr><td colSpan={3} style={{ padding: 16, textAlign: 'center', color: '#999' }}>Không có dữ liệu</td></tr>
+              ) : byLop.map((r) => (
+                <tr key={r.code || r.name} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '10px' }}>
+                    <div style={{ fontWeight: 600 }}>{r.name || r.code}</div>
+                    <div style={{ fontSize: 12, color: '#888' }}>{r.code}</div>
+                  </td>
+                  <td style={{ padding: '10px', fontSize: 13, color: '#555' }}>{r.makhoa || '—'}</td>
+                  <td style={{ padding: '10px', textAlign: 'right', fontWeight: 600 }}>{r.total}</td>
                 </tr>
               ))}
             </tbody>
@@ -174,10 +181,15 @@ const AdminReports = () => {
               </tr>
             </thead>
             <tbody>
-              {byKhoa.map((r) => (
-                <tr key={r.name} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '10px' }}>{r.name}</td>
-                  <td style={{ padding: '10px', textAlign: 'right' }}>{r.total}</td>
+              {byKhoa.length === 0 ? (
+                <tr><td colSpan={2} style={{ padding: 16, textAlign: 'center', color: '#999' }}>Không có dữ liệu</td></tr>
+              ) : byKhoa.map((r) => (
+                <tr key={r.code || r.name} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '10px' }}>
+                    <div style={{ fontWeight: 600 }}>{r.name || r.code}</div>
+                    <div style={{ fontSize: 12, color: '#888' }}>{r.code}</div>
+                  </td>
+                  <td style={{ padding: '10px', textAlign: 'right', fontWeight: 600 }}>{r.total}</td>
                 </tr>
               ))}
             </tbody>

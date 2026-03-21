@@ -6,7 +6,7 @@ import { useUrlMssv } from '../utils/useUrlMssv';
 const DrlClassReview = () => {
   const { user } = useAuth();
   const isGV = user?.role === 'giangvien';
-  const isCTSV = user?.role === 'ctsv';
+  const isCTSV = user?.role === 'ctsv' || user?.role === 'admin';
   const [urlMssv, setUrlMssv] = useUrlMssv();
   const [filterMssv, setFilterMssv] = useState('');
   const [malop, setMalop] = useState('');
@@ -26,7 +26,7 @@ const DrlClassReview = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    lookupAPI.getHocKy().then((r) => setHockyList(r.data || [])).catch(() => {});
+    lookupAPI.getHocKyDangMo().then((r) => setHockyList(r.data || [])).catch(() => {});
     // GV chỉ load lớp thuộc khoa mình; CTSV/admin load tất cả
     const makhoa = isGV ? user?.makhoa : null;
     lookupAPI.getLopByKhoa(makhoa)
@@ -133,7 +133,7 @@ const DrlClassReview = () => {
       <div className="card">
         <div className="card-header">
           <h1 className="card-title">
-            Duyệt tự đánh giá điểm rèn luyện ({isCTSV ? 'CTSV' : user?.role === 'admin' ? 'Admin' : 'Giảng viên'})
+            Duyệt tự đánh giá điểm rèn luyện ({user?.role === 'admin' ? 'Admin' : isCTSV ? 'CTSV' : 'Giảng viên'})
           </h1>
           {isGV && user?.makhoa && (
             <p style={{ color: '#2563eb', fontWeight: 500, marginBottom: 8, marginTop: 4 }}>

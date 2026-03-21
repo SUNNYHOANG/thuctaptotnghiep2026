@@ -31,6 +31,18 @@ router.get('/hocky', async (req, res) => {
   }
 });
 
+// Chỉ trả về học kỳ đang mở (trangthai = 'dangmo') — dùng cho dropdown người dùng nộp/đăng ký
+router.get('/hocky-dangmo', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      "SELECT mahocky, tenhocky, namhoc FROM hocky WHERE trangthai = 'dangmo' ORDER BY namhoc DESC, tenhocky"
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/giangvien', async (req, res) => {
   try {
     const list = await getGiangVienList();
@@ -92,10 +104,38 @@ router.get('/tieu-chi-drl', async (req, res) => {
   }
 });
 
+// Danh sách khoa (lấy từ bảng khoa, fallback về sinhvien DISTINCT)
+router.get('/khoa-list', async (req, res) => {
+  try {
+    let rows = [];
+    try {
+      [rows] = await pool.execute('SELECT makhoa, tenkhoa FROM khoa ORDER BY makhoa');
+    } catch {
+      // fallback nếu không có bảng khoa
+      const [sv] = await pool.execute(
+        `SELECT DISTINCT makhoa, makhoa AS tenkhoa FROM sinhvien
+         WHERE makhoa IS NOT NULL AND makhoa != '' ORDER BY makhoa`
+      );
+      rows = sv;
+    }
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Danh sách lớp theo khoa (GV chỉ thấy lớp của khoa mình)
 router.get('/lop-by-khoa', async (req, res) => {
   try {
-    const { makhoa } = req.query;
+    // Ưu tiên makhoa từ query, fallback về header (GV gửi qua interceptor)
+    const makhoa = req.query.makhoa || req.headers['x-user-makhoa'] || null;
+    const role = req.headers['x-user-role'] || '';
+
+    // GV bắt buộc phải có makhoa — không cho xem tất cả lớp
+    if (role === 'giangvien' && !makhoa) {
+      return res.json({ data: [] });
+    }
+
     let rows = [];
     const table = await (async () => {
       try { await pool.execute('SELECT 1 FROM lophanhchinh LIMIT 1'); return 'lophanhchinh'; }
@@ -207,18 +247,33 @@ router.get('/report-advanced', async (req, res) => {
 router.get('/report-stats', async (req, res) => {
   try {
     const { group } = req.query; // 'malop' | 'makhoa'
+
     if (group === 'makhoa') {
-      const [rows] = await pool.execute(
-        `SELECT makhoa AS name, COUNT(*) AS total FROM sinhvien WHERE makhoa IS NOT NULL AND makhoa != '' GROUP BY makhoa ORDER BY total DESC`
-      );
+      // Lấy tất cả khoa từ bảng khoa, đếm SV tương ứng
+      const [rows] = await pool.execute(`
+        SELECT k.makhoa AS code, k.tenkhoa AS name,
+               COUNT(s.mssv) AS total
+        FROM khoa k
+        LEFT JOIN sinhvien s ON s.makhoa = k.makhoa
+        GROUP BY k.makhoa, k.tenkhoa
+        ORDER BY k.makhoa
+      `);
       return res.json({ data: rows });
     }
+
     if (group === 'malop') {
-      const [rows] = await pool.execute(
-        `SELECT malop AS name, COUNT(*) AS total FROM sinhvien WHERE malop IS NOT NULL AND malop != '' GROUP BY malop ORDER BY malop`
-      );
+      // Lấy tất cả lớp từ bảng lophanhchinh, đếm SV tương ứng
+      const [rows] = await pool.execute(`
+        SELECT l.malop AS code, l.tenlop AS name, l.makhoa,
+               COUNT(s.mssv) AS total
+        FROM lophanhchinh l
+        LEFT JOIN sinhvien s ON s.malop = l.malop
+        GROUP BY l.malop, l.tenlop, l.makhoa
+        ORDER BY l.makhoa, l.malop
+      `);
       return res.json({ data: rows });
     }
+
     const [rows] = await pool.execute(
       'SELECT malop, makhoa, COUNT(*) AS total FROM sinhvien GROUP BY malop, makhoa ORDER BY makhoa, malop'
     );

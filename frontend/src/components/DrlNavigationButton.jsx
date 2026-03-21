@@ -19,7 +19,7 @@ const DrlNavigationButton = ({ mssv, role }) => {
   // Ẩn hoàn toàn nếu role không hợp lệ
   if (!DRL_ROUTES[role]) return null;
 
-  const isDisabled = !mssv || mssv.trim() === '';
+  const isDisabled = !mssv || String(mssv).trim() === '';
   const targetUrl = isDisabled ? '' : DRL_ROUTES[role](mssv);
 
   const handleClick = () => {

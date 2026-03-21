@@ -22,7 +22,7 @@ const KhoaDrlReview = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    lookupAPI.getHocKy().then((r) => setHockyList(r.data || [])).catch(() => {});
+    lookupAPI.getHocKyDangMo().then((r) => setHockyList(r.data || [])).catch(() => {});
     lookupAPI.getLop().then((r) => setLopList(r.data?.data || r.data || [])).catch(() => {});
   }, []);
 

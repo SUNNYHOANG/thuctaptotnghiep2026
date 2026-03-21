@@ -1,239 +1,312 @@
 import React, { useState, useEffect } from 'react';
-import { adminAPIEndpoints } from '../api/adminAPI';
-import { useAuth } from '../context/AuthContext';
-import DrlNavigationButton from '../components/DrlNavigationButton';
+import api, { lookupAPI } from '../api/api';
+
+const ROLE_COLORS = { admin: '#e74c3c', giangvien: '#3498db', ctsv: '#9b59b6', khoa: '#e67e22' };
+const ROLE_LABELS = { admin: 'Admin', giangvien: 'Giảng viên', ctsv: 'CTSV', khoa: 'Khoa' };
+
+const EMPTY_STAFF = { username: '', password: '', hoten: '', email: '', role: 'giangvien', makhoa: '', status: 'active' };
+const EMPTY_SV = { mssv: '', hoten: '', malop: '', makhoa: '', ngaysinh: '', gioitinh: '', tinhtrang: 'Đang học', khoahoc: '', bacdaotao: 'Đại học', nganh: '' };
+
+const th = { padding: '10px 12px', textAlign: 'left', borderBottom: '2px solid #ddd', fontWeight: 600, whiteSpace: 'nowrap' };
+const td = { padding: '9px 12px', verticalAlign: 'middle' };
+const btnEdit = { marginRight: 6, background: '#3498db', color: 'white', padding: '4px 10px', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 };
+const btnDel = { background: '#e74c3c', color: 'white', padding: '4px 10px', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 13 };
+const btnCancel = { padding: '9px 20px', background: '#95a5a6', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' };
+const btnSave = { padding: '9px 24px', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 };
+const inp = { width: '100%', padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, boxSizing: 'border-box' };
+
+const Field = ({ label, required, children }) => (
+  <div style={{ marginBottom: 14 }}>
+    <label style={{ display: 'block', marginBottom: 5, fontWeight: 500, fontSize: 14 }}>
+      {label} {required && <span style={{ color: 'red' }}>*</span>}
+    </label>
+    {children}
+  </div>
+);
 
 const AdminUsers = () => {
-  const { user } = useAuth();
-  const userRole = user?.role || 'admin';
-  const [userType, setUserType] = useState('staff'); // 'staff' or 'students'
+  const [userType, setUserType] = useState('staff');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filters, setFilters] = useState({ role: '', status: '' });
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    hoten: '',
-    email: '',
-    role: 'giangvien',
-    makhoa: '',
-    status: 'active'
-  });
+  const [staffForm, setStaffForm] = useState(EMPTY_STAFF);
+  const [svForm, setSvForm] = useState(EMPTY_SV);
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [svSearch, setSvSearch] = useState('');
+  const [khoaList, setKhoaList] = useState([]);
+  const [lopList, setLopList] = useState([]);
+
+  useEffect(() => { fetchUsers(); }, [filters, userType]); // eslint-disable-line
 
   useEffect(() => {
-    fetchUsers();
-  }, [filters, userType]);
+    lookupAPI.getKhoaList()
+      .then((r) => setKhoaList(r.data?.data || []))
+      .catch(() => setKhoaList([]));
+  }, []);
 
   const fetchUsers = async () => {
+    setLoading(true); setError(null);
     try {
-      setLoading(true);
-      let response;
       if (userType === 'staff') {
-        response = await adminAPIEndpoints.getUsers(filters);
+        const params = {};
+        if (filters.role) params.role = filters.role;
+        if (filters.status) params.status = filters.status;
+        const res = await api.get('/users', { params });
+        setUsers(res.data?.data || res.data || []);
       } else {
-        response = await fetch('http://localhost:5000/api/users/students/all').then(r => r.json());
+        const res = await api.get('/users/students/all');
+        setUsers(res.data?.data || res.data || []);
       }
-      setUsers(response.data || []);
     } catch (err) {
-      setError('Lỗi tải dữ liệu: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
+      setError('Lỗi tải dữ liệu: ' + (err.response?.data?.error || err.message));
+      setUsers([]);
+    } finally { setLoading(false); }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // ── STAFF handlers ──
+  const handleStaffSubmit = async (e) => {
+    e.preventDefault(); setFormError('');
+    if (!staffForm.username.trim()) { setFormError('Vui lòng nhập username.'); return; }
+    if (!editingId && !staffForm.password.trim()) { setFormError('Vui lòng nhập mật khẩu.'); return; }
+    if ((staffForm.role === 'khoa' || staffForm.role === 'giangvien') && !staffForm.makhoa) {
+      setFormError(`Vai trò "${ROLE_LABELS[staffForm.role]}" bắt buộc phải có Mã Khoa.`); return;
+    }
+    setSubmitting(true);
     try {
-      const payload = { ...formData };
-      // Chỉ gửi makhoa nếu role là 'khoa'
-      if (payload.role !== 'khoa') {
-        delete payload.makhoa;
-      }
+      const payload = { ...staffForm };
+      if (!payload.makhoa) delete payload.makhoa;
+      if (!payload.email) delete payload.email;
+      if (!payload.hoten) delete payload.hoten;
       if (editingId) {
-        await adminAPIEndpoints.updateUser(editingId, payload);
-        alert('Cập nhật thành công');
+        const up = { ...payload }; delete up.username;
+        if (!up.password) delete up.password;
+        await api.put(`/users/${editingId}`, up);
       } else {
-        await adminAPIEndpoints.createUser(payload);
-        alert('Thêm người dùng thành công');
+        await api.post('/users', payload);
       }
-      setShowModal(false);
-      setFormData({ username: '', password: '', hoten: '', email: '', role: 'giangvien', makhoa: '', status: 'active' });
-      setEditingId(null);
-      fetchUsers();
+      closeModal(); fetchUsers();
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      setFormError('Lỗi: ' + (err.response?.data?.error || err.message));
+    } finally { setSubmitting(false); }
+  };
+
+  const openEditStaff = (u) => {
+    setStaffForm({ username: u.username || '', password: '', hoten: u.hoten || '', email: u.email || '', role: u.role || 'giangvien', makhoa: u.makhoa || '', status: u.status || 'active' });
+    setEditingId(u.id); setFormError(''); setShowModal(true);
+  };
+
+  const handleDeleteStaff = async (id, username) => {
+    if (!window.confirm(`Xác nhận xóa tài khoản "${username}"?`)) return;
+    try { await api.delete(`/users/${id}`); fetchUsers(); }
+    catch (err) { alert('Lỗi xóa: ' + (err.response?.data?.error || err.message)); }
+  };
+
+  // ── SINH VIÊN handlers ──
+  const handleSvSubmit = async (e) => {
+    e.preventDefault(); setFormError('');
+    if (!svForm.mssv.trim()) { setFormError('Vui lòng nhập MSSV.'); return; }
+    if (!svForm.hoten.trim()) { setFormError('Vui lòng nhập họ tên.'); return; }
+    setSubmitting(true);
+    try {
+      if (editingId) {
+        await api.put(`/users/students/${editingId}`, svForm);
+      } else {
+        await api.post('/users/students', svForm);
+      }
+      closeModal(); fetchUsers();
+    } catch (err) {
+      setFormError('Lỗi: ' + (err.response?.data?.error || err.message));
+    } finally { setSubmitting(false); }
+  };
+
+  const loadLopByKhoa = async (makhoa) => {
+    if (!makhoa) { setLopList([]); return; }
+    try {
+      const r = await lookupAPI.getLopByKhoa(makhoa);
+      setLopList(r.data?.data || r.data || []);
+    } catch {
+      setLopList([]);
     }
   };
 
-  const handleEdit = (user) => {
-    setFormData({ ...user, makhoa: user.makhoa || '', password: '' });
-    setEditingId(user.id);
+  const openEditSv = async (u) => {
+    // Load lớp trước khi set form để tránh race condition
+    await loadLopByKhoa(u.makhoa || '');
+    setSvForm({
+      mssv: u.mssv || u.id || '',
+      hoten: u.hoten || '',
+      malop: u.malop || '',
+      makhoa: u.makhoa || '',
+      ngaysinh: u.ngaysinh ? String(u.ngaysinh).split('T')[0] : '',
+      gioitinh: u.gioitinh || '',
+      tinhtrang: u.tinhtrang || 'Đang học',
+      khoahoc: u.khoahoc || '',
+      bacdaotao: u.bacdaotao || 'Đại học',
+      nganh: u.nganh || '',
+    });
+    setEditingId(u.mssv || u.id);
+    setFormError('');
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Xác nhận xóa?')) return;
-    try {
-      await adminAPIEndpoints.deleteUser(id);
-      alert('Xóa thành công');
-      fetchUsers();
-    } catch (err) {
-      alert('Lỗi: ' + err.message);
-    }
+  const handleDeleteSv = async (mssv, hoten) => {
+    if (!window.confirm(`Xác nhận xóa sinh viên "${hoten}" (${mssv})?`)) return;
+    try { await api.delete(`/users/students/${mssv}`); fetchUsers(); }
+    catch (err) { alert('Lỗi xóa: ' + (err.response?.data?.error || err.message)); }
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingId(null);
-    setFormData({ username: '', password: '', hoten: '', email: '', role: 'giangvien', makhoa: '', status: 'active' });
+  const closeModal = () => {
+    setShowModal(false); setEditingId(null);
+    setStaffForm(EMPTY_STAFF); setSvForm(EMPTY_SV);
+    setLopList([]); setFormError('');
   };
 
-  const getRoleBadgeColor = (role) => {
-    const colors = {
-      admin: '#e74c3c',
-      giangvien: '#3498db',
-      ctsv: '#9b59b6',
-      khoa: '#e67e22',
-    };
-    return colors[role] || '#95a5a6';
-  };
+  const displayedUsers = userType === 'students' && svSearch.trim()
+    ? users.filter((u) => {
+        const q = svSearch.trim().toLowerCase();
+        return (
+          (u.mssv || u.id || '').toString().toLowerCase().includes(q) ||
+          (u.hoten || '').toLowerCase().includes(q) ||
+          (u.malop || '').toLowerCase().includes(q) ||
+          (u.makhoa || '').toLowerCase().includes(q)
+        );
+      })
+    : users;
 
-  // Hiển thị cột makhoa khi filter role='khoa'
-  const showMakhoaColumn = filters.role === 'khoa' || !filters.role;
+  const needsMakhoa = staffForm.role === 'khoa' || staffForm.role === 'giangvien';
 
   return (
     <div className="admin-page">
       <h2>👥 Quản Lý Người Dùng</h2>
 
       {/* Tabs */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', borderBottom: '2px solid #ddd', paddingBottom: '10px' }}>
-        <button
-          onClick={() => setUserType('staff')}
-          style={{
-            padding: '10px 20px',
-            background: userType === 'staff' ? '#3498db' : '#ecf0f1',
-            color: userType === 'staff' ? 'white' : 'black',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}>
-          👔 Cán Bộ (Admin/GV/CTSV/Khoa)
+      <div style={{ marginBottom: 20, display: 'flex', gap: 10, borderBottom: '2px solid #ddd', paddingBottom: 10 }}>
+        <button onClick={() => { setUserType('staff'); setError(null); }}
+          style={{ padding: '10px 20px', background: userType === 'staff' ? '#3498db' : '#ecf0f1', color: userType === 'staff' ? 'white' : '#333', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>
+          👔 Cán Bộ
         </button>
-        <button
-          onClick={() => setUserType('students')}
-          style={{
-            padding: '10px 20px',
-            background: userType === 'students' ? '#27ae60' : '#ecf0f1',
-            color: userType === 'students' ? 'white' : 'black',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}>
+        <button onClick={() => { setUserType('students'); setError(null); }}
+          style={{ padding: '10px 20px', background: userType === 'students' ? '#27ae60' : '#ecf0f1', color: userType === 'students' ? 'white' : '#333', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>
           🎓 Sinh Viên
         </button>
       </div>
 
-      {/* Filters */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      {/* Toolbar */}
+      <div style={{ marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         {userType === 'staff' && (
           <>
-            <select value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}>
+            <select value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+              style={{ padding: '7px 10px', borderRadius: 4, border: '1px solid #ddd' }}>
               <option value="">Tất cả vai trò</option>
               <option value="admin">Admin</option>
               <option value="giangvien">Giảng viên</option>
               <option value="ctsv">CTSV</option>
               <option value="khoa">Khoa</option>
             </select>
-            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              style={{ padding: '7px 10px', borderRadius: 4, border: '1px solid #ddd' }}>
               <option value="">Tất cả trạng thái</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
+            <button onClick={() => { setStaffForm(EMPTY_STAFF); setEditingId(null); setFormError(''); setShowModal(true); }}
+              style={{ padding: '8px 16px', background: '#27ae60', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+              ➕ Thêm Cán Bộ
+            </button>
           </>
         )}
-        {userType === 'staff' && (
-          <button onClick={() => setShowModal(true)} style={{ background: '#27ae60', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            ➕ Thêm Cán Bộ
-          </button>
+        {userType === 'students' && (
+          <>
+            <input type="text" placeholder="Tìm theo MSSV, họ tên, lớp, khoa..."
+              value={svSearch} onChange={(e) => setSvSearch(e.target.value)}
+              style={{ padding: '7px 12px', borderRadius: 4, border: '1px solid #ddd', width: 280 }} />
+            <button onClick={() => { setSvForm(EMPTY_SV); setLopList([]); setEditingId(null); setFormError(''); setShowModal(true); }}
+              style={{ padding: '8px 16px', background: '#27ae60', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
+              ➕ Thêm Sinh Viên
+            </button>
+          </>
         )}
+        <button onClick={fetchUsers}
+          style={{ padding: '7px 14px', background: '#ecf0f1', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer' }}>
+          🔄 Làm mới
+        </button>
       </div>
 
-      {/* Table */}
+      {!loading && !error && (
+        <p style={{ fontSize: 13, color: '#666', marginBottom: 8 }}>
+          Tổng: <strong>{displayedUsers.length}</strong>
+          {userType === 'students' && svSearch && ` / ${users.length}`} bản ghi
+        </p>
+      )}
+
+      {/* Bảng dữ liệu */}
       {loading ? (
-        <div>Đang tải...</div>
+        <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>⏳ Đang tải...</div>
       ) : error ? (
-        <div style={{ color: 'red' }}>{error}</div>
+        <div style={{ padding: 16, background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, color: '#dc2626' }}>
+          ⚠️ {error}
+          <button onClick={fetchUsers} style={{ marginLeft: 12, padding: '4px 10px', cursor: 'pointer' }}>Thử lại</button>
+        </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: '#f5f5f5' }}>
                 {userType === 'staff' ? (
                   <>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Username</th>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Họ Tên</th>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Email</th>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Vai Trò</th>
-                    {showMakhoaColumn && (
-                      <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Mã Khoa</th>
-                    )}
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Trạng Thái</th>
-                    <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #ddd' }}>Hành Động</th>
+                    <th style={th}>Username</th><th style={th}>Họ Tên</th><th style={th}>Email</th>
+                    <th style={th}>Vai Trò</th><th style={th}>Mã Khoa</th><th style={th}>Trạng Thái</th>
+                    <th style={{ ...th, textAlign: 'center' }}>Hành Động</th>
                   </>
                 ) : (
                   <>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>MSSV</th>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Họ Tên</th>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Lớp</th>
-                    <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Khoa</th>
-                    <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #ddd' }}>Hành Động</th>
+                    <th style={th}>MSSV</th><th style={th}>Họ Tên</th><th style={th}>Lớp</th>
+                    <th style={th}>Khoa</th><th style={th}>Tình Trạng</th>
+                    <th style={{ ...th, textAlign: 'center' }}>Hành Động</th>
                   </>
                 )}
               </tr>
             </thead>
             <tbody>
-              {users.map(user => (
-                <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
+              {displayedUsers.length === 0 ? (
+                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#999' }}>Không có dữ liệu.</td></tr>
+              ) : displayedUsers.map((u) => (
+                <tr key={userType === 'staff' ? u.id : (u.mssv || u.id)} style={{ borderBottom: '1px solid #eee' }}>
                   {userType === 'staff' ? (
                     <>
-                      <td style={{ padding: '10px' }}>{user.username}</td>
-                      <td style={{ padding: '10px' }}>{user.hoten || '-'}</td>
-                      <td style={{ padding: '10px' }}>{user.email || '-'}</td>
-                      <td style={{ padding: '10px' }}>
-                        <span style={{ background: getRoleBadgeColor(user.role), color: 'white', padding: '4px 8px', borderRadius: '4px' }}>
-                          {user.role}
+                      <td style={td}>{u.username}</td>
+                      <td style={td}>{u.hoten || '-'}</td>
+                      <td style={td}>{u.email || '-'}</td>
+                      <td style={td}>
+                        <span style={{ background: ROLE_COLORS[u.role] || '#95a5a6', color: 'white', padding: '3px 8px', borderRadius: 4, fontSize: 12 }}>
+                          {ROLE_LABELS[u.role] || u.role}
                         </span>
                       </td>
-                      {showMakhoaColumn && (
-                        <td style={{ padding: '10px' }}>{user.makhoa || '-'}</td>
-                      )}
-                      <td style={{ padding: '10px' }}>
-                        <span style={{ background: user.status === 'active' ? '#27ae60' : '#95a5a6', color: 'white', padding: '4px 8px', borderRadius: '4px' }}>
-                          {user.status}
+                      <td style={td}>{u.makhoa || '-'}</td>
+                      <td style={td}>
+                        <span style={{ background: u.status === 'active' ? '#27ae60' : '#95a5a6', color: 'white', padding: '3px 8px', borderRadius: 4, fontSize: 12 }}>
+                          {u.status === 'active' ? 'Hoạt động' : 'Vô hiệu'}
                         </span>
                       </td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>
-                        <button onClick={() => handleEdit(user)} style={{ marginRight: '5px', background: '#3498db', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                          ✏️
-                        </button>
-                        <button onClick={() => handleDelete(user.id)} style={{ background: '#e74c3c', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                          🗑️
-                        </button>
+                      <td style={{ ...td, textAlign: 'center' }}>
+                        <button onClick={() => openEditStaff(u)} style={btnEdit}>✏️ Sửa</button>
+                        <button onClick={() => handleDeleteStaff(u.id, u.username)} style={btnDel}>🗑️ Xóa</button>
                       </td>
                     </>
                   ) : (
                     <>
-                      <td style={{ padding: '10px' }}>{user.id}</td>
-                      <td style={{ padding: '10px' }}>{user.hoten || '-'}</td>
-                      <td style={{ padding: '10px' }}>{user.malop || '-'}</td>
-                      <td style={{ padding: '10px' }}>{user.makhoa || '-'}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>
-                        <DrlNavigationButton mssv={user.id} role={userRole} />
+                      <td style={td}>{u.mssv || u.id}</td>
+                      <td style={td}>{u.hoten || '-'}</td>
+                      <td style={td}>{u.malop || '-'}</td>
+                      <td style={td}>{u.makhoa || '-'}</td>
+                      <td style={td}>{u.tinhtrang || '-'}</td>
+                      <td style={{ ...td, textAlign: 'center' }}>
+                        <button onClick={() => openEditSv(u)} style={btnEdit}>✏️ Sửa</button>
+                        <button onClick={() => handleDeleteSv(u.mssv || u.id, u.hoten)} style={btnDel}>🗑️ Xóa</button>
                       </td>
                     </>
                   )}
@@ -244,67 +317,142 @@ const AdminUsers = () => {
         </div>
       )}
 
-      {/* Modal */}
-      {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', padding: '30px', borderRadius: '8px', width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3>{editingId ? 'Cập Nhật Người Dùng' : 'Thêm Người Dùng'}</h3>
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '15px' }}>
-                <label>Username <span style={{ color: 'red' }}>*</span></label>
-                <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} required disabled={editingId} />
-              </div>
-              {!editingId && (
-                <div style={{ marginBottom: '15px' }}>
-                  <label>Mật Khẩu <span style={{ color: 'red' }}>*</span></label>
-                  <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} required />
-                </div>
-              )}
-              <div style={{ marginBottom: '15px' }}>
-                <label>Họ Tên</label>
-                <input type="text" value={formData.hoten} onChange={(e) => setFormData({ ...formData, hoten: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
-              </div>
-              <div style={{ marginBottom: '15px' }}>
-                <label>Email</label>
-                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
-              </div>
-              <div style={{ marginBottom: '15px' }}>
-                <label>Vai Trò</label>
-                <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
+      {/* Modal cán bộ */}
+      {showModal && userType === 'staff' && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: 16 }}>
+          <div style={{ background: 'white', padding: 28, borderRadius: 8, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ marginTop: 0 }}>{editingId ? '✏️ Cập Nhật Cán Bộ' : '➕ Thêm Cán Bộ Mới'}</h3>
+            {formError && <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, color: '#dc2626', marginBottom: 14, fontSize: 13 }}>⚠️ {formError}</div>}
+            <form onSubmit={handleStaffSubmit}>
+              <Field label="Username" required>
+                <input type="text" value={staffForm.username} onChange={(e) => setStaffForm({ ...staffForm, username: e.target.value })}
+                  disabled={!!editingId} style={{ ...inp, background: editingId ? '#f9f9f9' : 'white' }} placeholder="Username đăng nhập" required />
+              </Field>
+              <Field label={editingId ? 'Mật Khẩu Mới (để trống nếu không đổi)' : 'Mật Khẩu'} required={!editingId}>
+                <input type="password" value={staffForm.password} onChange={(e) => setStaffForm({ ...staffForm, password: e.target.value })}
+                  style={inp} placeholder={editingId ? 'Để trống nếu không thay đổi' : 'Nhập mật khẩu'} required={!editingId} />
+              </Field>
+              <Field label="Họ Tên">
+                <input type="text" value={staffForm.hoten} onChange={(e) => setStaffForm({ ...staffForm, hoten: e.target.value })} style={inp} placeholder="Họ và tên đầy đủ" />
+              </Field>
+              <Field label="Email">
+                <input type="email" value={staffForm.email} onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })} style={inp} placeholder="example@email.com" />
+              </Field>
+              <Field label="Vai Trò" required>
+                <select value={staffForm.role} onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value, makhoa: '' })} style={inp}>
                   <option value="admin">Admin</option>
                   <option value="giangvien">Giảng Viên</option>
                   <option value="ctsv">CTSV</option>
                   <option value="khoa">Khoa</option>
                 </select>
-              </div>
-              {/* Field makhoa bắt buộc khi role='khoa' */}
-              {formData.role === 'khoa' && (
-                <div style={{ marginBottom: '15px' }}>
-                  <label>Mã Khoa <span style={{ color: 'red' }}>*</span></label>
-                  <input
-                    type="text"
-                    value={formData.makhoa}
-                    onChange={(e) => setFormData({ ...formData, makhoa: e.target.value })}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                    placeholder="Nhập mã khoa (vd: CNTT, QTKD)"
-                    required
-                  />
-                  <small style={{ color: '#666' }}>Mã khoa phải tồn tại trong hệ thống sinh viên</small>
-                </div>
+              </Field>
+              {needsMakhoa && (
+                <Field label="Mã Khoa" required>
+                  <select value={staffForm.makhoa} onChange={(e) => setStaffForm({ ...staffForm, makhoa: e.target.value })} style={inp} required>
+                    <option value="">-- Chọn khoa --</option>
+                    {khoaList.map((k) => <option key={k.makhoa} value={k.makhoa}>{k.makhoa} – {k.tenkhoa}</option>)}
+                  </select>
+                  <small style={{ color: '#666', fontSize: 12 }}>
+                    {staffForm.role === 'khoa' ? 'Tài khoản Khoa chỉ quản lý sinh viên thuộc khoa này.' : 'Giảng viên chỉ xem/duyệt sinh viên thuộc khoa này.'}
+                  </small>
+                </Field>
               )}
-              <div style={{ marginBottom: '15px' }}>
-                <label>Trạng Thái</label>
-                <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+              <Field label="Trạng Thái">
+                <select value={staffForm.status} onChange={(e) => setStaffForm({ ...staffForm, status: e.target.value })} style={inp}>
+                  <option value="active">Hoạt động</option>
+                  <option value="inactive">Vô hiệu</option>
                 </select>
-              </div>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={handleCloseModal} style={{ padding: '10px 20px', background: '#95a5a6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                  Hủy
+              </Field>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+                <button type="button" onClick={closeModal} style={btnCancel}>Hủy</button>
+                <button type="submit" disabled={submitting} style={{ ...btnSave, background: submitting ? '#aaa' : '#27ae60' }}>
+                  {submitting ? 'Đang lưu...' : (editingId ? 'Cập Nhật' : 'Thêm Mới')}
                 </button>
-                <button type="submit" style={{ padding: '10px 20px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                  {editingId ? 'Cập Nhật' : 'Thêm'}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal sinh viên */}
+      {showModal && userType === 'students' && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: 16 }}>
+          <div style={{ background: 'white', padding: 28, borderRadius: 8, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ marginTop: 0 }}>{editingId ? '✏️ Cập Nhật Sinh Viên' : '➕ Thêm Sinh Viên Mới'}</h3>
+            {formError && <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 6, color: '#dc2626', marginBottom: 14, fontSize: 13 }}>⚠️ {formError}</div>}
+            <form onSubmit={handleSvSubmit}>
+              <Field label="MSSV" required>
+                <input type="text" value={svForm.mssv} onChange={(e) => setSvForm({ ...svForm, mssv: e.target.value })}
+                  disabled={!!editingId} style={{ ...inp, background: editingId ? '#f9f9f9' : 'white' }} placeholder="Mã số sinh viên" required />
+              </Field>
+              <Field label="Họ Tên" required>
+                <input type="text" value={svForm.hoten} onChange={(e) => setSvForm({ ...svForm, hoten: e.target.value })} style={inp} placeholder="Họ và tên đầy đủ" required />
+              </Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Field label="Mã Khoa">
+                  <select value={svForm.makhoa} onChange={async (e) => {
+                    const mk = e.target.value;
+                    setSvForm((prev) => ({ ...prev, makhoa: mk, malop: '' }));
+                    await loadLopByKhoa(mk);
+                  }} style={inp}>
+                    <option value="">-- Chọn khoa --</option>
+                    {khoaList.map((k) => <option key={k.makhoa} value={k.makhoa}>{k.makhoa} – {k.tenkhoa}</option>)}
+                  </select>
+                </Field>
+                <Field label="Lớp">
+                  <select value={svForm.malop} onChange={(e) => setSvForm((prev) => ({ ...prev, malop: e.target.value }))} style={inp}>
+                    <option value="">-- Chọn lớp --</option>
+                    {lopList.map((l) => <option key={l.malop} value={l.malop}>{l.malop}{l.tenlop ? ` – ${l.tenlop}` : ''}</option>)}
+                    {svForm.malop && !lopList.find((l) => l.malop === svForm.malop) && (
+                      <option value={svForm.malop}>{svForm.malop}</option>
+                    )}
+                  </select>
+                  {!svForm.makhoa && <small style={{ color: '#e67e22', fontSize: 12 }}>Chọn khoa trước để lọc danh sách lớp.</small>}
+                </Field>
+                <Field label="Ngày Sinh">
+                  <input type="date" value={svForm.ngaysinh} onChange={(e) => setSvForm((prev) => ({ ...prev, ngaysinh: e.target.value }))} style={inp} />
+                </Field>
+                <Field label="Giới Tính">
+                  <select value={svForm.gioitinh} onChange={(e) => setSvForm((prev) => ({ ...prev, gioitinh: e.target.value }))} style={inp}>
+                    <option value="">-- Chọn --</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Khác">Khác</option>
+                  </select>
+                </Field>
+                <Field label="Khóa học">
+                  <select value={svForm.khoahoc} onChange={(e) => setSvForm((prev) => ({ ...prev, khoahoc: e.target.value }))} style={inp}>
+                    <option value="">-- Chọn khóa --</option>
+                    {Array.from({ length: 9 }, (_, i) => {
+                      const start = 2022 + i;
+                      const val = `${start}-${start + 4}`;
+                      return <option key={val} value={val}>{val}</option>;
+                    })}
+                  </select>
+                </Field>
+                <Field label="Bậc đào tạo">
+                  <select value={svForm.bacdaotao} onChange={(e) => setSvForm((prev) => ({ ...prev, bacdaotao: e.target.value }))} style={inp}>
+                    <option value="Đại học">Đại học</option>
+                    <option value="Cao đẳng">Cao đẳng</option>
+                    <option value="Thạc sĩ">Thạc sĩ</option>
+                  </select>
+                </Field>
+              </div>
+              <Field label="Ngành">
+                <input type="text" value={svForm.nganh} onChange={(e) => setSvForm((prev) => ({ ...prev, nganh: e.target.value }))} style={inp} placeholder="VD: Công nghệ thông tin" />
+              </Field>
+              <Field label="Tình Trạng">
+                <select value={svForm.tinhtrang} onChange={(e) => setSvForm((prev) => ({ ...prev, tinhtrang: e.target.value }))} style={inp}>
+                  <option value="Đang học">Đang học</option>
+                  <option value="Tốt nghiệp">Tốt nghiệp</option>
+                  <option value="Bảo lưu">Bảo lưu</option>
+                  <option value="Thôi học">Thôi học</option>
+                </select>
+              </Field>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+                <button type="button" onClick={closeModal} style={btnCancel}>Hủy</button>
+                <button type="submit" disabled={submitting} style={{ ...btnSave, background: submitting ? '#aaa' : '#27ae60' }}>
+                  {submitting ? 'Đang lưu...' : (editingId ? 'Cập Nhật' : 'Thêm Mới')}
                 </button>
               </div>
             </form>

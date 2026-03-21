@@ -3,28 +3,40 @@ import { phucKhaoAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import './PhucKhao.css';
 
+const TRANGTHAI_CONFIG = {
+  cho:      { label: 'Chờ xử lý',  cls: 'cho' },
+  dangxuly: { label: 'Đang xử lý', cls: 'dangxuly' },
+  chapnhan: { label: 'Chấp nhận',  cls: 'chapnhan' },
+  tuchoi:   { label: 'Từ chối',    cls: 'tuchoi' },
+};
+
 const PhucKhao = () => {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ mabangdiem: '', malophocphan: '', lydo: '' });
-  const [editingId, setEditingId] = useState(null);
   const { user } = useAuth();
+  const [requests, setRequests]     = useState([]);
+  const [monHocList, setMonHocList] = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [filter, setFilter]         = useState('all');
+  const [showForm, setShowForm]     = useState(false);
+  const [editingId, setEditingId]   = useState(null);
+  const [formData, setFormData]     = useState({ mamonhoc: '', lydo: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadRequests();
+    if (user?.mssv) {
+      loadRequests();
+      phucKhaoAPI.getMonHocList()
+        .then((res) => setMonHocList(res.data || []))
+        .catch(() => {});
+    }
   }, [user]);
 
   const loadRequests = async () => {
     try {
       setLoading(true);
-      if (user?.mssv) {
-        const res = await phucKhaoAPI.getByStudent(user.mssv);
-        setRequests(res.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading requests:', error);
+      const res = await phucKhaoAPI.getByStudent(user.mssv);
+      setRequests(res.data || []);
+    } catch (err) {
+      console.error('Load phúc khảo lỗi:', err);
     } finally {
       setLoading(false);
     }
@@ -32,65 +44,69 @@ const PhucKhao = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.mamonhoc) { alert('Vui lòng chọn môn học cần phúc khảo.'); return; }
+    if (!formData.lydo.trim()) { alert('Vui lòng nhập lý do phúc khảo.'); return; }
     try {
-      const data = { ...formData, mssv: user.mssv };
+      setSubmitting(true);
       if (editingId) {
-        await phucKhaoAPI.update(editingId, formData);
+        await phucKhaoAPI.update(editingId, { lydo: formData.lydo });
       } else {
-        await phucKhaoAPI.create(data);
+        await phucKhaoAPI.create({ mssv: user.mssv, mamonhoc: formData.mamonhoc, lydo: formData.lydo });
       }
-      loadRequests();
-      setFormData({ mabangdiem: '', malophocphan: '', lydo: '' });
-      setEditingId(null);
-      setShowForm(false);
-    } catch (error) {
-      alert(error.response?.data?.error || 'Lỗi khi lưu');
+      await loadRequests();
+      resetForm();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Lỗi khi lưu đơn.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleEdit = (request) => {
-    setFormData({ mabangdiem: request.mabangdiem, malophocphan: request.malophocphan, lydo: request.lydo || '' });
-    setEditingId(request.maphuckhao);
+  const resetForm = () => {
+    setFormData({ mamonhoc: '', lydo: '' });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleEdit = (req) => {
+    setFormData({ mamonhoc: String(req.mamonhoc || ''), lydo: req.lydo || '' });
+    setEditingId(req.maphuckhao);
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Xóa đơn này?')) return;
+    if (!window.confirm('Xóa đơn phúc khảo này?')) return;
     try {
       await phucKhaoAPI.delete(id);
-      loadRequests();
-    } catch (error) {
-      alert(error.response?.data?.error || 'Lỗi khi xóa');
+      await loadRequests();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Lỗi khi xóa.');
     }
   };
 
-  const filteredRequests = requests.filter(r => {
-    if (filter === 'all') return true;
-    return r.trangthai === filter;
-  });
-
-  const getStatusLabel = (status) => {
-    const labels = { 'dangxuly': '⏳ Đang xử lý', 'duyet': '✅ Có lý do', 'tuchoi': '❌ Từ chối' };
-    return labels[status] || status;
-  };
+  const filtered = filter === 'all' ? requests : requests.filter((r) => r.trangthai === filter);
+  const counts = requests.reduce((acc, r) => { acc[r.trangthai] = (acc[r.trangthai] || 0) + 1; return acc; }, {});
 
   return (
     <div className="phuckhao-container">
       <h1>Phúc Khảo Điểm</h1>
-      
+
       <div className="phuckhao-header">
         <div className="filter-buttons">
-          <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
-            Tất Cả ({requests.length})
-          </button>
-          <button className={`filter-btn ${filter === 'dangxuly' ? 'active' : ''}`} onClick={() => setFilter('dangxuly')}>
-            Đang Xử Lý ({requests.filter(r => r.trangthai === 'dangxuly').length})
-          </button>
-          <button className={`filter-btn ${filter === 'duyet' ? 'active' : ''}`} onClick={() => setFilter('duyet')}>
-            Có Lý Do ({requests.filter(r => r.trangthai === 'duyet').length})
-          </button>
+          {[
+            { key: 'all',      label: 'Tất cả',      count: requests.length },
+            { key: 'cho',      label: 'Chờ xử lý',   count: counts.cho || 0 },
+            { key: 'dangxuly', label: 'Đang xử lý',  count: counts.dangxuly || 0 },
+            { key: 'chapnhan', label: 'Chấp nhận',   count: counts.chapnhan || 0 },
+            { key: 'tuchoi',   label: 'Từ chối',     count: counts.tuchoi || 0 },
+          ].map((f) => (
+            <button key={f.key} className={`filter-btn ${filter === f.key ? 'active' : ''}`} onClick={() => setFilter(f.key)}>
+              {f.label} ({f.count})
+            </button>
+          ))}
         </div>
-        <button className="btn-add" onClick={() => { setShowForm(!showForm); setEditingId(null); setFormData({ mabangdiem: '', malophocphan: '', lydo: '' }); }}>
+        <button className="btn-add" onClick={() => { resetForm(); setShowForm(!showForm); }}>
           + Tạo Đơn Phúc Khảo
         </button>
       </div>
@@ -99,21 +115,43 @@ const PhucKhao = () => {
         <div className="form-container">
           <h3>{editingId ? 'Chỉnh Sửa Đơn' : 'Tạo Đơn Phúc Khảo'}</h3>
           <form onSubmit={handleSubmit}>
+            {!editingId ? (
+              <div className="form-group">
+                <label>Chọn môn học cần phúc khảo *</label>
+                <select
+                  value={formData.mamonhoc}
+                  onChange={(e) => setFormData({ ...formData, mamonhoc: e.target.value })}
+                  required
+                >
+                  <option value="">-- Chọn môn học --</option>
+                  {monHocList.map((m) => (
+                    <option key={m.mamonhoc} value={m.mamonhoc}>
+                      {m.tenmonhoc} ({m.sotinchi} tín chỉ)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>Môn học</label>
+                <input value={requests.find((r) => r.maphuckhao === editingId)?.tenmonhoc || ''} disabled />
+              </div>
+            )}
             <div className="form-group">
-              <label>Mã Bảng Điểm *</label>
-              <input value={formData.mabangdiem} onChange={e => setFormData({...formData, mabangdiem: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>Mã Lớp Học Phần *</label>
-              <input value={formData.malophocphan} onChange={e => setFormData({...formData, malophocphan: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>Lý Do Phúc Khảo *</label>
-              <textarea value={formData.lydo} onChange={e => setFormData({...formData, lydo: e.target.value})} required></textarea>
+              <label>Lý do phúc khảo *</label>
+              <textarea
+                value={formData.lydo}
+                onChange={(e) => setFormData({ ...formData, lydo: e.target.value })}
+                rows={4}
+                placeholder="Mô tả lý do bạn muốn phúc khảo điểm môn này..."
+                required
+              />
             </div>
             <div className="form-actions">
-              <button type="submit" className="btn-submit">Lưu</button>
-              <button type="button" className="btn-cancel" onClick={() => { setShowForm(false); setEditingId(null); }}>Hủy</button>
+              <button type="submit" className="btn-submit" disabled={submitting}>
+                {submitting ? 'Đang lưu...' : 'Lưu'}
+              </button>
+              <button type="button" className="btn-cancel" onClick={resetForm}>Hủy</button>
             </div>
           </form>
         </div>
@@ -121,44 +159,43 @@ const PhucKhao = () => {
 
       {loading ? (
         <div className="loading">Đang tải...</div>
-      ) : filteredRequests.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="empty-state">Không có đơn nào</div>
       ) : (
         <div className="records-grid">
-          {filteredRequests.map(req => (
-            <div key={req.maphuckhao} className={`record-card status-${req.trangthai}`}>
-              <div className="record-header">
-                <h3>{req.tenmonhoc}</h3>
-                <span className="status-badge">{getStatusLabel(req.trangthai)}</span>
-              </div>
-              <div className="record-body">
-                <div className="record-item">
-                  <span className="label">Mã Phúc Khảo:</span>
-                  <span className="value">{req.maphuckhao}</span>
+          {filtered.map((req) => {
+            const cfg = TRANGTHAI_CONFIG[req.trangthai] || { label: req.trangthai, cls: '' };
+            return (
+              <div key={req.maphuckhao} className={`record-card status-${req.trangthai}`}>
+                <div className="record-header">
+                  <h3>{req.tenmonhoc || 'Môn học'}</h3>
+                  <span className={`status-badge status-${cfg.cls}`}>{cfg.label}</span>
                 </div>
-                <div className="record-item">
-                  <span className="label">Lý Do:</span>
-                  <span className="value">{req.lydo}</span>
-                </div>
-                <div className="record-item">
-                  <span className="label">Ngày Gửi:</span>
-                  <span className="value">{new Date(req.ngaygui).toLocaleDateString('vi-VN')}</span>
-                </div>
-                {req.ketqua && (
+                <div className="record-body">
                   <div className="record-item">
-                    <span className="label">Kết Quả:</span>
-                    <span className="value">{req.ketqua}</span>
+                    <span className="label">Lý do:</span>
+                    <span className="value">{req.lydo}</span>
                   </div>
-                )}
-                {req.trangthai === 'dangxuly' && (
-                  <div className="record-actions">
-                    <button className="btn-edit" onClick={() => handleEdit(req)}>Sửa</button>
-                    <button className="btn-delete" onClick={() => handleDelete(req.maphuckhao)}>Xóa</button>
+                  <div className="record-item">
+                    <span className="label">Ngày gửi:</span>
+                    <span className="value">{new Date(req.ngaygui).toLocaleDateString('vi-VN')}</span>
                   </div>
-                )}
+                  {req.ketqua && (
+                    <div className="record-item">
+                      <span className="label">Kết quả:</span>
+                      <span className="value">{req.ketqua}</span>
+                    </div>
+                  )}
+                  {req.trangthai === 'cho' && (
+                    <div className="record-actions">
+                      <button className="btn-edit" onClick={() => handleEdit(req)}>Sửa</button>
+                      <button className="btn-delete" onClick={() => handleDelete(req.maphuckhao)}>Xóa</button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

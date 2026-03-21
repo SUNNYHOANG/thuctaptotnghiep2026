@@ -120,17 +120,47 @@ const CTSVDrlManager = () => {
     });
   }, [lopList, filterKhoa]);
 
+  const handleExportExcel = async () => {
+    try {
+      const params = {};
+      if (filterHocky) params.mahocky = filterHocky;
+      if (filterKhoa) params.makhoa = filterKhoa;
+      if (filterLop) params.malop = filterLop;
+      if (filterTrangthai) params.trangthai = filterTrangthai;
+      if (filterMssv) params.mssv = filterMssv;
+      const res = await drlSelfAPI.exportExcel(params);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const filename = `DRL_${filterHocky || 'tatca'}_${filterKhoa || ''}_${filterLop || ''}.xlsx`.replace(/_{2,}/g, '_');
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setMessage('Xuất Excel thất bại: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
   return (
     <div className="container">
       <div className="card">
         <div className="card-header">
-          <h1 className="card-title">📊 Quản Lý Điểm Rèn Luyện</h1>
-          <p style={{ color: '#666', marginTop: 4, marginBottom: 12 }}>
-            Tổng hợp tất cả phiếu tự đánh giá DRL của sinh viên toàn trường
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <h1 className="card-title">📊 Quản Lý Điểm Rèn Luyện</h1>
+              <p style={{ color: '#666', marginTop: 4, marginBottom: 0 }}>
+                Tổng hợp tất cả phiếu tự đánh giá DRL của sinh viên toàn trường
+              </p>
+            </div>
+            <button className="btn btn-secondary" type="button" onClick={handleExportExcel} title="Xuất danh sách hiện tại ra Excel">
+              📥 Xuất Excel
+            </button>
+          </div>
 
           {/* Bộ lọc */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end', marginTop: 12 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Học kỳ</label>
               <select className="form-control" style={{ width: 180 }} value={filterHocky} onChange={(e) => setFilterHocky(e.target.value)}>

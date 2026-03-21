@@ -82,12 +82,16 @@
   margin: 0;
   padding: 0;
   overflow-y: auto;
+  /* Chỉ hiển thị 2 item, scroll để xem thêm */
+  max-height: 152px;
 }
 
 .reminder-bell-item {
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-bottom: 1px solid #f0f0f0;
   cursor: default;
+  min-height: 72px;
+  box-sizing: border-box;
 }
 
 .reminder-bell-item.unread {
@@ -219,4 +223,27 @@
 
 .btn-dong-y:hover {
   background: #0d47a1;
+}
+
+/* Hint cuộn */
+.reminder-bell-dropdown__hint {
+  padding: 6px 16px;
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+  background: #f8f9fa;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+/* Scrollbar đẹp cho list */
+.reminder-bell-dropdown__list::-webkit-scrollbar {
+  width: 4px;
+}
+.reminder-bell-dropdown__list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.reminder-bell-dropdown__list::-webkit-scrollbar-thumb {
+  background: #c5cae9;
+  border-radius: 2px;
 }

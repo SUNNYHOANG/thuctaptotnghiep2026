@@ -9,20 +9,18 @@ class DichVu {
   }
 
   static async create(data) {
-    const { mssv, maloaidichvu, noidung_yeucau, ghichu } = data;
+    const { mssv, maloaidichvu, tieude, noidung_yeucau, ghichu, file_dinh_kem } = data;
     
-    // Validate required fields
     if (!mssv) throw new Error('Mã sinh viên không được để trống');
     if (!maloaidichvu) throw new Error('Loại dịch vụ không được để trống');
     
-    // Ensure maloaidichvu is a number
     const maloaidichvuInt = parseInt(maloaidichvu);
     if (isNaN(maloaidichvuInt)) throw new Error('Loại dịch vụ không hợp lệ');
     
     const [result] = await pool.execute(
-      `INSERT INTO dichvu_sinhvien (mssv, maloaidichvu, noidung_yeucau, ghichu)
-       VALUES (?, ?, ?, ?)`,
-      [mssv, maloaidichvuInt, noidung_yeucau ?? null, ghichu ?? null]
+      `INSERT INTO dichvu_sinhvien (mssv, maloaidichvu, tieude, file_dinh_kem, noidung_yeucau, ghichu, trangthai)
+       VALUES (?, ?, ?, ?, ?, ?, 'cho')`,
+      [mssv, maloaidichvuInt, tieude ?? null, file_dinh_kem ?? null, noidung_yeucau ?? null, ghichu ?? null]
     );
     return this.getById(result.insertId);
   }
@@ -87,11 +85,15 @@ class DichVu {
   }
 
   static async update(madon, data) {
-    const { maloaidichvu, noidung_yeucau, ghichu } = data;
-    await pool.execute(
-      `UPDATE dichvu_sinhvien SET maloaidichvu=?, noidung_yeucau=?, ghichu=? WHERE madon=?`,
-      [maloaidichvu, noidung_yeucau ?? null, ghichu ?? null, madon]
-    );
+    const { maloaidichvu, tieude, noidung_yeucau, ghichu, file_dinh_kem } = data;
+    const updates = ['maloaidichvu=?', 'tieude=?', 'noidung_yeucau=?', 'ghichu=?'];
+    const values = [maloaidichvu, tieude ?? null, noidung_yeucau ?? null, ghichu ?? null];
+    if (file_dinh_kem !== undefined) {
+      updates.push('file_dinh_kem=?');
+      values.push(file_dinh_kem);
+    }
+    values.push(madon);
+    await pool.execute(`UPDATE dichvu_sinhvien SET ${updates.join(', ')} WHERE madon=?`, values);
     return this.getById(madon);
   }
 

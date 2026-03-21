@@ -108,7 +108,9 @@ export const lookupAPI = {
   getLop: () => api.get('/lookup/lop'),
   getLopByKhoa: (makhoa) => api.get('/lookup/lop-by-khoa', { params: makhoa ? { makhoa } : {} }),
   getHocKy: () => api.get('/lookup/hocky'),
+  getHocKyDangMo: () => api.get('/lookup/hocky-dangmo'),
   getGiangVien: () => api.get('/lookup/giangvien'),
+  getKhoaList: () => api.get('/lookup/khoa-list'),
   getStudentByMssv: (mssv) => api.get(`/lookup/student/${mssv}`),
   getStudentsByClass: (malop) => api.get('/lookup/students-by-class', { params: { malop } }),
   getReportStats: (group) => api.get('/lookup/report-stats', { params: { group } }),
@@ -118,10 +120,9 @@ export const lookupAPI = {
 
 // Phúc Khảo API
 export const phucKhaoAPI = {
-  getAll: (filters = {}) =>
-    api.get('/phuc-khao', { params: filters }),
+  getAll: (filters = {}) => api.get('/phuc-khao', { params: filters }),
   getByStudent: (mssv) => api.get(`/phuc-khao/student/${mssv}`),
-  getByClassSection: (malophocphan) => api.get(`/phuc-khao/class-section/${malophocphan}`),
+  getMonHocList: () => api.get('/phuc-khao/monhoc-list'),
   getById: (id) => api.get(`/phuc-khao/${id}`),
   create: (data) => api.post('/phuc-khao', data),
   update: (id, data) => api.put(`/phuc-khao/${id}`, data),
@@ -175,6 +176,69 @@ export const drlSelfAPI = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+  exportExcel: (params = {}) => api.get('/drl-self/export-excel', {
+    params,
+    responseType: 'blob',
+  }),
+};
+
+// Quản lý Khoa (Admin CRUD)
+export const khoaAPI = {
+  getAll: () => api.get('/khoa'),
+  create: (data) => api.post('/khoa', data),
+  update: (makhoa, data) => api.put(`/khoa/${makhoa}`, data),
+  delete: (makhoa) => api.delete(`/khoa/${makhoa}`),
+};
+
+// Quản lý Lớp (Admin CRUD)
+export const lopAPI = {
+  getAll: (makhoa) => api.get('/khoa/lop', { params: makhoa ? { makhoa } : {} }),
+  create: (data) => api.post('/khoa/lop', data),
+  update: (malop, data) => api.put(`/khoa/lop/${malop}`, data),
+  delete: (malop) => api.delete(`/khoa/lop/${malop}`),
+};
+
+// Quản lý Học kỳ (Admin CRUD)
+export const hocKyAPI = {
+  getAll: () => api.get('/hocky'),
+  create: (data) => api.post('/hocky', data),
+  update: (mahocky, data) => api.put(`/hocky/${mahocky}`, data),
+  updateTrangthai: (mahocky, trangthai) => api.patch(`/hocky/${mahocky}/trangthai`, { trangthai }),
+  delete: (mahocky) => api.delete(`/hocky/${mahocky}`),
+};
+
+// Audit Log (Admin)
+export const auditLogAPI = {
+  getAll: (params = {}) => api.get('/audit-log', { params }),
+  clear: (days) => api.delete('/audit-log/clear', { params: { days } }),
+};
+
+// Đơn trực tuyến (Sinh viên nộp, CTSV/Admin duyệt)
+export const donOnlineAPI = {
+  // Sinh viên
+  getMyDon: () => api.get('/don-online/my'),
+  create: (data) => api.post('/don-online', data),
+  cancel: (id) => api.delete(`/don-online/${id}`),
+  // CTSV / Admin
+  getAll: (filters = {}) => api.get('/don-online', { params: filters }),
+  getById: (id) => api.get(`/don-online/${id}`),
+  approve: (id, data) => api.put(`/don-online/${id}/approve`, data),
+  reject: (id, data) => api.put(`/don-online/${id}/reject`, data),
+  exportCSV: (filters = {}) => api.get('/don-online/export', { params: filters, responseType: 'blob' }),
+};
+
+// Hồ sơ người dùng (Giảng viên, CTSV, Admin)
+export const userProfileAPI = {
+  getMe: () => api.get('/users/profile/me'),
+  updateMe: (data) => api.put('/users/profile/me', data),
+};
+
+// Tiêu chí DRL (Admin cấu hình)
+export const tieuChiDrlAPI = {
+  getAll: () => api.get('/lookup/tieu-chi-drl'),
+  update: (id, data) => api.put(`/tieu-chi-drl/${id}`, data),
+  create: (data) => api.post('/tieu-chi-drl', data),
+  delete: (id) => api.delete(`/tieu-chi-drl/${id}`),
 };
 
 export default api;

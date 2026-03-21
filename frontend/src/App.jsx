@@ -12,7 +12,6 @@ import AdminUsers from './pages/AdminUsers';
 import AdminCourses from './pages/AdminCourses';
 import AdminCourseAvailability from './pages/AdminCourseAvailability';
 import AdminActivities from './pages/AdminActivities';
-import AdminScores from './pages/AdminScores';
 import AdminScholarships from './pages/AdminScholarships';
 import AdminRewards from './pages/AdminRewards';
 import AdminServices from './pages/AdminServices';
@@ -45,8 +44,22 @@ import PhucKhao from './pages/PhucKhao';
 import KhoaDashboard from './pages/KhoaDashboard';
 import KhoaDrlReview from './pages/KhoaDrlReview';
 import KhoaStudentList from './pages/KhoaStudentList';
+import AdminKhoa from './pages/AdminKhoa';
+import AdminHocKy from './pages/AdminHocKy';
+import AdminAuditLog from './pages/AdminAuditLog';
 import CTSVDrlManager from './pages/CTSVDrlManager';
-import './index.css';
+import CTSVDrlStats from './pages/CTSVDrlStats';
+import TeacherClassStats from './pages/TeacherClassStats';
+import CTSVBaoCao from './pages/CTSVBaoCao';
+import KhoaDrlStats from './pages/KhoaDrlStats';
+import KhoaKhenThuong from './pages/KhoaKhenThuong';
+import KhoaHocBong from './pages/KhoaHocBong';
+import KhoaThongBao from './pages/KhoaThongBao';
+import TeacherProfile from './pages/TeacherProfile';
+import TeacherPhucKhao from './pages/TeacherPhucKhao';
+import TeacherKhenThuong from './pages/TeacherKhenThuong';
+import AdminLopHanhChinh from './pages/AdminLopHanhChinh';
+import AdminTieuChiDRL from './pages/AdminTieuChiDRL';import './index.css';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -129,6 +142,12 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
+      <Route path="/admin/khoa" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminKhoa />
+        </ProtectedRoute>
+      } />
+
       <Route path="/admin/course-availability" element={
         <ProtectedRoute requiredRole="admin">
           <AdminCourseAvailability />
@@ -143,7 +162,7 @@ function AppRoutes() {
 
       <Route path="/admin/scores" element={
         <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
-          <AdminScores />
+          <CTSVDrlManager />
         </ProtectedRoute>
       } />
 
@@ -159,15 +178,19 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      <Route path="/admin/services" element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminServices />
-        </ProtectedRoute>
-      } />
-
       <Route path="/admin/reports" element={
         <ProtectedRoute requiredRole="admin">
           <AdminReports />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/hoc-ky" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminHocKy />
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/audit-log" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminAuditLog />
         </ProtectedRoute>
       } />
       <Route path="/admin/thong-bao" element={
@@ -188,17 +211,17 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/ctsv/duyet-don-online" element={
-        <ProtectedRoute requiredRole="ctsv">
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
           <CTSVDonOnline />
         </ProtectedRoute>
       } />
       <Route path="/ctsv/nhac-nho" element={
-        <ProtectedRoute requiredRole="ctsv">
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
           <CTSVNhacNho />
         </ProtectedRoute>
       } />
       <Route path="/ctsv/diem-ren-luyen-tu-danh-gia" element={
-        <ProtectedRoute requiredRole="ctsv">
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
           <DrlClassReview />
         </ProtectedRoute>
       } />
@@ -209,7 +232,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/ctsv/duyet-phuc-khao" element={
-        <ProtectedRoute requiredRole="ctsv">
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
           <CTSVPhucKhao />
         </ProtectedRoute>
       } />
@@ -239,6 +262,11 @@ function AppRoutes() {
       <Route path="/ctsv/quan-ly-diem-ren-luyen" element={
         <ProtectedRoute requiredRole="ctsv">
           <CTSVDrlManager />
+        </ProtectedRoute>
+      } />
+      <Route path="/ctsv/thong-ke-drl" element={
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
+          <CTSVDrlStats />
         </ProtectedRoute>
       } />
       
@@ -273,6 +301,11 @@ function AppRoutes() {
       <Route path="/giangvien/diem-ren-luyen-tu-danh-gia" element={
         <ProtectedRoute requiredRole="giangvien">
           <DrlClassReview />
+        </ProtectedRoute>
+      } />
+      <Route path="/giangvien/thong-ke-diem-lop" element={
+        <ProtectedRoute requiredRole="giangvien">
+          <TeacherClassStats />
         </ProtectedRoute>
       } />
       
@@ -317,6 +350,57 @@ function AppRoutes() {
       <Route path="/khoa/students" element={
         <ProtectedRoute requiredRole="khoa">
           <KhoaStudentList />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/drl-stats" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaDrlStats />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/khen-thuong" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaKhenThuong />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/hoc-bong" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaHocBong />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/thong-bao" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaThongBao />
+        </ProtectedRoute>
+      } />
+
+      {/* CTSV routes bổ sung */}
+      <Route path="/ctsv/bao-cao" element={
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
+          <CTSVBaoCao />
+        </ProtectedRoute>
+      } />
+
+      {/* Giảng viên routes bổ sung */}
+      <Route path="/giangvien/ho-so" element={
+        <ProtectedRoute requiredRole="giangvien">
+          <TeacherProfile />
+        </ProtectedRoute>
+      } />
+      <Route path="/giangvien/phuc-khao" element={
+        <ProtectedRoute requiredRole="giangvien">
+          <TeacherPhucKhao />
+        </ProtectedRoute>
+      } />
+      <Route path="/giangvien/khen-thuong" element={
+        <ProtectedRoute requiredRole="giangvien">
+          <TeacherKhenThuong />
+        </ProtectedRoute>
+      } />
+
+      {/* Admin routes bổ sung */}
+      <Route path="/admin/tieu-chi-drl" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminTieuChiDRL />
         </ProtectedRoute>
       } />
     </Routes>

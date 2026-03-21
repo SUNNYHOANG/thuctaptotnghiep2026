@@ -1,5 +1,6 @@
 import express from 'express';
 import PhucKhao from '../models/PhucKhao.js';
+import pool from '../config/database.js';
 import { requireRole } from '../middleware/requireRole.js';
 
 const router = express.Router();
@@ -27,6 +28,18 @@ router.post('/', async (req, res) => {
 router.get('/class-section/:malophocphan', requireRole(), async (req, res) => {
   try {
     const rows = await PhucKhao.getByClassSection(req.params.malophocphan);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Lấy danh sách môn học (để sinh viên chọn khi tạo đơn phúc khảo)
+router.get('/monhoc-list', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT mamonhoc, tenmonhoc, sotinchi FROM monhoc ORDER BY tenmonhoc'
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

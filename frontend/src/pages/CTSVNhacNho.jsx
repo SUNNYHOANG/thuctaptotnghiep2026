@@ -76,7 +76,7 @@ const CTSVNhacNho = () => {
   const loadLookupData = async () => {
     try {
       const [hkRes, lopRes] = await Promise.all([
-        lookupAPI.getHocKy(),
+        lookupAPI.getHocKyDangMo(),
         lookupAPI.getLop(),
       ]);
       const hkData = Array.isArray(hkRes.data) ? hkRes.data : hkRes.data?.data || [];

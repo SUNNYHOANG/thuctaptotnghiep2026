@@ -27,6 +27,52 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /profile/me - Lấy thông tin cá nhân của user đang đăng nhập (giảng viên, ctsv, admin)
+router.get('/profile/me', async (req, res) => {
+  try {
+    const userId = req.user?.id || req.headers['x-user-id'];
+    if (!userId) return res.status(401).json({ error: 'Chưa đăng nhập' });
+
+    const [rows] = await pool.execute(
+      'SELECT id, username, hoten, email, role, makhoa, status, created_at FROM users WHERE id = ?',
+      [userId]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /profile/me - Cập nhật thông tin cá nhân
+router.put('/profile/me', async (req, res) => {
+  try {
+    const userId = req.user?.id || req.headers['x-user-id'];
+    if (!userId) return res.status(401).json({ error: 'Chưa đăng nhập' });
+
+    const { hoten, email, password } = req.body;
+    const updates = [];
+    const values = [];
+
+    if (hoten !== undefined) { updates.push('hoten = ?'); values.push(hoten); }
+    if (email !== undefined) { updates.push('email = ?'); values.push(email || null); }
+    if (password && String(password).trim()) { updates.push('password = ?'); values.push(password.trim()); }
+
+    if (updates.length === 0) return res.status(400).json({ error: 'Không có dữ liệu cập nhật' });
+
+    values.push(userId);
+    await pool.execute(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
+
+    const [rows] = await pool.execute(
+      'SELECT id, username, hoten, email, role, makhoa, status FROM users WHERE id = ?',
+      [userId]
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all students - MUST come before /:id route
 router.get('/students/all', async (req, res) => {
   try {
@@ -34,7 +80,7 @@ router.get('/students/all', async (req, res) => {
     const role = user.role || req.headers['x-user-role'] || '';
     const makhoa = user.makhoa || req.headers['x-user-makhoa'] || null;
 
-    let sql = 'SELECT mssv as id, hoten as username, hoten, malop, makhoa, tinhtrang, NULL as email, "sinhvien" as role, "active" as status, NULL as created_at FROM sinhvien WHERE 1=1';
+    let sql = 'SELECT mssv, mssv as id, hoten as username, hoten, malop, makhoa, tinhtrang, ngaysinh, gioitinh, khoahoc, bacdaotao, nganh, diachi, quequan FROM sinhvien WHERE 1=1';
     const params = [];
 
     // Khoa_Manager chỉ thấy sinh viên của khoa mình
@@ -204,11 +250,82 @@ router.get('/students/incomplete-profile', async (req, res) => {
   }
 });
 
+// Thêm sinh viên mới
+router.post('/students', async (req, res) => {
+  try {
+    const { mssv, hoten, malop, makhoa, ngaysinh, gioitinh, diachi, quequan, tinhtrang, khoahoc, bacdaotao, nganh } = req.body;
+    if (!mssv || !String(mssv).trim()) {
+      return res.status(400).json({ error: 'MSSV không được để trống' });
+    }
+    const mk = String(mssv).trim();
+    const [existing] = await pool.execute('SELECT mssv FROM sinhvien WHERE mssv = ?', [mk]);
+    if (existing.length > 0) {
+      return res.status(400).json({ error: `MSSV "${mk}" đã tồn tại` });
+    }
+    await pool.execute(
+      `INSERT INTO sinhvien (mssv, hoten, malop, makhoa, ngaysinh, gioitinh, diachi, quequan, tinhtrang, khoahoc, bacdaotao, nganh)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [mk, hoten || null, malop || null, makhoa || null, ngaysinh || null, gioitinh || null,
+       diachi || null, quequan || null, tinhtrang || 'Đang học', khoahoc || null, bacdaotao || null, nganh || null]
+    );
+    const [rows] = await pool.execute('SELECT * FROM sinhvien WHERE mssv = ?', [mk]);
+    res.status(201).json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cập nhật sinh viên
+router.put('/students/:mssv', async (req, res) => {
+  try {
+    const { mssv } = req.params;
+    const { hoten, malop, makhoa, ngaysinh, gioitinh, diachi, quequan, tinhtrang, khoahoc, bacdaotao, nganh } = req.body;
+
+    const updates = [];
+    const values = [];
+    const addIf = (col, val) => { if (val !== undefined) { updates.push(`${col} = ?`); values.push(val); } };
+
+    addIf('hoten', hoten);
+    addIf('malop', malop);
+    addIf('makhoa', makhoa);
+    addIf('ngaysinh', ngaysinh);
+    addIf('gioitinh', gioitinh);
+    addIf('diachi', diachi);
+    addIf('quequan', quequan);
+    addIf('tinhtrang', tinhtrang);
+    addIf('khoahoc', khoahoc);
+    addIf('bacdaotao', bacdaotao);
+    addIf('nganh', nganh);
+
+    if (updates.length === 0) return res.status(400).json({ error: 'Không có dữ liệu cập nhật' });
+
+    values.push(mssv);
+    await pool.execute(`UPDATE sinhvien SET ${updates.join(', ')} WHERE mssv = ?`, values);
+    const [rows] = await pool.execute('SELECT * FROM sinhvien WHERE mssv = ?', [mssv]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy sinh viên' });
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Xóa sinh viên
+router.delete('/students/:mssv', async (req, res) => {
+  try {
+    const { mssv } = req.params;
+    const [result] = await pool.execute('DELETE FROM sinhvien WHERE mssv = ?', [mssv]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Không tìm thấy sinh viên' });
+    res.json({ message: 'Xóa sinh viên thành công' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get user by ID
 router.get('/:id', async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, email, role, magiangvien, makhoa, status, created_at FROM users WHERE id = ?',
+      'SELECT id, username, hoten, email, role, makhoa, status, created_at FROM users WHERE id = ?',
       [req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
@@ -227,18 +344,19 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Thiếu username, password hoặc role' });
     }
 
-    // Validate makhoa bắt buộc khi role='khoa'
-    if (role === 'khoa') {
-      if (!makhoa || String(makhoa).trim() === '') {
-        return res.status(400).json({ error: 'Tài khoản vai trò khoa phải có makhoa' });
+    // Validate makhoa bắt buộc khi role='khoa' hoặc 'giangvien'
+    if (role === 'khoa' || role === 'giangvien') {
+      const mkVal = makhoa ? String(makhoa).trim() : '';
+      if (!mkVal) {
+        return res.status(400).json({ error: `Vai trò "${role}" bắt buộc phải có Mã Khoa.` });
       }
       // Validate makhoa tồn tại trong bảng sinhvien
       const [makhoaRows] = await pool.execute(
         'SELECT makhoa FROM sinhvien WHERE makhoa = ? LIMIT 1',
-        [makhoa]
+        [mkVal]
       );
       if (makhoaRows.length === 0) {
-        return res.status(400).json({ error: 'makhoa không hợp lệ hoặc không tồn tại' });
+        return res.status(400).json({ error: `Mã khoa "${mkVal}" không tồn tại trong hệ thống sinh viên.` });
       }
     }
 
@@ -247,19 +365,21 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Username đã tồn tại' });
     }
 
+    const mkFinal = (makhoa && String(makhoa).trim()) ? String(makhoa).trim() : null;
+
     const [result] = await pool.execute(
-      'INSERT INTO users (username, password, hoten, email, role, magiangvien, makhoa, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [username, password, hoten || null, email || null, role, magiangvien || null, makhoa || null, status || 'active']
+      'INSERT INTO users (username, password, hoten, email, role, makhoa, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [username, password, hoten || null, email || null, role, mkFinal, status || 'active']
     );
 
     res.status(201).json({
       id: result.insertId,
       username,
-      hoten,
-      email,
+      hoten: hoten || null,
+      email: email || null,
       role,
-      makhoa: makhoa || null,
-      status: status || 'active'
+      makhoa: mkFinal,
+      status: status || 'active',
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -269,44 +389,37 @@ router.post('/', async (req, res) => {
 // Update user
 router.put('/:id', async (req, res) => {
   try {
-    const { hoten, email, role, status, magiangvien, makhoa } = req.body;
+    const { hoten, email, role, status, magiangvien, makhoa, password } = req.body;
 
     const updates = [];
     const values = [];
 
-    if (hoten !== undefined) {
-      updates.push('hoten = ?');
-      values.push(hoten);
+    if (hoten !== undefined) { updates.push('hoten = ?'); values.push(hoten); }
+    if (email !== undefined) { updates.push('email = ?'); values.push(email || null); }
+    if (role !== undefined) { updates.push('role = ?'); values.push(role); }
+    if (status !== undefined) { updates.push('status = ?'); values.push(status); }
+    if (magiangvien !== undefined) { /* bỏ qua - cột không tồn tại */ }
+
+    // Cập nhật mật khẩu nếu được gửi lên
+    if (password && String(password).trim() !== '') {
+      updates.push('password = ?');
+      values.push(password.trim());
     }
-    if (email !== undefined) {
-      updates.push('email = ?');
-      values.push(email);
-    }
-    if (role !== undefined) {
-      updates.push('role = ?');
-      values.push(role);
-    }
-    if (status !== undefined) {
-      updates.push('status = ?');
-      values.push(status);
-    }
-    if (magiangvien !== undefined) {
-      updates.push('magiangvien = ?');
-      values.push(magiangvien);
-    }
+
     if (makhoa !== undefined) {
-      // Validate makhoa tồn tại trong bảng sinhvien nếu không null
-      if (makhoa !== null && String(makhoa).trim() !== '') {
-        const [makhoaRows] = await pool.execute(
+      // Validate makhoa tồn tại trong bảng sinhvien nếu không null/rỗng
+      const mkVal = makhoa ? String(makhoa).trim() : null;
+      if (mkVal) {
+        const [mkRows] = await pool.execute(
           'SELECT makhoa FROM sinhvien WHERE makhoa = ? LIMIT 1',
-          [makhoa]
+          [mkVal]
         );
-        if (makhoaRows.length === 0) {
-          return res.status(400).json({ error: 'makhoa không hợp lệ hoặc không tồn tại' });
+        if (mkRows.length === 0) {
+          return res.status(400).json({ error: `Mã khoa "${mkVal}" không tồn tại trong hệ thống sinh viên.` });
         }
       }
       updates.push('makhoa = ?');
-      values.push(makhoa || null);
+      values.push(mkVal);
     }
 
     if (updates.length === 0) {
@@ -314,10 +427,14 @@ router.put('/:id', async (req, res) => {
     }
 
     values.push(req.params.id);
-    const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+    await pool.execute(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
 
-    await pool.execute(sql, values);
-    res.json({ message: 'Cập nhật thành công' });
+    // Trả về user đã cập nhật
+    const [rows] = await pool.execute(
+      'SELECT id, username, hoten, email, role, makhoa, status FROM users WHERE id = ?',
+      [req.params.id]
+    );
+    res.json(rows[0] || { message: 'Cập nhật thành công' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
