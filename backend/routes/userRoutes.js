@@ -179,6 +179,31 @@ router.put('/students/profile/:mssv', async (req, res) => {
   }
 });
 
+// GET /students/incomplete-profile - Sinh viên thiếu thông tin hồ sơ bắt buộc
+// Phân quyền: admin, ctsv
+router.get('/students/incomplete-profile', async (req, res) => {
+  try {
+    const role = (req.user && req.user.role) || req.headers['x-user-role'] || '';
+    if (!['admin', 'ctsv'].includes(role)) {
+      return res.status(403).json({ error: 'Bạn không có quyền truy cập chức năng này' });
+    }
+
+    const sql = `
+      SELECT mssv, hoten, malop, makhoa, ngaysinh, gioitinh
+      FROM sinhvien
+      WHERE hoten IS NULL OR hoten = ''
+         OR ngaysinh IS NULL
+         OR gioitinh IS NULL OR gioitinh = ''
+         OR malop IS NULL OR malop = ''
+         OR makhoa IS NULL OR makhoa = ''
+    `;
+    const [rows] = await pool.execute(sql);
+    res.json({ data: rows, total: rows.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Lỗi hệ thống, vui lòng thử lại' });
+  }
+});
+
 // Get user by ID
 router.get('/:id', async (req, res) => {
   try {

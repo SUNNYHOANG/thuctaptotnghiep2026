@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { drlSelfAPI, lookupAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useUrlMssv } from '../utils/useUrlMssv';
 
 const DrlClassReview = () => {
   const { user } = useAuth();
   const isGV = user?.role === 'giangvien';
   const isCTSV = user?.role === 'ctsv';
+  const [urlMssv, setUrlMssv] = useUrlMssv();
+  const [filterMssv, setFilterMssv] = useState('');
   const [malop, setMalop] = useState('');
   const [mahocky, setMahocky] = useState('');
   const [hockyList, setHockyList] = useState([]);
@@ -31,6 +34,13 @@ const DrlClassReview = () => {
       .catch(() => lookupAPI.getLop().then((r) => setLopList(r.data?.data || r.data || [])));
   }, [isGV, user?.makhoa]);
 
+  // Tự động điền MSSV từ URL khi mount
+  useEffect(() => {
+    if (urlMssv) {
+      setFilterMssv(urlMssv);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setMessage('');
   }, [malop, mahocky]);
@@ -45,10 +55,18 @@ const DrlClassReview = () => {
     setSelected(null);
     try {
       const res = await drlSelfAPI.getByClassAndSemester(malop || '', mahocky);
-      setRows(res.data || []);
-      if ((res.data || []).length === 0) {
+      let data = res.data || [];
+      // Lọc theo MSSV nếu có
+      if (filterMssv.trim()) {
+        const mssvFilter = filterMssv.trim().toLowerCase();
+        data = data.filter((r) => r.mssv?.toLowerCase().includes(mssvFilter));
+        if (data.length === 0) {
+          setMessage(`Sinh viên ${filterMssv.trim()} chưa có phiếu tự đánh giá nào`);
+        }
+      } else if (data.length === 0) {
         setMessage('Không có phiếu nào. Admin/CTSV: thử chọn "Tất cả lớp". Sinh viên cần gửi phiếu tự đánh giá đúng học kỳ.');
       }
+      setRows(data);
     } catch (error) {
       setRows([]);
       setMessage(error.response?.data?.error || 'Không tải được danh sách phiếu.');
@@ -154,6 +172,20 @@ const DrlClassReview = () => {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Tìm theo MSSV</label>
+              <input
+                type="text"
+                className="form-control"
+                style={{ width: 160 }}
+                placeholder="Nhập MSSV..."
+                value={filterMssv}
+                onChange={(e) => {
+                  setFilterMssv(e.target.value);
+                  setUrlMssv(e.target.value);
+                }}
+              />
             </div>
             <button className="btn btn-primary btn-sm" type="button" onClick={loadData} disabled={loading}>
               {loading ? 'Đang tải...' : 'Tải danh sách'}

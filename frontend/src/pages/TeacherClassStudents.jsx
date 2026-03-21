@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { lookupAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import DrlNavigationButton from '../components/DrlNavigationButton';
 import './TeacherClassStudents.css';
 
 const TeacherClassStudents = () => {
@@ -87,6 +88,7 @@ const TeacherClassStudents = () => {
                     <th>Họ tên</th>
                     <th>Lớp</th>
                     <th>Khoa</th>
+                    <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -96,6 +98,7 @@ const TeacherClassStudents = () => {
                       <td>{s.hoten}</td>
                       <td>{s.malop}</td>
                       <td>{s.makhoa}</td>
+                      <td><DrlNavigationButton mssv={s.mssv} role="giangvien" /></td>
                     </tr>
                   ))}
                 </tbody>

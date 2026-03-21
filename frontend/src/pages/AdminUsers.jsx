@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPIEndpoints } from '../api/adminAPI';
+import { useAuth } from '../context/AuthContext';
+import DrlNavigationButton from '../components/DrlNavigationButton';
 
 const AdminUsers = () => {
+  const { user } = useAuth();
+  const userRole = user?.role || 'admin';
   const [userType, setUserType] = useState('staff'); // 'staff' or 'students'
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -187,6 +191,7 @@ const AdminUsers = () => {
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Họ Tên</th>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Lớp</th>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Khoa</th>
+                    <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #ddd' }}>Hành Động</th>
                   </>
                 )}
               </tr>
@@ -227,6 +232,9 @@ const AdminUsers = () => {
                       <td style={{ padding: '10px' }}>{user.hoten || '-'}</td>
                       <td style={{ padding: '10px' }}>{user.malop || '-'}</td>
                       <td style={{ padding: '10px' }}>{user.makhoa || '-'}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <DrlNavigationButton mssv={user.id} role={userRole} />
+                      </td>
                     </>
                   )}
                 </tr>

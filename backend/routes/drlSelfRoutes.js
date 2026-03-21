@@ -171,6 +171,91 @@ router.get('/manage', requireRole(['admin', 'ctsv']), async (req, res) => {
   }
 });
 
+// Lấy danh sách sinh viên theo trạng thái DRL trong một học kỳ
+router.get(
+  '/students-by-status',
+  requireRole(['admin', 'ctsv', 'giangvien', 'khoa']),
+  async (req, res) => {
+    try {
+      const { mahocky, trangthai, makhoa, malop } = req.query;
+
+      // Validate mahocky bắt buộc
+      if (!mahocky) {
+        return res.status(400).json({ error: 'mahocky là bắt buộc' });
+      }
+
+      // Validate trangthai
+      const VALID_TRANGTHAI = ['chua_nop', 'choduyet', 'chokhoaduyet', 'bituchoi', 'daduyet'];
+      if (!trangthai || !VALID_TRANGTHAI.includes(trangthai)) {
+        return res.status(400).json({
+          error: 'Trạng thái không hợp lệ. Các giá trị hợp lệ: chua_nop, choduyet, chokhoaduyet, bituchoi, daduyet',
+        });
+      }
+
+      const role = (req.user && req.user.role) || '';
+      const userMakhoa = (req.user && req.user.makhoa) || null;
+
+      // Xác định filter makhoa theo role
+      const effectiveMakhoa =
+        role === 'giangvien' || role === 'khoa'
+          ? userMakhoa
+          : makhoa || null;
+
+      let rows;
+
+      if (trangthai === 'chua_nop') {
+        // Sinh viên KHÔNG có bản ghi trong drl_tudanhgia cho mahocky này
+        let query = `
+          SELECT s.mssv, s.hoten, s.malop, s.makhoa, 'chua_nop' AS trangthai
+          FROM sinhvien s
+          WHERE s.mssv NOT IN (
+            SELECT mssv FROM drl_tudanhgia WHERE mahocky = ?
+          )
+        `;
+        const params = [mahocky];
+
+        if (effectiveMakhoa) {
+          query += ' AND s.makhoa = ?';
+          params.push(effectiveMakhoa);
+        }
+        if (malop && role !== 'giangvien' && role !== 'khoa') {
+          query += ' AND s.malop = ?';
+          params.push(malop);
+        } else if (malop && (role === 'giangvien' || role === 'khoa')) {
+          query += ' AND s.malop = ?';
+          params.push(malop);
+        }
+
+        [rows] = await pool.execute(query, params);
+      } else {
+        // JOIN drl_tudanhgia với sinhvien theo trangthai + mahocky
+        let query = `
+          SELECT t.mssv, s.hoten, s.malop, s.makhoa, t.trangthai, t.tong_diem
+          FROM drl_tudanhgia t
+          JOIN sinhvien s ON t.mssv = s.mssv
+          WHERE t.mahocky = ? AND t.trangthai = ?
+        `;
+        const params = [mahocky, trangthai];
+
+        if (effectiveMakhoa) {
+          query += ' AND s.makhoa = ?';
+          params.push(effectiveMakhoa);
+        }
+        if (malop) {
+          query += ' AND s.malop = ?';
+          params.push(malop);
+        }
+
+        [rows] = await pool.execute(query, params);
+      }
+
+      res.json({ data: rows, total: rows.length });
+    } catch (error) {
+      res.status(500).json({ error: 'Lỗi hệ thống, vui lòng thử lại' });
+    }
+  }
+);
+
 // CTSV: Lấy danh sách khoa có phiếu DRL
 router.get('/manage/khoa-list', requireRole(['admin', 'ctsv']), async (req, res) => {
   try {

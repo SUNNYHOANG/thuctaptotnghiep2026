@@ -16,6 +16,7 @@ export const parseUser = (req, res, next) => {
       id: idHeader || null,
       username: usernameHeader || idHeader || roleHeader,
       makhoa: makhoaHeader || null,
+      mssv: req.headers['x-user-mssv'] || null,
     };
     return next();
   }

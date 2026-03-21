@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import DrlNavigationButton from '../components/DrlNavigationButton';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -99,6 +100,7 @@ const KhoaStudentList = () => {
                     <th>Họ tên</th>
                     <th>Lớp</th>
                     <th>Tình trạng</th>
+                    <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,11 +114,14 @@ const KhoaStudentList = () => {
                       <td>{sv.hoten || '-'}</td>
                       <td>{sv.malop || '-'}</td>
                       <td>{sv.tinhtrang || '-'}</td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <DrlNavigationButton mssv={sv.id} role="khoa" />
+                      </td>
                     </tr>
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: 16 }}>
                         {search ? 'Không tìm thấy sinh viên phù hợp.' : 'Chưa có sinh viên trong khoa.'}
                       </td>
                     </tr>

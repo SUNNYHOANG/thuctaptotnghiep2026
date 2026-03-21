@@ -21,6 +21,7 @@ api.interceptors.request.use((config) => {
       if (user.makhoa) config.headers['x-user-makhoa'] = user.makhoa;
       if (user.id) config.headers['x-user-id'] = user.id;
       if (user.username) config.headers['x-user-username'] = user.username;
+      if (user.mssv) config.headers['x-user-mssv'] = user.mssv;
     } catch {}
   }
   return config;
@@ -135,6 +136,9 @@ export const thongBaoAPI = {
   create: (data) => api.post('/thong-bao', data),
   update: (id, data) => api.put(`/thong-bao/${id}`, data),
   delete: (id) => api.delete(`/thong-bao/${id}`),
+  // Nhắc nhở có mục tiêu
+  sendReminder: (data) => api.post('/thongbao/reminder', data),
+  getReminderHistory: (filters = {}) => api.get('/thongbao/reminder-history', { params: filters }),
 };
 
 // Score (Điểm Rèn Luyện) API
@@ -163,6 +167,7 @@ export const drlSelfAPI = {
   review: (id, data) => api.put(`/drl-self/${id}/review`, data),
   manage: (filters = {}) => api.get('/drl-self/manage', { params: filters }),
   getKhoaList: () => api.get('/drl-self/manage/khoa-list'),
+  getStudentsByStatus: (params) => api.get('/drl-self/students-by-status', { params }),
   parseExcel: (file) => {
     const formData = new FormData();
     formData.append('file', file);

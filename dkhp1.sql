@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th3 20, 2026 lúc 08:01 PM
+-- Thời gian đã tạo: Th3 21, 2026 lúc 06:43 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -90,7 +90,8 @@ CREATE TABLE `dichvu_sinhvien` (
 
 INSERT INTO `dichvu_sinhvien` (`madon`, `mssv`, `maloaidichvu`, `trangthai`, `noidung_yeucau`, `ketqua`, `file_ketqua`, `ngaygui`, `ngayduyet`, `nguoiduyet`, `ghichu`) VALUES
 (1, '20123457', 2, 'duyet', 'xuất bản điểm giúp tôi', 'ok', NULL, '2026-03-08 01:47:00', '2026-03-08 08:47:27', '2', 'heheheh'),
-(2, '20123456', 3, 'tuchoi', 'Xin yêu cầu ở KTX', 'Chưa thể đăng ký được em nhé', NULL, '2026-03-14 03:52:15', '2026-03-14 10:54:30', '1', '');
+(2, '20123456', 3, 'tuchoi', 'Xin yêu cầu ở KTX', 'Chưa thể đăng ký được em nhé', NULL, '2026-03-14 03:52:15', '2026-03-14 10:54:30', '1', ''),
+(3, '20123459', 1, 'duyet', 'heheh', 'ok', NULL, '2026-03-21 04:34:13', '2026-03-21 11:38:23', '1', 'adsasdads');
 
 -- --------------------------------------------------------
 
@@ -620,27 +621,29 @@ CREATE TABLE `thongbao` (
   `mathongbao` int(11) NOT NULL,
   `tieude` varchar(500) NOT NULL,
   `noidung` text DEFAULT NULL,
-  `loai` enum('truong','lop','lichthi','deadline_hocphi','khac') NOT NULL,
+  `loai` enum('truong','lop','nhacnho','lichthi','deadline_hocphi','khac','nhacnho_drl','nhacnho_hoso') NOT NULL DEFAULT 'khac',
   `malop` varchar(50) DEFAULT NULL,
   `mahocky` int(11) DEFAULT NULL,
   `han_xem` date DEFAULT NULL,
   `guiemail` tinyint(1) DEFAULT 0,
   `nguoitao` varchar(50) DEFAULT NULL,
-  `ngaytao` timestamp NOT NULL DEFAULT current_timestamp()
+  `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
+  `nguoi_nhan` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Danh sách MSSV nhận thông báo (null = tất cả)' CHECK (json_valid(`nguoi_nhan`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `thongbao`
 --
 
-INSERT INTO `thongbao` (`mathongbao`, `tieude`, `noidung`, `loai`, `malop`, `mahocky`, `han_xem`, `guiemail`, `nguoitao`, `ngaytao`) VALUES
-(1, 'hii', 'hhhhhh', 'lichthi', NULL, NULL, '2026-03-04', 0, '2', '2026-03-03 18:05:37'),
-(2, 'hehehe', 'alo alo', 'lichthi', NULL, NULL, '2026-03-19', 0, '2', '2026-03-10 16:50:08'),
-(3, 'Thông báo Cảnh cáo', '[MSSV 20123458] Bạn đã nhận Cảnh cáo: ngu lắm nha', 'lop', 'CNTT02', NULL, NULL, 0, '2', '2026-03-13 15:59:17'),
-(4, 'Lịch thi GDTC Bóng chuyền', 'THI CUỐI KỲ I', 'truong', NULL, NULL, '2025-04-23', 0, '1', '2026-03-14 03:55:26'),
-(5, 'Nhắc nhở hoàn thành BHYT', 'BHYT', 'truong', NULL, NULL, '2025-03-20', 0, '2', '2026-03-14 06:47:56'),
-(6, 'Thực hiện đánh giá điểm rèn luyện Hk1', 'ĐRL', 'lop', 'QTKD01', NULL, '2026-03-19', 0, '2', '2026-03-14 07:27:20'),
-(7, 'Thông báo Khen thưởng', '[MSSV 20123456] Bạn đã nhận Khen thưởng: KHEN THUONG HK1', 'lop', 'CNTT01', NULL, NULL, 0, '1', '2026-03-14 07:36:25');
+INSERT INTO `thongbao` (`mathongbao`, `tieude`, `noidung`, `loai`, `malop`, `mahocky`, `han_xem`, `guiemail`, `nguoitao`, `ngaytao`, `nguoi_nhan`) VALUES
+(1, 'hii', 'hhhhhh', 'lop', 'CNTT01', NULL, '2026-03-03', 0, '2', '2026-03-03 18:05:37', NULL),
+(2, 'hehehe', 'alo alo', 'lop', 'QTKD01', NULL, '2026-03-18', 0, '2', '2026-03-10 16:50:08', NULL),
+(4, 'Lịch thi GDTC Bóng chuyền', 'THI CUỐI KỲ I', 'truong', NULL, NULL, '2025-04-23', 0, '1', '2026-03-14 03:55:26', NULL),
+(5, 'Nhắc nhở hoàn thành BHYT', 'BHYT', 'truong', NULL, NULL, '2025-03-20', 0, '2', '2026-03-14 06:47:56', NULL),
+(6, 'Thực hiện đánh giá điểm rèn luyện Hk1', 'ĐRL', 'lop', 'QTKD01', NULL, '2026-03-19', 0, '2', '2026-03-14 07:27:20', NULL),
+(10, 'Nhắc nhở: Nộp phiếu tự đánh giá điểm rèn luyện', 'Kính gửi các bạn sinh viên,\n\nHạn nộp phiếu tự đánh giá điểm rèn luyện (DRL) đang đến gần. Vui lòng đăng nhập hệ thống và hoàn thành phiếu tự đánh giá trước thời hạn quy định.\n\nTrân trọng,\nPhòng Công tác Sinh viên', 'nhacnho_drl', NULL, 4, NULL, 0, '2', '2026-03-21 05:37:25', '[\"20123456\",\"20123457\",\"20123458\",\"20123459\",\"2254810304\"]'),
+(11, 'Nhắc nhở: Hoàn thiện thông tin hồ sơ sinh viên', 'Kính gửi các bạn sinh viên,\n\nHồ sơ của bạn trong hệ thống còn thiếu một số thông tin bắt buộc. Vui lòng đăng nhập và cập nhật đầy đủ thông tin cá nhân (ngày sinh, giới tính, địa chỉ, v.v.) để tránh ảnh hưởng đến các thủ tục hành chính.\n\nTrân trọng,\nPhòng Công tác Sinh viên', 'nhacnho_hoso', NULL, 4, NULL, 0, '2', '2026-03-21 05:40:45', '[\"20123459\"]'),
+(12, 'Nhắc nhở: Nộp phiếu tự đánh giá điểm rèn luyện', 'Kính gửi các bạn sinh viên,\n\nHạn nộp phiếu tự đánh giá điểm rèn luyện (DRL) đang đến gần. Vui lòng đăng nhập hệ thống và hoàn thành phiếu tự đánh giá trước thời hạn quy định.\n\nTrân trọng,\nPhòng Công tác Sinh viên', 'nhacnho_drl', NULL, 4, NULL, 0, '2', '2026-03-21 05:41:17', '[\"20123459\"]');
 
 -- --------------------------------------------------------
 
@@ -924,7 +927,7 @@ ALTER TABLE `config`
 -- AUTO_INCREMENT cho bảng `dichvu_sinhvien`
 --
 ALTER TABLE `dichvu_sinhvien`
-  MODIFY `madon` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `madon` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `diemrenluyen`
@@ -1026,7 +1029,7 @@ ALTER TABLE `thamgiahoatdong`
 -- AUTO_INCREMENT cho bảng `thongbao`
 --
 ALTER TABLE `thongbao`
-  MODIFY `mathongbao` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `mathongbao` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `tieuchi_diemrenluyen`

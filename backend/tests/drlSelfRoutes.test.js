@@ -78,3 +78,160 @@ describe('DRL filter logic theo role', () => {
     expect(filtered.every((r) => r.makhoa === makhoa)).toBe(true);
   });
 });
+
+// ============================================================
+// Task 6.1: Unit tests cho route GET /api/drl-self/students-by-status
+// ============================================================
+
+// Import drlSelfRoutes sau khi mock đã được thiết lập ở trên
+const { default: drlSelfRoutes } = await import('../routes/drlSelfRoutes.js');
+
+// Helper tạo mock req/res
+function makeReqRes({ query = {}, headers = {}, user = {} } = {}) {
+  const req = { query, headers, user, params: {}, body: {} };
+  let statusCode = 200;
+  let responseData = null;
+  const res = {
+    get statusCode() { return statusCode; },
+    status(code) { statusCode = code; return this; },
+    json(data) { responseData = data; return this; },
+    get data() { return responseData; },
+  };
+  return { req, res };
+}
+
+// Helper tìm route handler GET /students-by-status
+function getStudentsByStatusHandler() {
+  return drlSelfRoutes.stack.find(
+    (layer) =>
+      layer.route?.path === '/students-by-status' &&
+      layer.route?.methods?.get
+  );
+}
+
+// Helper chạy toàn bộ middleware stack của route (requireRole + handler)
+async function runRouteStack(layer, req, res) {
+  const stack = layer.route.stack;
+  let idx = 0;
+  const next = async (err) => {
+    if (err) return;
+    if (idx < stack.length) {
+      const fn = stack[idx++];
+      await fn.handle(req, res, next);
+    }
+  };
+  await next();
+}
+
+describe('GET /api/drl-self/students-by-status - unit tests', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('thiếu mahocky → trả về 400', async () => {
+    const { req, res } = makeReqRes({
+      query: { trangthai: 'chua_nop' },
+      user: { role: 'admin' },
+    });
+
+    const layer = getStudentsByStatusHandler();
+    expect(layer).toBeTruthy();
+    await runRouteStack(layer, req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.data.error).toMatch(/mahocky/i);
+  });
+
+  test('trangthai không hợp lệ → trả về 400', async () => {
+    const { req, res } = makeReqRes({
+      query: { mahocky: '2024-1', trangthai: 'invalid_status' },
+      user: { role: 'admin' },
+    });
+
+    const layer = getStudentsByStatusHandler();
+    await runRouteStack(layer, req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.data.error).toMatch(/trạng thái không hợp lệ/i);
+  });
+
+  test('trangthai=chua_nop với mock DB → trả về { data: [...], total: N }', async () => {
+    const fakeRows = [
+      { mssv: 'SV001', hoten: 'Nguyễn Văn A', malop: 'CNTT01', makhoa: 'CNTT', trangthai: 'chua_nop' },
+      { mssv: 'SV002', hoten: 'Trần Thị B', malop: 'CNTT01', makhoa: 'CNTT', trangthai: 'chua_nop' },
+    ];
+    mockExecute.mockResolvedValueOnce([fakeRows]);
+
+    const { req, res } = makeReqRes({
+      query: { mahocky: '2024-1', trangthai: 'chua_nop' },
+      user: { role: 'admin' },
+    });
+
+    const layer = getStudentsByStatusHandler();
+    await runRouteStack(layer, req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.data).toEqual({ data: fakeRows, total: 2 });
+  });
+
+  test('trangthai=chua_nop với danh sách rỗng → trả về { data: [], total: 0 }', async () => {
+    mockExecute.mockResolvedValueOnce([[]]);
+
+    const { req, res } = makeReqRes({
+      query: { mahocky: '2024-1', trangthai: 'chua_nop' },
+      user: { role: 'ctsv' },
+    });
+
+    const layer = getStudentsByStatusHandler();
+    await runRouteStack(layer, req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.data).toEqual({ data: [], total: 0 });
+  });
+
+  test('role=sinhvien → trả về 403', async () => {
+    const { req, res } = makeReqRes({
+      query: { mahocky: '2024-1', trangthai: 'chua_nop' },
+      user: { role: 'sinhvien' },
+    });
+
+    const layer = getStudentsByStatusHandler();
+    await runRouteStack(layer, req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.data.error).toBeTruthy();
+  });
+
+  test('không có role → trả về 401', async () => {
+    const { req, res } = makeReqRes({
+      query: { mahocky: '2024-1', trangthai: 'chua_nop' },
+      user: {},
+    });
+
+    const layer = getStudentsByStatusHandler();
+    await runRouteStack(layer, req, res);
+
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('role=giangvien tự động filter theo userMakhoa', async () => {
+    const fakeRows = [
+      { mssv: 'SV003', hoten: 'Lê Văn C', malop: 'CNTT02', makhoa: 'CNTT', trangthai: 'chua_nop' },
+    ];
+    mockExecute.mockResolvedValueOnce([fakeRows]);
+
+    const { req, res } = makeReqRes({
+      query: { mahocky: '2024-1', trangthai: 'chua_nop' },
+      user: { role: 'giangvien', makhoa: 'CNTT' },
+    });
+
+    const layer = getStudentsByStatusHandler();
+    await runRouteStack(layer, req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.data.data).toEqual(fakeRows);
+    // Kiểm tra query DB có truyền makhoa vào params
+    const callArgs = mockExecute.mock.calls[0];
+    expect(callArgs[1]).toContain('CNTT'); // makhoa được truyền vào params
+  });
+});

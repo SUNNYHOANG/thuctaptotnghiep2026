@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ReminderPopup from './ReminderPopup';
 import './AppShell.css';
 
 function getRoleName(role) {
@@ -57,7 +58,7 @@ const AppShell = ({ children }) => {
     if (hasRole('ctsv')) {
       return [
         { label: 'Tổng quan', path: '/ctsv/dashboard' },
-        { label: 'Quản lý điểm (kiểm tra & khóa)', path: '/ctsv/quan-ly-diem' },
+        // { label: 'Quản lý điểm (kiểm tra & khóa)', path: '/ctsv/quan-ly-diem' },
         { label: 'Duyệt đơn online', path: '/ctsv/duyet-don-online' },
         { label: 'Duyệt đơn phúc khảo', path: '/ctsv/duyet-phuc-khao' },
         { label: 'Duyệt đăng ký hoạt động', path: '/ctsv/duyet-dang-ky-hoat-dong' },
@@ -175,6 +176,7 @@ const AppShell = ({ children }) => {
             <span className="app-topbar__title">{title}</span>
           </div>
           <div className="app-topbar__spacer" />
+          <ReminderPopup />
           <div className="app-user">
             <div className="app-user__meta">
               <div className="app-user__name">{user?.hoten || user?.username || 'Người dùng'}</div>

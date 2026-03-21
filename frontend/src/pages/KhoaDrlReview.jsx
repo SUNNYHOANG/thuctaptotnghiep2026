@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { drlSelfAPI, lookupAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useUrlMssv } from '../utils/useUrlMssv';
 
 const KhoaDrlReview = () => {
   const { user } = useAuth();
+  const [urlMssv, setUrlMssv] = useUrlMssv();
+  const [filterMssv, setFilterMssv] = useState('');
   const [malop, setMalop] = useState('');
   const [mahocky, setMahocky] = useState('');
   const [hockyList, setHockyList] = useState([]);
@@ -25,7 +28,14 @@ const KhoaDrlReview = () => {
 
   useEffect(() => {
     setMessage('');
-  }, [malop, mahocky]);
+  }, [malop, mahocky, filterMssv]);
+
+  // Khi component mount và urlMssv có giá trị: tự động điền ô tìm kiếm
+  useEffect(() => {
+    if (urlMssv) {
+      setFilterMssv(urlMssv);
+    }
+  }, [urlMssv]);
 
   const loadData = async () => {
     if (!mahocky) {
@@ -38,13 +48,20 @@ const KhoaDrlReview = () => {
     try {
       const res = await drlSelfAPI.getByClassAndSemester(malop || '', mahocky);
       // Chỉ hiển thị phiếu chokhoaduyet thuộc khoa mình
-      const filtered = (res.data || []).filter(
+      let filtered = (res.data || []).filter(
         (r) => r.trangthai === 'chokhoaduyet'
       );
-      setRows(filtered);
-      if (filtered.length === 0) {
+      // Lọc theo MSSV nếu có
+      if (filterMssv.trim()) {
+        const mssvSearch = filterMssv.trim().toLowerCase();
+        filtered = filtered.filter((r) => r.mssv?.toLowerCase().includes(mssvSearch));
+        if (filtered.length === 0) {
+          setMessage(`Sinh viên ${filterMssv.trim()} chưa có phiếu tự đánh giá nào`);
+        }
+      } else if (filtered.length === 0) {
         setMessage('Không có phiếu nào đang chờ Khoa duyệt.');
       }
+      setRows(filtered);
     } catch (error) {
       setRows([]);
       setMessage(error.response?.data?.error || 'Không tải được danh sách phiếu.');
@@ -127,6 +144,20 @@ const KhoaDrlReview = () => {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Tìm theo MSSV</label>
+              <input
+                type="text"
+                className="form-control"
+                style={{ width: 160 }}
+                value={filterMssv}
+                onChange={(e) => {
+                  setFilterMssv(e.target.value);
+                  setUrlMssv(e.target.value);
+                }}
+                placeholder="Nhập MSSV..."
+              />
             </div>
             <button className="btn btn-primary btn-sm" type="button" onClick={loadData} disabled={loading}>
               {loading ? 'Đang tải...' : 'Tải danh sách'}

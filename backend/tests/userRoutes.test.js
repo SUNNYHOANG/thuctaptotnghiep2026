@@ -133,3 +133,158 @@ describe('POST /api/users - validate makhoa cho role khoa', () => {
     }
   });
 });
+
+describe('GET /students/incomplete-profile - phân quyền và logic', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  // Helper tìm route handler GET /students/incomplete-profile
+  function getIncompleteProfileHandler() {
+    return userRoutes.stack.find(
+      (layer) =>
+        layer.route?.path === '/students/incomplete-profile' &&
+        layer.route?.methods?.get
+    );
+  }
+
+  test('role=admin → trả về data và total', async () => {
+    const fakeRows = [
+      { mssv: 'SV001', hoten: null, malop: 'CNTT01', makhoa: 'CNTT', ngaysinh: null, gioitinh: null },
+    ];
+    mockExecute.mockResolvedValueOnce([fakeRows]);
+
+    const req = {
+      body: {},
+      params: {},
+      query: {},
+      headers: { 'x-user-role': 'admin' },
+      user: { role: 'admin' },
+    };
+    let responseStatus = 200;
+    let responseData = null;
+    const res = {
+      status(code) { responseStatus = code; return this; },
+      json(data) { responseData = data; return this; },
+    };
+
+    const handler = getIncompleteProfileHandler();
+    expect(handler).toBeTruthy();
+    await handler.route.stack[0].handle(req, res, () => {});
+
+    expect(responseStatus).toBe(200);
+    expect(responseData).toEqual({ data: fakeRows, total: 1 });
+  });
+
+  test('role=ctsv → trả về data và total', async () => {
+    mockExecute.mockResolvedValueOnce([[]]);
+
+    const req = {
+      body: {},
+      params: {},
+      query: {},
+      headers: { 'x-user-role': 'ctsv' },
+      user: { role: 'ctsv' },
+    };
+    let responseStatus = 200;
+    let responseData = null;
+    const res = {
+      status(code) { responseStatus = code; return this; },
+      json(data) { responseData = data; return this; },
+    };
+
+    const handler = getIncompleteProfileHandler();
+    await handler.route.stack[0].handle(req, res, () => {});
+
+    expect(responseStatus).toBe(200);
+    expect(responseData).toEqual({ data: [], total: 0 });
+  });
+
+  test('role=giangvien → trả về 403', async () => {
+    const req = {
+      body: {},
+      params: {},
+      query: {},
+      headers: { 'x-user-role': 'giangvien' },
+      user: { role: 'giangvien' },
+    };
+    let responseStatus = 200;
+    let responseData = null;
+    const res = {
+      status(code) { responseStatus = code; return this; },
+      json(data) { responseData = data; return this; },
+    };
+
+    const handler = getIncompleteProfileHandler();
+    await handler.route.stack[0].handle(req, res, () => {});
+
+    expect(responseStatus).toBe(403);
+    expect(responseData.error).toBeTruthy();
+  });
+
+  test('role=sinhvien → trả về 403', async () => {
+    const req = {
+      body: {},
+      params: {},
+      query: {},
+      headers: { 'x-user-role': 'sinhvien' },
+      user: { role: 'sinhvien' },
+    };
+    let responseStatus = 200;
+    let responseData = null;
+    const res = {
+      status(code) { responseStatus = code; return this; },
+      json(data) { responseData = data; return this; },
+    };
+
+    const handler = getIncompleteProfileHandler();
+    await handler.route.stack[0].handle(req, res, () => {});
+
+    expect(responseStatus).toBe(403);
+  });
+
+  test('không có role → trả về 403', async () => {
+    const req = {
+      body: {},
+      params: {},
+      query: {},
+      headers: {},
+      user: {},
+    };
+    let responseStatus = 200;
+    let responseData = null;
+    const res = {
+      status(code) { responseStatus = code; return this; },
+      json(data) { responseData = data; return this; },
+    };
+
+    const handler = getIncompleteProfileHandler();
+    await handler.route.stack[0].handle(req, res, () => {});
+
+    expect(responseStatus).toBe(403);
+  });
+
+  test('lỗi database → trả về 500', async () => {
+    mockExecute.mockRejectedValueOnce(new Error('DB error'));
+
+    const req = {
+      body: {},
+      params: {},
+      query: {},
+      headers: { 'x-user-role': 'admin' },
+      user: { role: 'admin' },
+    };
+    let responseStatus = 200;
+    let responseData = null;
+    const res = {
+      status(code) { responseStatus = code; return this; },
+      json(data) { responseData = data; return this; },
+    };
+
+    const handler = getIncompleteProfileHandler();
+    await handler.route.stack[0].handle(req, res, () => {});
+
+    expect(responseStatus).toBe(500);
+    expect(responseData.error).toBe('Lỗi hệ thống, vui lòng thử lại');
+  });
+});

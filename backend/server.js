@@ -48,6 +48,7 @@ app.use('/api/khen-thuong-ky-luat', khenThuongKyLuatRoutes);
 app.use('/api/hoc-bong', hocBongRoutes);
 app.use('/api/dich-vu', dichVuRoutes);
 app.use('/api/thong-bao', thongBaoRoutes);
+app.use('/api/thongbao', thongBaoRoutes);
 app.use('/api/drl-self', drlSelfRoutes);
 app.use('/api/nrl', nrlRoutes);
 

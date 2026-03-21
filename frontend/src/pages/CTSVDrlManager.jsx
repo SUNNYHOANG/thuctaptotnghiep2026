@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { drlSelfAPI, lookupAPI } from '../api/api';
+import { useUrlMssv } from '../utils/useUrlMssv';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -29,13 +30,50 @@ const CTSVDrlManager = () => {
   const [filterKhoa, setFilterKhoa] = useState('');
   const [filterLop, setFilterLop] = useState('');
   const [filterTrangthai, setFilterTrangthai] = useState('');
+  const [filterMssv, setFilterMssv] = useState('');
   const [message, setMessage] = useState('');
+
+  const [urlMssv, setUrlMssv] = useUrlMssv();
 
   useEffect(() => {
     lookupAPI.getHocKy().then((r) => setHockyList(r.data || [])).catch(() => {});
     drlSelfAPI.getKhoaList().then((r) => setKhoaList(r.data || [])).catch(() => {});
     lookupAPI.getLop().then((r) => setLopList(r.data?.data || r.data || [])).catch(() => {});
   }, []);
+
+  // Khi mount và urlMssv có giá trị: tự động điền ô tìm kiếm và load data
+  useEffect(() => {
+    if (urlMssv) {
+      setFilterMssv(urlMssv);
+      loadDataWithMssv(urlMssv);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlMssv]);
+
+  const loadDataWithMssv = async (mssv) => {
+    setLoading(true);
+    setMessage('');
+    try {
+      const params = {};
+      if (filterHocky) params.mahocky = filterHocky;
+      if (filterKhoa) params.makhoa = filterKhoa;
+      if (filterLop) params.malop = filterLop;
+      if (filterTrangthai) params.trangthai = filterTrangthai;
+      if (mssv) params.mssv = mssv;
+      const res = await drlSelfAPI.manage(params);
+      const data = res.data || [];
+      setRows(data);
+      if (data.length === 0 && mssv) {
+        setMessage(`Sinh viên ${mssv} chưa có phiếu tự đánh giá nào`);
+      } else if (data.length === 0) {
+        setMessage('Không có phiếu nào phù hợp với bộ lọc.');
+      }
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Không tải được dữ liệu.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -46,9 +84,15 @@ const CTSVDrlManager = () => {
       if (filterKhoa) params.makhoa = filterKhoa;
       if (filterLop) params.malop = filterLop;
       if (filterTrangthai) params.trangthai = filterTrangthai;
+      if (filterMssv) params.mssv = filterMssv;
       const res = await drlSelfAPI.manage(params);
-      setRows(res.data || []);
-      if ((res.data || []).length === 0) setMessage('Không có phiếu nào phù hợp với bộ lọc.');
+      const data = res.data || [];
+      setRows(data);
+      if (data.length === 0 && filterMssv) {
+        setMessage(`Sinh viên ${filterMssv} chưa có phiếu tự đánh giá nào`);
+      } else if (data.length === 0) {
+        setMessage('Không có phiếu nào phù hợp với bộ lọc.');
+      }
     } catch (err) {
       setMessage(err.response?.data?.error || 'Không tải được dữ liệu.');
     } finally {
@@ -114,6 +158,20 @@ const CTSVDrlManager = () => {
                   return <option key={val} value={val}>{label}</option>;
                 })}
               </select>
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">MSSV</label>
+              <input
+                className="form-control"
+                style={{ width: 160 }}
+                type="text"
+                placeholder="Nhập MSSV..."
+                value={filterMssv}
+                onChange={(e) => {
+                  setFilterMssv(e.target.value);
+                  setUrlMssv(e.target.value);
+                }}
+              />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Trạng thái</label>
