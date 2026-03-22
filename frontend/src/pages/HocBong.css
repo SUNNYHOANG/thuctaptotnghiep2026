@@ -1,102 +1,125 @@
 .hocbong-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  min-height: calc(100vh - 100px);
+  padding: 24px 16px;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-.hocbong-container h1 {
-  font-size: 2em;
-  color: #333;
-  margin-bottom: 30px;
-  text-align: center;
+.hocbong-header { margin-bottom: 20px; }
+.hocbong-header h1 { font-size: 1.6rem; color: #1a1a2e; margin: 0 0 12px; }
+
+.hb-tabs { display: flex; gap: 4px; border-bottom: 2px solid #eee; }
+.hb-tab {
+  padding: 8px 18px; border: none; background: none;
+  cursor: pointer; font-size: 0.9rem; color: #666;
+  border-bottom: 3px solid transparent; transition: all 0.2s;
+}
+.hb-tab:hover { color: #2c3e50; }
+.hb-tab.active {
+  color: #2980b9; font-weight: 700;
+  border-bottom: 3px solid #2980b9;
 }
 
-.scholarships-grid {
+.hb-loading, .hb-empty {
+  text-align: center; padding: 40px; color: #888;
+  background: #f9f9f9; border-radius: 10px; margin-top: 16px;
+}
+
+/* Grid danh sách học bổng */
+.hb-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 18px;
+  margin-top: 16px;
 }
 
-.scholarship-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: all 0.3s ease;
-  border-left: 5px solid #28a745;
+.hb-card {
+  background: #fff; border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border-left: 5px solid #27ae60;
+  overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;
+}
+.hb-card:hover { transform: translateY(-3px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+
+.hb-card-header {
+  padding: 14px 16px; background: #f8f9fa;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #eee;
+}
+.hb-card-header h3 { margin: 0; font-size: 1rem; color: #2c3e50; }
+.hb-status {
+  padding: 4px 10px; border-radius: 12px; font-size: 0.78rem;
+  font-weight: 600; background: #d4edda; color: #155724;
 }
 
-.scholarship-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-5px);
+.hb-card-body { padding: 14px 16px; }
+.hb-info-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 0.88rem; }
+.hb-label { font-weight: 600; color: #555; min-width: 90px; }
+.hb-value { color: #333; flex: 1; }
+
+.hb-toggle-btn {
+  background: none; border: none; color: #2980b9;
+  cursor: pointer; text-decoration: underline; font-size: 0.85rem;
+  margin-top: 6px; padding: 0;
+}
+.hb-recipients {
+  margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px;
+  font-size: 0.85rem;
+}
+.hb-recipients ul { margin: 0; padding-left: 16px; }
+.hb-muted { color: #999; font-style: italic; margin: 0; }
+
+/* Kết quả xét học bổng */
+.hb-results { margin-top: 16px; }
+.hb-results-filter {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.hb-results-filter label { font-weight: 600; }
+.hb-results-filter select {
+  padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem;
 }
 
-.card-header {
-  padding: 15px;
-  background: #f8f9fa;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e9ecef;
+.hb-results-list { display: flex; flex-direction: column; gap: 12px; }
+
+.hb-result-card {
+  background: #fff; border-radius: 10px; padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-left: 5px solid #95a5a6;
 }
+.hb-result-card.hb-result-duyet { border-left-color: #27ae60; }
+.hb-result-card.hb-result-tuchoi { border-left-color: #e74c3c; }
+.hb-result-card.hb-result-cho_duyet { border-left-color: #f39c12; }
 
-.card-header h3 {
-  margin: 0;
-  color: #333;
-  font-size: 1.1em;
+.hb-result-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 10px;
 }
+.hb-result-name { font-weight: 700; font-size: 1rem; color: #2c3e50; }
+.hb-result-hk { font-size: 0.82rem; color: #888; margin-top: 2px; }
+.hb-result-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
-.status-badge {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.85em;
-  font-weight: bold;
-  background: #d4edda;
-  color: #155724;
-  white-space: nowrap;
+.muc-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  color: #fff; font-size: 0.78rem; font-weight: 600;
 }
-
-.card-body {
-  padding: 15px;
+.tt-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 0.78rem; font-weight: 600;
 }
+.tt-cho_duyet { background: #ffeeba; color: #856404; }
+.tt-duyet { background: #d4edda; color: #155724; }
+.tt-tuchoi { background: #f8d7da; color: #721c24; }
 
-.info-item {
-  display: flex;
-  margin-bottom: 12px;
-  gap: 10px;
+.hb-reject-reason {
+  margin-top: 10px; padding: 8px 12px;
+  background: #fff5f5; border-radius: 6px;
+  font-size: 0.85rem; color: #c0392b;
+  border: 1px solid #f5c6cb;
 }
-
-.info-item .label {
-  font-weight: 600;
-  color: #495057;
-  min-width: 100px;
-}
-
-.info-item .value {
-  color: #333;
-  flex: 1;
-  word-wrap: break-word;
-}
-
-.recipients-toggle { margin-top: 10px; }
-.recipients-toggle .btn-link { background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; }
-.recipients-list { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
-.recipients-list ul { margin: 0; padding-left: 1.2rem; }
-.recipients-list .muted { margin: 0; color: #666; font-size: 0.9rem; }
-
-.loading,
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  color: #666;
-  font-size: 1.1em;
+.hb-reward {
+  margin-top: 8px; font-size: 0.88rem; color: #27ae60;
 }
 
 @media (max-width: 768px) {
-  .scholarships-grid {
-    grid-template-columns: 1fr;
-  }
+  .hb-grid { grid-template-columns: 1fr; }
 }

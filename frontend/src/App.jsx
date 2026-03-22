@@ -59,7 +59,10 @@ import TeacherProfile from './pages/TeacherProfile';
 import TeacherPhucKhao from './pages/TeacherPhucKhao';
 import TeacherKhenThuong from './pages/TeacherKhenThuong';
 import AdminLopHanhChinh from './pages/AdminLopHanhChinh';
-import AdminTieuChiDRL from './pages/AdminTieuChiDRL';import './index.css';
+import AdminTieuChiDRL from './pages/AdminTieuChiDRL';
+import ScholarshipEvaluator from './pages/ScholarshipEvaluator';
+import KhoaGrades from './pages/KhoaGrades';
+import './index.css';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -242,6 +245,12 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
+      <Route path="/ctsv/xet-hoc-bong" element={
+        <ProtectedRoute allowedRoles={['admin', 'ctsv']}>
+          <ScholarshipEvaluator />
+        </ProtectedRoute>
+      } />
+
       <Route path="/ctsv/hoc-bong" element={
         <ProtectedRoute requiredRole="ctsv">
           <AdminScholarships />
@@ -370,6 +379,11 @@ function AppRoutes() {
       <Route path="/khoa/thong-bao" element={
         <ProtectedRoute requiredRole="khoa">
           <KhoaThongBao />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/diem" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaGrades />
         </ProtectedRoute>
       } />
 

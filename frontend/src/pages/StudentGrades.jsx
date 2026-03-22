@@ -1,192 +1,184 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { gradesAPIEndpoints } from '../api/gradesAPI';
-import { calculateGPA, getClassification, formatScore, getAcademicWarning } from '../utils/gradeUtils';
+import { gradeAPI } from '../api/api';
 import './StudentGrades.css';
 
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
+}
+
+const XL_COLOR = {
+  'Xuất sắc': '#27ae60',
+  'Giỏi': '#2980b9',
+  'Khá': '#f39c12',
+  'Trung bình': '#e67e22',
+  'Yếu': '#e74c3c',
+  'Chưa xếp loại': '#95a5a6',
+};
+
+function xepLoai(tongket) {
+  if (tongket === null || tongket === undefined) return 'Chưa xếp loại';
+  if (tongket >= 9) return 'Xuất sắc';
+  if (tongket >= 8) return 'Giỏi';
+  if (tongket >= 7) return 'Khá';
+  if (tongket >= 5) return 'Trung bình';
+  return 'Yếu';
+}
+
 const StudentGrades = () => {
-  const { user } = useAuth();
+  const user = getUser();
   const [grades, setGrades] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState(null);
   const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchGrades();
+    if (user.mssv) loadGrades();
   }, []);
 
-  const fetchGrades = async () => {
+  const loadGrades = async () => {
     try {
       setLoading(true);
-      const response = await gradesAPIEndpoints.getStudentGrades(user?.mssv);
-      setGrades(response.data);
-      
-      // Lấy danh sách học kỳ
-      const semesters = [...new Set(response.data.map(g => g.mahocky))];
-      setSemesters(semesters.sort((a, b) => b - a));
-      if (semesters.length > 0) {
-        setSelectedSemester(semesters[0]);
-      }
+      const res = await gradeAPI.getByStudent(user.mssv);
+      const data = res.data || [];
+      setGrades(data);
+
+      // Lấy danh sách học kỳ duy nhất
+      const hkSet = [...new Set(data.map(g => g.mahocky).filter(Boolean))];
+      hkSet.sort((a, b) => b - a);
+      setSemesters(hkSet);
+      if (hkSet.length > 0) setSelectedSemester(String(hkSet[0]));
     } catch (err) {
-      setError('Lỗi tải dữ liệu: ' + err.message);
+      setError('Lỗi tải điểm: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredGrades = selectedSemester 
-    ? grades.filter(g => g.mahocky === selectedSemester)
+  const filtered = selectedSemester
+    ? grades.filter(g => String(g.mahocky) === selectedSemester)
     : grades;
 
-  const totalGPA = filteredGrades.length > 0 
-    ? (filteredGrades.reduce((sum, g) => sum + (g.gpa || 0), 0) / filteredGrades.length).toFixed(2)
-    : 0;
+  // GPA học kỳ (trung bình có trọng số tín chỉ)
+  const totalTinChi = filtered.reduce((s, g) => s + (g.sotinchi || 0), 0);
+  const gpaHocKy = totalTinChi > 0
+    ? Math.round(filtered.reduce((s, g) => s + (g.gpa || 0) * (g.sotinchi || 0), 0) / totalTinChi * 100) / 100
+    : null;
 
-  if (loading) return <div className="loading">Đang tải...</div>;
-  if (error) return <div className="error">{error}</div>;
+  const xlHocKy = xepLoai(gpaHocKy !== null ? (gpaHocKy / 4) * 10 : null);
+
+  if (loading) return <div className="sg-loading">Đang tải bảng điểm...</div>;
+  if (error) return <div className="sg-error">{error}</div>;
 
   return (
-    <div className="student-grades-container">
-      <div className="grades-header">
-        <h1>📊 Bảng Điểm Của Tôi</h1>
-        <p>Xin chào, {user?.hoten}</p>
+    <div className="sg-container">
+      <div className="sg-header">
+        <h1>📊 Bảng điểm của tôi</h1>
+        <p>Xin chào, <strong>{user.hoten || user.username}</strong> – MSSV: {user.mssv}</p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="summary-cards">
-        <div className="summary-card">
-          <h3>Môn Học</h3>
-          <p className="value">{filteredGrades.length}</p>
-        </div>
-        <div className="summary-card">
-          <h3>GPA Trung Bình</h3>
-          <p className="value">{parseFloat(totalGPA).toFixed(2)}</p>
-        </div>
-        <div className="summary-card">
-          <h3>Xếp Loại</h3>
-          <p className="value">{getClassification(parseFloat(totalGPA))}</p>
-        </div>
-      </div>
-
-      {/* Semester Filter */}
-      {semesters.length > 1 && (
-        <div className="semester-filter">
-          <label>Chọn học kỳ:</label>
-          <select value={selectedSemester || ''} onChange={(e) => setSelectedSemester(Number(e.target.value))}>
+      {/* Chọn học kỳ */}
+      {semesters.length > 0 && (
+        <div className="sg-filter">
+          <label>Học kỳ:</label>
+          <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
             <option value="">Tất cả học kỳ</option>
-            {semesters.map(sem => (
-              <option key={sem} value={sem}>Học kỳ {sem}</option>
+            {semesters.map(hk => (
+              <option key={hk} value={String(hk)}>
+                {filtered.find(g => String(g.mahocky) === String(hk))?.tenhocky || `HK ${hk}`}
+                {filtered.find(g => String(g.mahocky) === String(hk))?.namhoc
+                  ? ` – ${filtered.find(g => String(g.mahocky) === String(hk))?.namhoc}` : ''}
+              </option>
             ))}
           </select>
         </div>
       )}
 
-      {/* Grades Table */}
-      <div className="grades-table-container">
-        {filteredGrades.length === 0 ? (
-          <div className="no-data">Chưa có điểm nào</div>
-        ) : (
-          <table className="grades-table">
+      {/* Thẻ tóm tắt */}
+      <div className="sg-summary">
+        <div className="sg-card">
+          <div className="sg-card-label">Số môn</div>
+          <div className="sg-card-value">{filtered.length}</div>
+        </div>
+        <div className="sg-card">
+          <div className="sg-card-label">Tổng tín chỉ</div>
+          <div className="sg-card-value">{totalTinChi}</div>
+        </div>
+        <div className="sg-card">
+          <div className="sg-card-label">GPA học kỳ</div>
+          <div className="sg-card-value" style={{ color: '#8e44ad' }}>
+            {gpaHocKy !== null ? gpaHocKy : '–'}
+          </div>
+        </div>
+        <div className="sg-card">
+          <div className="sg-card-label">Xếp loại</div>
+          <div className="sg-card-value">
+            <span className="xl-badge" style={{ background: XL_COLOR[xlHocKy] || '#95a5a6' }}>
+              {xlHocKy}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Bảng điểm */}
+      {filtered.length === 0 ? (
+        <div className="sg-empty">Chưa có điểm chính thức nào được công bố.</div>
+      ) : (
+        <div className="sg-table-wrapper">
+          <table className="sg-table">
             <thead>
               <tr>
-                <th>Mã Môn</th>
-                <th>Tên Môn Học</th>
-                <th>Giảng Viên</th>
-                <th>Chuyên Cần</th>
-                <th>Giữa Kỳ</th>
-                <th>Cuối Kỳ</th>
-                <th>Tổng Kết</th>
+                <th>STT</th>
+                <th>Tên môn học</th>
+                <th>Tín chỉ</th>
+                <th>Chuyên cần</th>
+                <th>Giữa kỳ</th>
+                <th>Cuối kỳ</th>
+                <th>Tổng kết</th>
                 <th>GPA</th>
-                <th>Xếp Loại</th>
-                <th>Trạng Thái</th>
+                <th>Xếp loại</th>
+                <th>Cảnh báo</th>
               </tr>
             </thead>
             <tbody>
-              {filteredGrades.map((grade, idx) => {
-                const classification = getClassification(grade.gpa);
-                const warning = getAcademicWarning(grade.gpa);
-                
+              {filtered.map((g, i) => {
+                const xl = xepLoai(g.diemtongket);
                 return (
-                  <tr key={grade.mabangdiem} className={warning ? 'row-warning' : ''}>
-                    <td>{idx + 1}</td>
-                    <td className="subject-name">{grade.tenmonhoc}</td>
-                    <td>{grade.tengiangvien}</td>
-                    <td>{formatScore(grade.diemchuyencan)}</td>
-                    <td>{formatScore(grade.diemgiuaky)}</td>
-                    <td>{formatScore(grade.diemcuoiky)}</td>
-                    <td className="total-score">{formatScore(grade.diemtongket)}</td>
-                    <td className="gpa-cell"><strong>{formatScore(grade.gpa)}</strong></td>
+                  <tr key={g.mabangdiem}>
+                    <td>{i + 1}</td>
+                    <td className="sg-subject">{g.tenmonhoc}</td>
+                    <td>{g.sotinchi}</td>
+                    <td>{g.diemchuyencan ?? '–'}</td>
+                    <td>{g.diemgiuaky ?? '–'}</td>
+                    <td>{g.diemcuoiky ?? '–'}</td>
+                    <td><strong>{g.diemtongket ?? '–'}</strong></td>
+                    <td><strong style={{ color: '#8e44ad' }}>{g.gpa ?? '–'}</strong></td>
                     <td>
-                      <span className="classification-badge" style={{
-                        backgroundColor: getClassificationColor(classification)
-                      }}>
-                        {classification}
+                      <span className="xl-badge" style={{ background: XL_COLOR[xl] || '#95a5a6' }}>
+                        {xl}
                       </span>
                     </td>
                     <td>
-                      <span className={`status-badge status-${grade.trangthai}`}>
-                        {grade.trangthai === 'dangnhap' ? 'Đang nhập' : 'Đã khóa'}
-                      </span>
+                      {g.canhbao ? (
+                        <span className="sg-warning">{g.canhbao}</span>
+                      ) : '–'}
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        )}
-      </div>
-
-      {/* Academic Warning */}
-      {filteredGrades.some(g => getAcademicWarning(g.gpa)) && (
-        <div className="warning-box">
-          <h3>⚠️ Cảnh Báo Học Vụ</h3>
-          {filteredGrades.map(grade => {
-            const warning = getAcademicWarning(grade.gpa);
-            return warning ? (
-              <div key={grade.mabangdiem} className={`warning-item warning-${warning.severity}`}>
-                <strong>{grade.tenmonhoc}:</strong> {warning.message}
-              </div>
-            ) : null;
-          })}
         </div>
       )}
 
-      {/* Score Details */}
-      <div className="score-details">
-        <h3>📌 Ghi Chú Về Cách Tính Điểm</h3>
-        <div className="details-content">
-          <p><strong>Điểm Tổng Kết = </strong>Chuyên cần × 10% + Giữa kỳ × 30% + Cuối kỳ × 60%</p>
-          <p><strong>GPA = </strong>Điểm Tổng Kết ÷ 10 × 4 (Thang điểm 0-4)</p>
-          <div className="classification-legend">
-            <h4>Xếp Loại Học Lực:</h4>
-            <ul>
-              <li><span className="legend-badge" style={{backgroundColor: '#27ae60'}}>Xuất sắc</span>: GPA ≥ 3.6</li>
-              <li><span className="legend-badge" style={{backgroundColor: '#3498db'}}>Tốt</span>: GPA 3.2 - 3.5</li>
-              <li><span className="legend-badge" style={{backgroundColor: '#f39c12'}}>Khá</span>: GPA 2.8 - 3.1</li>
-              <li><span className="legend-badge" style={{backgroundColor: '#e67e22'}}>Trung bình</span>: GPA 2.4 - 2.7</li>
-              <li><span className="legend-badge" style={{backgroundColor: '#e74c3c'}}>Yếu</span>: GPA 2.0 - 2.3</li>
-              <li><span className="legend-badge" style={{backgroundColor: '#c0392b'}}>Kém</span>: GPA &lt; 2.0</li>
-            </ul>
-          </div>
-        </div>
+      {/* Ghi chú cách tính */}
+      <div className="sg-note">
+        <strong>Cách tính điểm:</strong> Tổng kết = Chuyên cần × 10% + Giữa kỳ × 30% + Cuối kỳ × 60% &nbsp;|&nbsp;
+        GPA = (Tổng kết ÷ 10) × 4 &nbsp;|&nbsp;
+        Chỉ hiển thị điểm đã được công bố chính thức.
       </div>
     </div>
   );
 };
 
 export default StudentGrades;
-
-// Helper function
-const getClassificationColor = (classification) => {
-  const colors = {
-    'Xuất sắc': '#27ae60',
-    'Tốt': '#3498db',
-    'Khá': '#f39c12',
-    'Trung bình': '#e67e22',
-    'Yếu': '#e74c3c',
-    'Kém': '#c0392b',
-    'Chưa xếp loại': '#95a5a6'
-  };
-  return colors[classification] || '#95a5a6';
-};

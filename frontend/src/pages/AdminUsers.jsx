@@ -124,22 +124,27 @@ const AdminUsers = () => {
   };
 
   const loadLopByKhoa = async (makhoa) => {
-    if (!makhoa) { setLopList([]); return; }
+    if (!makhoa) { setLopList([]); return []; }
     try {
       const r = await lookupAPI.getLopByKhoa(makhoa);
-      setLopList(r.data?.data || r.data || []);
+      const list = r.data?.data || r.data || [];
+      setLopList(list);
+      return list;
     } catch {
       setLopList([]);
+      return [];
     }
   };
 
   const openEditSv = async (u) => {
     // Load lớp trước khi set form để tránh race condition
-    await loadLopByKhoa(u.makhoa || '');
+    const list = await loadLopByKhoa(u.makhoa || '');
+    // Nếu SV chưa có lớp nhưng có khoa → tự động gán lớp đầu tiên của khoa
+    const autoMalop = (!u.malop && list.length > 0) ? list[0].malop : (u.malop || '');
     setSvForm({
       mssv: u.mssv || u.id || '',
       hoten: u.hoten || '',
-      malop: u.malop || '',
+      malop: autoMalop,
       makhoa: u.makhoa || '',
       ngaysinh: u.ngaysinh ? String(u.ngaysinh).split('T')[0] : '',
       gioitinh: u.gioitinh || '',
@@ -301,7 +306,7 @@ const AdminUsers = () => {
                     <>
                       <td style={td}>{u.mssv || u.id}</td>
                       <td style={td}>{u.hoten || '-'}</td>
-                      <td style={td}>{u.malop || '-'}</td>
+                      <td style={td}>{u.malop || <span style={{ color: '#e74c3c', fontSize: 12 }}>⚠️ Chưa có lớp</span>}</td>
                       <td style={td}>{u.makhoa || '-'}</td>
                       <td style={td}>{u.tinhtrang || '-'}</td>
                       <td style={{ ...td, textAlign: 'center' }}>
@@ -393,7 +398,11 @@ const AdminUsers = () => {
                   <select value={svForm.makhoa} onChange={async (e) => {
                     const mk = e.target.value;
                     setSvForm((prev) => ({ ...prev, makhoa: mk, malop: '' }));
-                    await loadLopByKhoa(mk);
+                    const list = await loadLopByKhoa(mk);
+                    // Tự động chọn lớp đầu tiên nếu có
+                    if (list.length > 0) {
+                      setSvForm((prev) => ({ ...prev, makhoa: mk, malop: list[0].malop }));
+                    }
                   }} style={inp}>
                     <option value="">-- Chọn khoa --</option>
                     {khoaList.map((k) => <option key={k.makhoa} value={k.makhoa}>{k.makhoa} – {k.tenkhoa}</option>)}

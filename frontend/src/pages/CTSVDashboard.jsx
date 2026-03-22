@@ -84,7 +84,7 @@ const CTSVDashboard = () => {
           <QuickLink to="/ctsv/diem-ren-luyen-tu-danh-gia" icon="📝" label="Duyệt phiếu DRL" color="#9b59b6" desc="Duyệt & chốt điểm" />
           <QuickLink to="/ctsv/quan-ly-diem-ren-luyen" icon="📊" label="Quản lý DRL" color="#2980b9" desc="Tổng hợp điểm RL" />
           <QuickLink to="/ctsv/thong-ke-drl" icon="📈" label="Thống kê DRL" color="#16a085" desc="Báo cáo thống kê" />
-          <QuickLink to="/ctsv/hoc-bong" icon="🎓" label="Học bổng" color="#8e44ad" desc="Quản lý học bổng" />
+          <QuickLink to="/ctsv/xet-hoc-bong" icon="🎓" label="Duyệt học bổng" color="#8e44ad" desc="Duyệt học bổng SV" />
           <QuickLink to="/ctsv/khen-thuong-ky-luat" icon="⭐" label="Khen thưởng/KL" color="#c0392b" desc="Khen thưởng, kỷ luật" />
           <QuickLink to="/ctsv/nhac-nho" icon="📨" label="Gửi nhắc nhở" color="#1abc9c" desc="Nhắc nhở SV" />
           <QuickLink to="/ctsv/bao-cao" icon="📤" label="Xuất báo cáo" color="#7f8c8d" desc="Xuất Excel/PDF" />

@@ -24,9 +24,17 @@ class ClassSection {
       query += ' AND l.mamonhoc = ?';
       params.push(filters.mamonhoc);
     }
+    if (filters.makhoa) {
+      query += ' AND m.makhoa = ?';
+      params.push(filters.makhoa);
+    }
     if (filters.trangthai) {
       query += ' AND l.trangthai = ?';
       params.push(filters.trangthai);
+    }
+    if (filters.magiaovien) {
+      query += ' AND l.magiaovien = ?';
+      params.push(filters.magiaovien);
     }
 
     query += ' ORDER BY h.namhoc DESC, h.tenhocky, m.tenmonhoc';

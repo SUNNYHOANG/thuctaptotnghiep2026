@@ -11,7 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
 import classSectionRoutes from './routes/classSectionRoutes.js';
 import lookupRoutes from './routes/lookupRoutes.js';
-import gradesRoutes from './routes/gradesRoutes.js';
+import gradeRoutes from './routes/gradeRoutes.js';
 import phucKhaoRoutes from './routes/phucKhaoRoutes.js';
 import khenThuongKyLuatRoutes from './routes/khenThuongKyLuatRoutes.js';
 import hocBongRoutes from './routes/hocBongRoutes.js';
@@ -26,6 +26,7 @@ import auditLogRoutes from './routes/auditLogRoutes.js';
 import donOnlineRoutes from './routes/donOnlineRoutes.js';
 import tieuChiDrlRoutes from './routes/tieuChiDrlRoutes.js';
 import tieuChiChiTietRoutes from './routes/tieuChiChiTietRoutes.js';
+import scholarshipRoutes from './routes/scholarshipRoutes.js';
 import { parseUser } from './middleware/parseUser.js';
 
 dotenv.config();
@@ -50,7 +51,7 @@ app.use('/api/scores', scoreRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/class-sections', classSectionRoutes);
 app.use('/api/lookup', lookupRoutes);
-app.use('/api/grades', gradesRoutes);
+app.use('/api/grades', gradeRoutes);
 app.use('/api/phuc-khao', phucKhaoRoutes);
 app.use('/api/khen-thuong-ky-luat', khenThuongKyLuatRoutes);
 app.use('/api/hoc-bong', hocBongRoutes);
@@ -65,6 +66,7 @@ app.use('/api/audit-log', auditLogRoutes);
 app.use('/api/don-online', donOnlineRoutes);
 app.use('/api/tieu-chi-drl', tieuChiDrlRoutes);
 app.use('/api/tieu-chi-chitiet', tieuChiChiTietRoutes);
+app.use('/api/scholarship', scholarshipRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

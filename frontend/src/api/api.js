@@ -22,6 +22,7 @@ api.interceptors.request.use((config) => {
       if (user.id) config.headers['x-user-id'] = user.id;
       if (user.username) config.headers['x-user-username'] = user.username;
       if (user.mssv) config.headers['x-user-mssv'] = user.mssv;
+      if (user.magiaovien) config.headers['x-user-magiaovien'] = user.magiaovien;
     } catch {}
   }
   return config;
@@ -248,6 +249,45 @@ export const tieuChiChiTietAPI = {
   create: (data) => api.post('/tieu-chi-chitiet', data),
   update: (id, data) => api.put(`/tieu-chi-chitiet/${id}`, data),
   delete: (id) => api.delete(`/tieu-chi-chitiet/${id}`),
+};
+
+// Grade API (nhập điểm, import Excel, khóa/mở khóa)
+export const gradeAPI = {
+  getByClass: (malophocphan) => api.get(`/grades/class/${malophocphan}`),
+  getByStudent: (mssv, mahocky = null) => api.get(`/grades/student/${mssv}`, { params: mahocky ? { mahocky } : {} }),
+  getById: (id) => api.get(`/grades/${id}`),
+  getLog: (id) => api.get(`/grades/${id}/log`),
+  create: (data) => api.post('/grades', data),
+  update: (id, data) => api.put(`/grades/${id}`, data),
+  importExcel: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/grades/import-excel', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  lock: (malophocphan) => api.post(`/grades/lock/${malophocphan}`),
+  unlock: (malophocphan) => api.post(`/grades/unlock/${malophocphan}`),
+  getStats: (mahocky) => api.get(`/grades/stats/${mahocky}`),
+  // Khoa read-only
+  getByKhoa: (params = {}) => api.get('/grades/by-khoa', { params }),
+  getLopHocPhanByKhoa: (params = {}) => api.get('/grades/lophocphan-by-khoa', { params }),
+};
+
+// Scholarship API (xét học bổng, duyệt, xuất Excel)
+export const scholarshipAPI = {
+  // Khoa: xét + duyệt bước 1
+  evaluate: (mahocky) => api.post(`/scholarship/evaluate/${mahocky}`),
+  getKhoaResults: (mahocky) => api.get(`/scholarship/khoa-results/${mahocky}`),
+  khoaApprove: (id, data) => api.put(`/scholarship/khoa-approve/${id}`, data),
+  // CTSV: xem + duyệt cuối
+  getResults: (mahocky) => api.get(`/scholarship/results/${mahocky}`),
+  approve: (id, data) => api.put(`/scholarship/approve/${id}`, data),
+  // Sinh viên
+  getMy: (mahocky) => mahocky
+    ? api.get(`/scholarship/my/${mahocky}`)
+    : api.get('/scholarship/my'),
+  exportExcel: (mahocky) => api.get(`/scholarship/export/${mahocky}`, { responseType: 'blob' }),
 };
 
 export default api;

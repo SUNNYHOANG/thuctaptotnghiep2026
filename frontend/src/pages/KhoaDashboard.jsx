@@ -102,7 +102,8 @@ const KhoaDashboard = () => {
           <QuickLink to="/khoa/drl-stats" icon="📊" label="Thống kê DRL" color="#9b59b6" desc="Phân tích điểm rèn luyện" />
           <QuickLink to="/khoa/students" icon="🎓" label="Danh sách SV" color="#27ae60" desc="SV thuộc khoa" />
           <QuickLink to="/khoa/khen-thuong" icon="⭐" label="Khen thưởng/KL" color="#e67e22" desc="Xem khen thưởng, kỷ luật" />
-          <QuickLink to="/khoa/hoc-bong" icon="💰" label="Học bổng" color="#8e44ad" desc="Xem học bổng SV" />
+          <QuickLink to="/khoa/hoc-bong" icon="💰" label="Duyệt Học bổng" color="#8e44ad" desc="Duyệt học bổng SV khoa" />
+          <QuickLink to="/khoa/diem" icon="📈" label="Xem Điểm" color="#16a085" desc="Điểm GV đã nhập" />
           <QuickLink to="/khoa/thong-bao" icon="📢" label="Thông báo" color="#2c3e50" desc="Đăng thông báo khoa" />
         </div>
       </div>
