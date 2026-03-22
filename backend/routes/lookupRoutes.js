@@ -96,7 +96,7 @@ router.get('/students-by-class', async (req, res) => {
 router.get('/tieu-chi-drl', async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT matieuchi, tentieuchi, diemtoida, loaitieuchi, mota FROM tieuchi_diemrenluyen ORDER BY loaitieuchi, matieuchi'
+      'SELECT matieuchi AS id, tentieuchi AS ten, diemtoida AS diem_toi_da, loaitieuchi AS loai, mota AS mo_ta FROM tieuchi_diemrenluyen ORDER BY matieuchi'
     );
     res.json({ data: rows });
   } catch (err) {

@@ -17,7 +17,7 @@ class KhenThuongKyLuat {
       `SELECT k.*, s.hoten, s.malop, h.tenhocky, h.namhoc
        FROM khenthuong_kyluat k
        JOIN sinhvien s ON k.mssv = s.mssv
-       JOIN hocky h ON k.mahocky = h.mahocky
+       LEFT JOIN hocky h ON k.mahocky = h.mahocky
        WHERE k.id = ?`,
       [id]
     );
@@ -43,12 +43,17 @@ class KhenThuongKyLuat {
 
   static async getBySemester(mahocky, loai = null) {
     let query = `
-      SELECT k.*, s.hoten, s.malop
+      SELECT k.*, s.hoten, s.malop, h.tenhocky, h.namhoc
        FROM khenthuong_kyluat k
        JOIN sinhvien s ON k.mssv = s.mssv
-       WHERE k.mahocky = ?
+       LEFT JOIN hocky h ON k.mahocky = h.mahocky
+       WHERE 1=1
     `;
-    const params = [mahocky];
+    const params = [];
+    if (mahocky) {
+      query += ' AND k.mahocky = ?';
+      params.push(mahocky);
+    }
     if (loai) {
       query += ' AND k.loai = ?';
       params.push(loai);

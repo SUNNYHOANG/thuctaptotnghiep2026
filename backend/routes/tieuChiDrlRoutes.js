@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT matieuchi AS id, matieuchi AS ma, tentieuchi AS ten, diemtoida AS diem_toi_da, loaitieuchi AS loai, mota AS mo_ta FROM tieuchi_diemrenluyen ORDER BY loaitieuchi, matieuchi'
+      'SELECT matieuchi AS id, tentieuchi AS ten, diemtoida AS diem_toi_da, loaitieuchi AS loai, mota AS mo_ta FROM tieuchi_diemrenluyen ORDER BY matieuchi'
     );
     res.json({ data: rows });
   } catch (err) {
@@ -21,14 +21,14 @@ router.post('/', async (req, res) => {
     const role = req.user?.role || req.headers['x-user-role'];
     if (role !== 'admin') return res.status(403).json({ error: 'Chỉ admin mới có quyền thêm tiêu chí' });
 
-    const { ma, ten, diem_toi_da, loai, mo_ta } = req.body;
-    if (!ma || !ten) return res.status(400).json({ error: 'Thiếu mã hoặc tên tiêu chí' });
+    const { ten, diem_toi_da, loai, mo_ta } = req.body;
+    if (!ten || !ten.trim()) return res.status(400).json({ error: 'Thiếu tên tiêu chí' });
 
     const [result] = await pool.execute(
       'INSERT INTO tieuchi_diemrenluyen (tentieuchi, diemtoida, loaitieuchi, mota) VALUES (?, ?, ?, ?)',
-      [ten, diem_toi_da || 10, loai || null, mo_ta || null]
+      [ten.trim(), diem_toi_da || 10, loai || null, mo_ta || null]
     );
-    res.status(201).json({ id: result.insertId, ma: result.insertId, ten, diem_toi_da, loai, mo_ta });
+    res.status(201).json({ id: result.insertId, ten, diem_toi_da, loai, mo_ta });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -41,11 +41,10 @@ router.put('/:id', async (req, res) => {
     if (role !== 'admin') return res.status(403).json({ error: 'Chỉ admin mới có quyền sửa tiêu chí' });
 
     const { id } = req.params;
-    const { ma, ten, diem_toi_da, loai, mo_ta } = req.body;
+    const { ten, diem_toi_da, loai, mo_ta } = req.body;
 
     const updates = [];
     const values = [];
-    if (ma !== undefined) { updates.push('matieuchi = ?'); values.push(ma); }
     if (ten !== undefined) { updates.push('tentieuchi = ?'); values.push(ten); }
     if (diem_toi_da !== undefined) { updates.push('diemtoida = ?'); values.push(diem_toi_da); }
     if (loai !== undefined) { updates.push('loaitieuchi = ?'); values.push(loai); }

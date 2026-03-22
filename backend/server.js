@@ -25,6 +25,7 @@ import hocKyRoutes from './routes/hocKyRoutes.js';
 import auditLogRoutes from './routes/auditLogRoutes.js';
 import donOnlineRoutes from './routes/donOnlineRoutes.js';
 import tieuChiDrlRoutes from './routes/tieuChiDrlRoutes.js';
+import tieuChiChiTietRoutes from './routes/tieuChiChiTietRoutes.js';
 import { parseUser } from './middleware/parseUser.js';
 
 dotenv.config();
@@ -63,6 +64,7 @@ app.use('/api/hocky', hocKyRoutes);
 app.use('/api/audit-log', auditLogRoutes);
 app.use('/api/don-online', donOnlineRoutes);
 app.use('/api/tieu-chi-drl', tieuChiDrlRoutes);
+app.use('/api/tieu-chi-chitiet', tieuChiChiTietRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

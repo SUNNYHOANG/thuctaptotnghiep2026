@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useSocketEvent } from '../context/SocketContext';
 import './DichVu.css';
 
 const API_BASE = 'http://localhost:5000/api';
@@ -34,11 +35,6 @@ const DichVu = () => {
   const [editingId, setEditingId] = useState(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadServices();
-    loadServiceTypes();
-  }, []);
-
   const loadServices = async () => {
     try {
       setLoading(true);
@@ -55,6 +51,14 @@ const DichVu = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadServices();
+    loadServiceTypes();
+  }, []);
+
+  // Realtime: tự reload khi trạng thái đơn thay đổi
+  useSocketEvent('dichvu:status', loadServices);
 
   const loadServiceTypes = async () => {
     try {

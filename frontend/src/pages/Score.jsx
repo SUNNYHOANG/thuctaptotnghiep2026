@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { scoreAPI, drlSelfAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useSocketEvent } from '../context/SocketContext';
 import './Score.css';
 
 const getScoreLevel = (score) => {
@@ -27,8 +28,6 @@ const ScorePage = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => { loadAll(); }, [user]);
-
   const loadAll = async () => {
     if (!user?.mssv) return;
     setLoading(true);
@@ -47,6 +46,11 @@ const ScorePage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => { loadAll(); }, [user]);
+
+  // Realtime: tự reload khi điểm DRL được cập nhật
+  useSocketEvent(['drl_score', 'drl:reviewed'], loadAll);
 
   const toggleExpand = (mahocky) => setExpanded((p) => (p === mahocky ? null : mahocky));
 

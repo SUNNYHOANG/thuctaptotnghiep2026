@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import DichVu from '../models/DichVu.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitDichVuStatus } from '../socket.js';
 
 const router = express.Router();
 
@@ -114,6 +115,8 @@ router.put('/:id/status', requireRole(['admin', 'ctsv']), async (req, res) => {
       req.user?.id || req.headers['x-user-id'],
       file_ketqua
     );
+    // Emit realtime cho SV
+    if (row?.mssv) emitDichVuStatus(row.mssv, row.id, trangthai, row.loai_dich_vu || row.ten_dich_vu || 'Dịch vụ');
     res.json(row);
   } catch (err) {
     res.status(400).json({ error: err.message });

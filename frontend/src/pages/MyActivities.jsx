@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { studentActivitiesAPI } from '../api/api';
+import { useSocketEvent } from '../context/SocketContext';
 import './MyActivities.css';
 
 const MyActivities = () => {
@@ -9,14 +10,6 @@ const MyActivities = () => {
   const mssv = user?.mssv || '';
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (mssv) {
-      loadActivities();
-    } else {
-      setLoading(false);
-    }
-  }, [mssv]);
 
   const loadActivities = async () => {
     try {
@@ -29,6 +22,17 @@ const MyActivities = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (mssv) {
+      loadActivities();
+    } else {
+      setLoading(false);
+    }
+  }, [mssv]);
+
+  // Realtime: tự reload khi hoạt động được duyệt/từ chối
+  useSocketEvent('activity_approval', loadActivities);
 
   const handleCancel = async (id) => {
     if (!window.confirm('Bạn có chắc chắn muốn hủy đăng ký?')) {

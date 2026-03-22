@@ -3,7 +3,7 @@ import pool from '../config/database.js';
 import SelfEvaluation from '../models/SelfEvaluation.js';
 import { requireRole } from '../middleware/requireRole.js';
 import Score from '../models/Score.js';
-import { emitDrlScore } from '../socket.js';
+import { emitDrlScore, emitDrlSubmitted, emitDrlReviewed, emitToRole, emitToKhoa } from '../socket.js';
 import multer from 'multer';
 import XLSX from 'xlsx';
 
@@ -68,6 +68,13 @@ router.post('/', async (req, res) => {
       return res.status(403).json({ error: 'Điểm học kỳ này đã được CTSV chốt chính thức, không thể chỉnh sửa.' });
     }
     const record = await SelfEvaluation.upsertForStudent(mssv, mahocky, payload);
+    // Thông báo realtime cho CVHT/Khoa/CTSV biết có phiếu mới
+    try {
+      const [svRow] = await pool.execute('SELECT malop, makhoa FROM sinhvien WHERE mssv = ?', [mssv]);
+      const malop = svRow[0]?.malop;
+      const makhoa = svRow[0]?.makhoa;
+      emitDrlSubmitted(mssv, malop, makhoa);
+    } catch (_) {}
     res.json(record);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -110,13 +117,14 @@ router.get(
       const role = (req.user && req.user.role) || req.userRole || '';
       const makhoa = (req.user && req.user.makhoa) || req.headers['x-user-makhoa'] || null;
 
-      // Khoa_Manager và Giảng viên: chỉ lấy phiếu thuộc khoa mình
       const queryOptions = {};
       if ((role === 'khoa' || role === 'giangvien') && makhoa) {
         queryOptions.makhoa = makhoa;
       }
 
-      const records = await SelfEvaluation.getPendingByClassAndSemester(malop, mahocky, queryOptions);
+      // malop = '_all_' hoặc rỗng → lấy tất cả lớp
+      const effectiveMalop = (!malop || malop === '_all_') ? '' : malop;
+      const records = await SelfEvaluation.getPendingByClassAndSemester(effectiveMalop, mahocky, queryOptions);
 
       // Tách bước duyệt theo role:
       // - GV: thấy 'choduyet' (SV vừa gửi) + 'bituchoi'
@@ -428,6 +436,16 @@ router.put('/:id/review', requireRole(['admin', 'giangvien', 'ctsv', 'khoa']), a
       // Ghi thẳng diem_ctsv vào diemtong (không tính lại từ thành phần)
       const saved = await Score.updateScoreFromCtsv(mssv, mahocky, finalTotal, ghichu);
       if (saved) emitDrlScore(mssv, saved.diemtong, saved.xeploai);
+    }
+    // Emit trạng thái duyệt cho SV biết realtime
+    if (updated?.mssv) {
+      emitDrlReviewed(updated.mssv, updated.trangthai, updated.diem_ctsv ?? updated.diem_khoa ?? updated.diem_cvht, updated.nhan_xet_ctsv || updated.nhan_xet_khoa || updated.nhan_xet_cvht);
+      // Thông báo cho các role quản lý biết có cập nhật
+      emitToRole('ctsv', 'drl:updated', { id, mssv: updated.mssv, trangthai: updated.trangthai });
+      emitToRole('admin', 'drl:updated', { id, mssv: updated.mssv, trangthai: updated.trangthai });
+      if (updated.sv_makhoa || phieu.sv_makhoa) {
+        emitToKhoa(updated.sv_makhoa || phieu.sv_makhoa, 'drl:updated', { id, mssv: updated.mssv, trangthai: updated.trangthai });
+      }
     }
     res.json(updated);
   } catch (error) {

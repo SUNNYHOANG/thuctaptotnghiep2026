@@ -2,6 +2,7 @@ import express from 'express';
 import PhucKhao from '../models/PhucKhao.js';
 import pool from '../config/database.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitPhucKhaoStatus } from '../socket.js';
 
 const router = express.Router();
 
@@ -74,6 +75,7 @@ router.put('/:id/status', requireRole(), async (req, res) => {
       ketqua,
       req.headers['x-user-id']
     );
+    if (row?.mssv) emitPhucKhaoStatus(row.mssv, row.id, trangthai, row.tenmonhoc || row.mamonhoc || 'môn học');
     res.json(row);
   } catch (err) {
     res.status(400).json({ error: err.message });

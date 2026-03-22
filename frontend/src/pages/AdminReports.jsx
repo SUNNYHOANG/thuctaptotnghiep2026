@@ -12,8 +12,7 @@ const AdminReports = () => {
     totalUsers: 0,
     totalStudents: 0,
     totalTeachers: 0,
-    totalCourses: 0,
-    totalEnrollments: 0
+    totalCourses: 0
   });
   const [advanced, setAdvanced] = useState(null);
   const [byLop, setByLop] = useState([]);
@@ -60,7 +59,6 @@ const AdminReports = () => {
         ['Tổng sinh viên', stats.totalStudents],
         ['Tổng giảng viên', stats.totalTeachers],
         ['Tổng môn học', stats.totalCourses],
-        ['Đăng ký', stats.totalEnrollments],
         ['SV đạt học bổng', advanced?.hocbongDat ?? '-'],
         ['DRL - Đạt (%)', `${advanced?.drlDatPercent ?? 0}%`],
         ['DRL - Rớt (%)', `${advanced?.drlRotPercent ?? 0}%`],
@@ -97,10 +95,6 @@ const AdminReports = () => {
         <div style={{ background: '#f0f0f0', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #27ae60' }}>
           <h4>📚 Tổng Môn Học</h4>
           <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '10px 0' }}>{stats.totalCourses}</p>
-        </div>
-        <div style={{ background: '#f0f0f0', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #f39c12' }}>
-          <h4>📋 Đăng Ký</h4>
-          <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '10px 0' }}>{stats.totalEnrollments}</p>
         </div>
         <div style={{ background: '#f0f0f0', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #8e44ad' }}>
           <h4>👤 Tài Khoản (Staff)</h4>

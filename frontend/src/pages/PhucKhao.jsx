@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { phucKhaoAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useSocketEvent } from '../context/SocketContext';
 import './PhucKhao.css';
 
 const TRANGTHAI_CONFIG = {
@@ -21,15 +22,6 @@ const PhucKhao = () => {
   const [formData, setFormData]     = useState({ mamonhoc: '', lydo: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (user?.mssv) {
-      loadRequests();
-      phucKhaoAPI.getMonHocList()
-        .then((res) => setMonHocList(res.data || []))
-        .catch(() => {});
-    }
-  }, [user]);
-
   const loadRequests = async () => {
     try {
       setLoading(true);
@@ -41,6 +33,18 @@ const PhucKhao = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user?.mssv) {
+      loadRequests();
+      phucKhaoAPI.getMonHocList()
+        .then((res) => setMonHocList(res.data || []))
+        .catch(() => {});
+    }
+  }, [user]);
+
+  // Realtime: tự reload khi trạng thái phúc khảo thay đổi
+  useSocketEvent('phuckhao:status', loadRequests);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

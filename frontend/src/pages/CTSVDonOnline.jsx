@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { dichVuAPI } from '../api/api';
+import { useSocketEvent } from '../context/SocketContext';
 
 // Enum DB thực tế: 'cho', 'dangxuly', 'duyet', 'tuchoi'
 const STATUS_CONFIG = {
@@ -66,6 +67,9 @@ const CTSVDonOnline = () => {
   }, []);
 
   useEffect(() => { fetchList(statusFilter, loaiFilter); }, [statusFilter, loaiFilter, reloadKey]);
+
+  // Realtime: tự reload khi có đơn mới hoặc trạng thái thay đổi
+  useSocketEvent('dichvu:status', reload);
 
   const updateListItem = (updatedItem) => {
     const id = updatedItem?.madon ?? updatedItem?.id;

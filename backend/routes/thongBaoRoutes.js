@@ -1,6 +1,7 @@
 import express from 'express';
 import ThongBao from '../models/ThongBao.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitThongBaoMoi } from '../socket.js';
 
 const router = express.Router();
 
@@ -84,7 +85,6 @@ router.post('/reminder', requireRole(['admin', 'ctsv', 'giangvien']), async (req
   try {
     const { tieude, noidung, loai, mahocky, mssv_list, malop, makhoa } = req.body;
 
-    // Validate tieude
     if (!tieude || tieude.trim() === '') {
       return res.status(400).json({ error: 'Tiêu đề không được để trống' });
     }
@@ -105,6 +105,9 @@ router.post('/reminder', requireRole(['admin', 'ctsv', 'giangvien']), async (req
       nguoi_nhan: list,
     });
 
+    // Emit realtime đến từng sinh viên trong danh sách
+    emitThongBaoMoi(row);
+
     res.status(201).json({ ...row, so_nguoi_nhan: list.length });
   } catch (err) {
     res.status(500).json({ error: 'Lỗi hệ thống, vui lòng thử lại' });
@@ -119,12 +122,12 @@ router.post('/', requireRole(['admin', 'giangvien', 'ctsv']), async (req, res) =
       nguoitao: req.user?.id || req.headers['x-user-id'] || req.body.nguoitao
     };
     const row = await ThongBao.create(data);
+    emitThongBaoMoi(row);
     res.status(201).json(row);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
-
 // Admin/GV/CTSV: sửa thông báo
 router.put('/:id', requireRole(['admin', 'giangvien', 'ctsv']), async (req, res) => {
   try {

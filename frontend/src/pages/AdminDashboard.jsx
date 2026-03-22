@@ -11,8 +11,7 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalStudents: 0,
     totalTeachers: 0,
-    totalCourses: 0,
-    totalEnrollments: 0
+    totalCourses: 0
   });
 
   useEffect(() => {
@@ -29,8 +28,7 @@ const AdminDashboard = () => {
         totalUsers: statsData.totalUsers || 0,
         totalStudents: statsData.totalStudents || 0,
         totalTeachers: statsData.totalTeachers || 0,
-        totalCourses: statsData.totalCourses || 0,
-        totalEnrollments: statsData.totalEnrollments || 0
+        totalCourses: statsData.totalCourses || 0
       });
     } catch (err) {
       console.error('Error fetching stats:', err);

@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/database.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitHocKyUpdated } from '../socket.js';
 
 const router = express.Router();
 
@@ -53,6 +54,7 @@ router.put('/:mahocky', requireRole(['admin']), async (req, res) => {
     );
     const [rows] = await pool.execute('SELECT * FROM hocky WHERE mahocky = ?', [req.params.mahocky]);
     if (rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy học kỳ' });
+    emitHocKyUpdated(rows[0]);
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -83,6 +85,7 @@ router.patch('/:mahocky/trangthai', requireRole(['admin']), async (req, res) => 
     }
     await pool.execute('UPDATE hocky SET trangthai = ? WHERE mahocky = ?', [trangthai, req.params.mahocky]);
     const [rows] = await pool.execute('SELECT * FROM hocky WHERE mahocky = ?', [req.params.mahocky]);
+    emitHocKyUpdated(rows[0]);
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });

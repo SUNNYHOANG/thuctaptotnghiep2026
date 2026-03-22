@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/database.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { emitDonOnlineStatus } from '../socket.js';
 
 const router = express.Router();
 
@@ -102,6 +103,10 @@ router.put('/:id/status', requireRole(['admin', 'ctsv']), async (req, res) => {
       `SELECT d.*, s.hoten, s.malop FROM don_online d JOIN sinhvien s ON d.mssv = s.mssv WHERE d.madon = ?`,
       [req.params.id]
     );
+    // Gửi thông báo realtime đến sinh viên
+    if (updated?.mssv) {
+      emitDonOnlineStatus(updated.mssv, updated.madon, trangthai, updated.loaidon || updated.tieude || 'Đơn trực tuyến');
+    }
     res.json(updated);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });

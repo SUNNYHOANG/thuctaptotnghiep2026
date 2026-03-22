@@ -145,12 +145,13 @@ router.post('/init/:malophocphan', async (req, res) => {
   try {
     const { malophocphan } = req.params;
 
-    // Lấy danh sách sinh viên đã đăng ký
+    // Lấy danh sách sinh viên từ bangdiem đã có
+    // (không còn dùng bảng dangkyhocphan)
     const [students] = await pool.execute(
       `SELECT DISTINCT sv.mssv, sv.hoten 
-       FROM dangkyhocphan dk
-       JOIN sinhvien sv ON dk.mssv = sv.mssv
-       WHERE dk.malophocphan = ? AND dk.trangthai = 'dangky'`,
+       FROM bangdiem bd
+       JOIN sinhvien sv ON bd.mssv = sv.mssv
+       WHERE bd.malophocphan = ?`,
       [malophocphan]
     );
 

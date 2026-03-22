@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { thongBaoAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useSocketEvent } from '../context/SocketContext';
 
 const KhoaThongBao = () => {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ const KhoaThongBao = () => {
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await thongBaoAPI.getAll({ makhoa: user?.makhoa });
+      const res = await thongBaoAPI.getAll({});
       setList(res.data?.data || res.data || []);
     } catch {
       setList([]);
@@ -25,6 +26,9 @@ const KhoaThongBao = () => {
   };
 
   useEffect(() => { fetchList(); }, []);
+
+  // Realtime: tự reload khi có thông báo mới
+  useSocketEvent('thongbao:new', fetchList);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -129,7 +133,7 @@ const KhoaThongBao = () => {
           <div>
             {list.map(tb => (
               <div
-                key={tb.id}
+                key={tb.mathongbao}
                 style={{
                   background: '#fff',
                   border: '1px solid #e0e0e0',
@@ -137,9 +141,9 @@ const KhoaThongBao = () => {
                   padding: '16px 20px',
                   marginBottom: 14,
                   cursor: 'pointer',
-                  boxShadow: selected?.id === tb.id ? '0 0 0 2px #1976d2' : 'none'
+                  boxShadow: selected?.mathongbao === tb.mathongbao ? '0 0 0 2px #1976d2' : 'none'
                 }}
-                onClick={() => setSelected(selected?.id === tb.id ? null : tb)}
+                onClick={() => setSelected(selected?.mathongbao === tb.mathongbao ? null : tb)}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
@@ -154,16 +158,16 @@ const KhoaThongBao = () => {
                     <strong>{tb.tieude}</strong>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#888' }}>{formatDate(tb.created_at)}</span>
+                    <span style={{ fontSize: 12, color: '#888' }}>{formatDate(tb.ngaytao)}</span>
                     <button
-                      onClick={e => { e.stopPropagation(); handleDelete(tb.id); }}
+                      onClick={e => { e.stopPropagation(); handleDelete(tb.mathongbao); }}
                       style={{ padding: '3px 10px', background: '#ffebee', color: '#c62828', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
                     >
                       Xóa
                     </button>
                   </div>
                 </div>
-                {selected?.id === tb.id && (
+                {selected?.mathongbao === tb.mathongbao && (
                   <div style={{ marginTop: 12, color: '#333', whiteSpace: 'pre-wrap', borderTop: '1px solid #eee', paddingTop: 10 }}>
                     {tb.noidung}
                   </div>

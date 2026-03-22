@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { khenThuongKyLuatAPI, thongBaoAPI, lookupAPI } from '../api/api';
 import api from '../api/api';
+import { useSocketEvent } from '../context/SocketContext';
 
 const LOAI_LABEL = { khenthuong: 'Khen thưởng', kyluat: 'Kỷ luật', canhcao: 'Cảnh cáo' };
 
@@ -121,11 +122,6 @@ const AdminRewards = () => {
     guiThongBao: true,
   });
 
-  useEffect(() => {
-    load();
-    lookupAPI.getHocKy().then((r) => setHockyList(r.data || []));
-  }, []);
-
   const load = async () => {
     try {
       setLoading(true);
@@ -137,6 +133,14 @@ const AdminRewards = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    load();
+    lookupAPI.getHocKy().then((r) => setHockyList(r.data || []));
+  }, []);
+
+  // Realtime: tự reload khi có khen thưởng/kỷ luật mới
+  useSocketEvent('reward_discipline', load);
 
   const loadBySemester = async (mahocky) => {
     try {

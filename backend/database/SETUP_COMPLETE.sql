@@ -5,6 +5,8 @@
 -- Chạy file này để khởi tạo toàn bộ database từ đầu
 -- ============================================================
 
+SET FOREIGN_KEY_CHECKS = 0;
+
 CREATE DATABASE IF NOT EXISTS dkhp1
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
@@ -136,7 +138,23 @@ UPDATE users SET magiaovien = 2 WHERE username = 'tranthid'   AND magiaovien IS 
 
 
 -- ============================================================
--- PHẦN 6: HỌC KỲ
+-- PHẦN 6: CONFIG
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS config (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    config_key   VARCHAR(100) NOT NULL,
+    config_value VARCHAR(255) DEFAULT NULL,
+    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY config_key (config_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+INSERT INTO config (config_key, config_value) VALUES
+('hocky_dang_mo_dang_ky', '1')
+ON DUPLICATE KEY UPDATE config_value = VALUES(config_value);
+
+-- ============================================================
+-- PHẦN 7: HỌC KỲ
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS hocky (
@@ -158,7 +176,7 @@ INSERT INTO hocky (tenhocky, namhoc, kyhoc, ngaybatdau, ngayketthuc, trangthai) 
 ('HK2 2024-2025', '2024-2025', 2, '2025-01-01', '2025-05-31', 'dangmo');
 
 -- ============================================================
--- PHẦN 7: MÔN HỌC, PHÒNG HỌC, LỚP HỌC PHẦN, ĐĂNG KÝ
+-- PHẦN 8: MÔN HỌC, PHÒNG HỌC, LỚP HỌC PHẦN, ĐĂNG KÝ
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS monhoc (
@@ -209,6 +227,8 @@ CREATE TABLE IF NOT EXISTS lophocphan (
     soluongtoida    INT DEFAULT 60,
     soluongdadangky INT DEFAULT 0,
     trangthai       ENUM('dangmo','dong','huy') DEFAULT 'dangmo',
+    ngaymodangky    DATETIME DEFAULT NULL COMMENT 'Thời điểm mở đăng ký',
+    ngaykhoadangky  DATETIME DEFAULT NULL COMMENT 'Hết hạn đăng ký',
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (mamonhoc)   REFERENCES monhoc(mamonhoc)      ON DELETE CASCADE,
@@ -223,40 +243,6 @@ INSERT INTO lophocphan (mamonhoc, mahocky, magiaovien, maphong, lichhoc, sogioho
 (1, 1, 1, 'A101', 'Thứ 2 - 7h30',  45, 60),
 (2, 1, 2, 'A102', 'Thứ 3 - 9h30',  45, 60),
 (3, 3, 1, 'B201', 'Thứ 4 - 13h30', 45, 40);
-
-CREATE TABLE IF NOT EXISTS dangkyhocphan (
-    madangky     INT AUTO_INCREMENT PRIMARY KEY,
-    mssv         VARCHAR(50) NOT NULL,
-    malophocphan INT NOT NULL,
-    trangthai    ENUM('dangky','huy') DEFAULT 'dangky',
-    ngaydangky   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ghichu       TEXT,
-    FOREIGN KEY (mssv)         REFERENCES sinhvien(mssv)           ON DELETE CASCADE,
-    FOREIGN KEY (malophocphan) REFERENCES lophocphan(malophocphan)  ON DELETE CASCADE,
-    UNIQUE KEY unique_dangky (mssv, malophocphan),
-    INDEX idx_mssv         (mssv),
-    INDEX idx_malophocphan (malophocphan)
-);
-
-INSERT INTO dangkyhocphan (mssv, malophocphan) VALUES
-('20123456', 1),
-('20123457', 1),
-('20123458', 2)
-ON DUPLICATE KEY UPDATE trangthai = VALUES(trangthai);
-
-CREATE TABLE IF NOT EXISTS hocphi_payments (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    mssv         VARCHAR(50) NOT NULL,
-    malophocphan INT NOT NULL,
-    amount       DECIMAL(12,0) NOT NULL,
-    paid_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_fee_enrollment (mssv, malophocphan),
-    INDEX idx_mssv         (mssv),
-    INDEX idx_malophocphan (malophocphan),
-    FOREIGN KEY (mssv)         REFERENCES sinhvien(mssv)           ON DELETE CASCADE,
-    FOREIGN KEY (malophocphan) REFERENCES lophocphan(malophocphan)  ON DELETE CASCADE
-);
-
 
 -- ============================================================
 -- PHẦN 8: QUẢN LÝ ĐIỂM
@@ -304,8 +290,9 @@ CREATE TABLE IF NOT EXISTS log_suadiem (
 
 CREATE TABLE IF NOT EXISTS phuckhao (
     maphuckhao   INT AUTO_INCREMENT PRIMARY KEY,
-    mabangdiem   INT NOT NULL,
+    mabangdiem   INT DEFAULT NULL,
     mssv         VARCHAR(50) NOT NULL,
+    mamonhoc     INT DEFAULT NULL,
     malophocphan INT NOT NULL,
     lydo         TEXT NOT NULL,
     trangthai    ENUM('cho','dangxuly','chapnhan','tuchoi') DEFAULT 'cho',
@@ -313,9 +300,9 @@ CREATE TABLE IF NOT EXISTS phuckhao (
     nguoiduyet   VARCHAR(50),
     ngayduyet    DATETIME,
     ngaygui      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (mabangdiem)   REFERENCES bangdiem(mabangdiem)       ON DELETE CASCADE,
+    FOREIGN KEY (mabangdiem)   REFERENCES bangdiem(mabangdiem)       ON DELETE SET NULL,
     FOREIGN KEY (mssv)         REFERENCES sinhvien(mssv)             ON DELETE CASCADE,
-    FOREIGN KEY (malophocphan) REFERENCES lophocphan(malophocphan)   ON DELETE CASCADE
+    FOREIGN KEY (mamonhoc)     REFERENCES monhoc(mamonhoc)           ON DELETE SET NULL
 );
 
 
@@ -403,6 +390,21 @@ INSERT INTO tieuchi_diemrenluyen (tentieuchi, diemtoida, loaitieuchi, mota) VALU
 ('Tổ chức hoạt động',              20, 'hoatdong', 'Điểm tổ chức hoạt động'),
 ('Điểm học tập',                   30, 'hoc_tap',  'Điểm dựa trên kết quả học tập'),
 ('Chấp hành kỷ luật',              20, 'ky_luat',  'Điểm chấp hành nội quy');
+
+-- Tiêu chí chi tiết (con) của từng mục DRL
+CREATE TABLE IF NOT EXISTS tieuchi_chitiet (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    matieuchi   INT NOT NULL,                          -- FK → tieuchi_diemrenluyen (mục lớn)
+    noidung     VARCHAR(500) NOT NULL,                 -- Tên tiêu chí con
+    diemtoida   INT NOT NULL DEFAULT 0,                -- Điểm tối đa (0 nếu là điểm trừ)
+    diemtoithieu INT NOT NULL DEFAULT 0,               -- Điểm tối thiểu (âm nếu là điểm trừ)
+    ghichu      VARCHAR(255) DEFAULT NULL,             -- Ghi chú (VD: "2đ/lần")
+    la_diem_tru TINYINT(1) NOT NULL DEFAULT 0,        -- 1 = điểm trừ
+    thutu       INT NOT NULL DEFAULT 0,                -- Thứ tự hiển thị
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (matieuchi) REFERENCES tieuchi_diemrenluyen(matieuchi) ON DELETE CASCADE
+);
 
 -- Quy trình DRL: SV → GV/CVHT → Khoa → CTSV (duyệt cuối)
 CREATE TABLE IF NOT EXISTS drl_tudanhgia (
@@ -532,7 +534,7 @@ INSERT INTO loai_dichvu (maloaidichvu, tendichvu, mota, thutu) VALUES
 (8,  'Xin chuyển ngành',                'Đơn xin chuyển ngành học',               8),
 (9,  'Xin học vượt',                    'Đơn xin học vượt lên lớp cao hơn',      9),
 (10, 'Xin nghỉ ốm',                     'Đơn xin nghỉ học do ốm đau',            10),
-(99, 'Đơn tự do (nội dung tùy ý)',      'Sinh viên tự soạn đơn với nội dung tùy ý', 99)
+(11, 'Đơn tự do (nội dung tùy ý)',      'Sinh viên tự soạn đơn với nội dung tùy ý', 99)
 ON DUPLICATE KEY UPDATE tendichvu = VALUES(tendichvu), thutu = VALUES(thutu);
 
 -- ENUM trangthai: 'cho','dangxuly','duyet','tuchoi'
@@ -589,8 +591,28 @@ CREATE TABLE IF NOT EXISTS thongbao (
 );
 
 -- ============================================================
--- PHẦN 14: ĐƠN TRỰC TUYẾN (DON_ONLINE)
+-- PHẦN 14: AUDIT LOG
 -- ============================================================
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    username   VARCHAR(100),
+    role       VARCHAR(50),
+    action     VARCHAR(100) NOT NULL,
+    entity     VARCHAR(100),
+    entity_id  VARCHAR(100),
+    detail     TEXT,
+    ip         VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_created_at (created_at),
+    INDEX idx_username   (username),
+    INDEX idx_action     (action)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- PHẦN 15: ĐƠN TRỰC TUYẾN (DON_ONLINE)
+-- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS don_online (
     madon       INT AUTO_INCREMENT PRIMARY KEY,
@@ -613,6 +635,8 @@ CREATE TABLE IF NOT EXISTS don_online (
 -- ============================================================
 -- KIỂM TRA KẾT QUẢ
 -- ============================================================
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 SELECT '✅ Database dkhp1 đã được khởi tạo thành công!' AS Result;
 

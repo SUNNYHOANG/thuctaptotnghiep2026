@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { studentActivitiesAPI, activitiesAPI } from '../api/api';
+import { useSocketEvent } from '../context/SocketContext';
 import './CTSVPhucKhao.css';
 
 const CTSVhoatDong = () => {
@@ -14,6 +15,9 @@ const CTSVhoatDong = () => {
     loadPending();
     loadClosedActivities();
   }, []);
+
+  // Realtime: tự reload khi có đăng ký hoạt động mới
+  useSocketEvent('activity_approval', () => { loadPending(); loadClosedActivities(); });
 
   const loadClosedActivities = async () => {
     try {

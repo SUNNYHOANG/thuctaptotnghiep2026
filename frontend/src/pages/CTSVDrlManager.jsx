@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { drlSelfAPI, lookupAPI } from '../api/api';
 import { useUrlMssv } from '../utils/useUrlMssv';
+import { useSocketEvent } from '../context/SocketContext';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -41,40 +42,6 @@ const CTSVDrlManager = () => {
     lookupAPI.getLop().then((r) => setLopList(r.data?.data || r.data || [])).catch(() => {});
   }, []);
 
-  // Khi mount và urlMssv có giá trị: tự động điền ô tìm kiếm và load data
-  useEffect(() => {
-    if (urlMssv) {
-      setFilterMssv(urlMssv);
-      loadDataWithMssv(urlMssv);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlMssv]);
-
-  const loadDataWithMssv = async (mssv) => {
-    setLoading(true);
-    setMessage('');
-    try {
-      const params = {};
-      if (filterHocky) params.mahocky = filterHocky;
-      if (filterKhoa) params.makhoa = filterKhoa;
-      if (filterLop) params.malop = filterLop;
-      if (filterTrangthai) params.trangthai = filterTrangthai;
-      if (mssv) params.mssv = mssv;
-      const res = await drlSelfAPI.manage(params);
-      const data = res.data || [];
-      setRows(data);
-      if (data.length === 0 && mssv) {
-        setMessage(`Sinh viên ${mssv} chưa có phiếu tự đánh giá nào`);
-      } else if (data.length === 0) {
-        setMessage('Không có phiếu nào phù hợp với bộ lọc.');
-      }
-    } catch (err) {
-      setMessage(err.response?.data?.error || 'Không tải được dữ liệu.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const loadData = async () => {
     setLoading(true);
     setMessage('');
@@ -92,6 +59,35 @@ const CTSVDrlManager = () => {
         setMessage(`Sinh viên ${filterMssv} chưa có phiếu tự đánh giá nào`);
       } else if (data.length === 0) {
         setMessage('Không có phiếu nào phù hợp với bộ lọc.');
+      }
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Không tải được dữ liệu.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Khi mount và urlMssv có giá trị: tự động điền ô tìm kiếm và load data
+  useEffect(() => {
+    if (urlMssv) {
+      setFilterMssv(urlMssv);
+      loadDataWithMssv(urlMssv);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlMssv]);
+
+  // Realtime: tự reload khi SV gửi phiếu DRL mới
+  useSocketEvent('drl:submitted', loadData);
+
+  const loadDataWithMssv = async (mssv) => {
+    setLoading(true);
+    setMessage('');
+    try {
+      const res = await drlSelfAPI.manage({ mssv });
+      const data = res.data || [];
+      setRows(data);
+      if (data.length === 0) {
+        setMessage(`Sinh viên ${mssv} chưa có phiếu tự đánh giá nào`);
       }
     } catch (err) {
       setMessage(err.response?.data?.error || 'Không tải được dữ liệu.');

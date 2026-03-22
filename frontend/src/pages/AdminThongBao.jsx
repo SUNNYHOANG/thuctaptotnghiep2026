@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { thongBaoAPI } from '../api/api';
 import { lookupAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useSocketEvent } from '../context/SocketContext';
 
 const LOAI_OPTIONS = [
   { value: 'truong', label: 'Toàn trường' },
@@ -58,6 +59,9 @@ const AdminThongBao = () => {
       setLoading(false);
     }
   };
+
+  // Realtime: tự reload khi có thông báo mới
+  useSocketEvent('thongbao:new', load);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

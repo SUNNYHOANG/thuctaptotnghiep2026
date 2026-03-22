@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { adminAPIEndpoints } from '../api/adminAPI';
+import { useSocketEvent } from '../context/SocketContext';
 
 const statusLabels = {
   'cho': '🕒 Chờ duyệt',
@@ -17,6 +18,9 @@ const AdminServices = () => {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  // Realtime: tự reload khi trạng thái đơn thay đổi
+  useSocketEvent('dichvu:status', fetchRequests);
 
   const fetchRequests = async () => {
     try {

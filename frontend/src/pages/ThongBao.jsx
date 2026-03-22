@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { thongBaoAPI } from '../api/api';
+import api from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useSocketEvent } from '../context/SocketContext';
 import './ThongBao.css';
 
 const ThongBao = () => {
@@ -8,22 +10,32 @@ const ThongBao = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadNotifications();
-  }, [user]);
-
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      const res = await thongBaoAPI.getAll({ malop: user?.malop });
-      const data = res.data;
-      setNotifications(Array.isArray(data) ? data : []);
+      const [publicRes, reminderRes] = await Promise.all([
+        thongBaoAPI.getAll({ malop: user?.malop }),
+        user?.mssv ? api.get('/thongbao/my-reminders') : Promise.resolve({ data: { data: [] } }),
+      ]);
+      const publicData = Array.isArray(publicRes.data) ? publicRes.data : [];
+      const reminderData = reminderRes.data?.data || [];
+      const merged = [...publicData, ...reminderData]
+        .filter((v, i, arr) => arr.findIndex(x => x.mathongbao === v.mathongbao) === i)
+        .sort((a, b) => new Date(b.ngaytao) - new Date(a.ngaytao));
+      setNotifications(merged);
     } catch (error) {
       console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadNotifications();
+  }, [user]);
+
+  // Realtime: thông báo mới hoặc nhắc nhở → tự reload
+  useSocketEvent('thongbao:new', loadNotifications);
 
   return (
     <div className="thongbao-container">

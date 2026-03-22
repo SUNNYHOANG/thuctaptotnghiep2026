@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { activitiesAPI } from '../api/api';
+import { useSocketEvent } from '../context/SocketContext';
 import './Activities.css';
 
 const Activities = () => {
@@ -11,10 +12,6 @@ const Activities = () => {
     trangthai: '',
     maloaihoatdong: ''
   });
-
-  useEffect(() => {
-    loadData();
-  }, [filters]);
 
   const loadData = async () => {
     try {
@@ -31,6 +28,13 @@ const Activities = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, [filters]);
+
+  // Realtime: tự reload khi có hoạt động được duyệt/cập nhật
+  useSocketEvent('activity_approval', loadData);
 
   const getStatusBadge = (trangthai) => {
     const badges = {

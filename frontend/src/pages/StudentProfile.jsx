@@ -1,316 +1,221 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { studentProfileAPI } from '../api/api';
+import AddressPicker from '../components/AddressPicker';
 import './StudentProfile.css';
+
+const GIOI_TINH   = ['Nam', 'Nữ', 'Khác'];
+const BAC_DAO_TAO = ['Đại học', 'Cao đẳng', 'Thạc sĩ', 'Tiến sĩ'];
+const KHOA_HOC_LIST = ['2019','2020','2021','2022','2023','2024','2025'];
+
+const initForm = (d = {}) => ({
+  hoten:    d.hoten    || '',
+  malop:    d.malop    || '',
+  makhoa:   d.makhoa   || '',
+  nganh:    d.nganh    || '',
+  diachi:   d.diachi   || '',
+  quequan:  d.quequan  || '',
+  ngaysinh: d.ngaysinh || '',
+  gioitinh: d.gioitinh || '',
+  khoahoc:  d.khoahoc  || '',
+  bacdaotao:d.bacdaotao|| '',
+  tinhtrang:d.tinhtrang|| '',
+});
+
+const Avatar = ({ name, mssv }) => {
+  const initials = (name || mssv || '?')
+    .trim().split(/\s+/).slice(-2).map(w => w[0]?.toUpperCase()).join('');
+  return <div className="sp-avatar">{initials}</div>;
+};
+
+const InfoItem = ({ label, value }) => (
+  <div className="sp-info-item">
+    <label>{label}</label>
+    <div className={`val${value ? '' : ' val--empty'}`}>{value || '—'}</div>
+  </div>
+);
+
+const Field = ({ label, children }) => (
+  <div className="sp-field">
+    <label>{label}</label>
+    {children}
+  </div>
+);
 
 const StudentProfile = () => {
   const { user } = useAuth();
   const mssv = user?.mssv || user?.id;
   const [profile, setProfile] = useState(null);
-  const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState({
-    hoten: '',
-    malop: '',
-    makhoa: '',
-    diachi: '',
-    ngaysinh: '',
-    quequan: '',
-    tinhtrang: '',
-    gioitinh: '',
-    khoahoc: '',
-    bacdaotao: '',
-    nganh: '',
-  });
+  const [edit, setEdit]       = useState(false);
+  const [form, setForm]       = useState(initForm());
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [saving, setSaving]   = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
-  useEffect(() => {
-    if (mssv) load();
-  }, [mssv]);
+  const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+
+  useEffect(() => { if (mssv) load(); }, [mssv]);
 
   const load = async () => {
     try {
       setLoading(true);
-      const res = await studentProfileAPI.get(mssv);
-      const data = res.data;
+      const { data } = await studentProfileAPI.get(mssv);
       setProfile(data);
-      setForm({
-        hoten: data.hoten || '',
-        malop: data.malop || '',
-        makhoa: data.makhoa || '',
-        diachi: data.diachi || '',
-        ngaysinh: data.ngaysinh || '',
-        quequan: data.quequan || '',
-        tinhtrang: data.tinhtrang || '',
-        gioitinh: data.gioitinh || '',
-        khoahoc: data.khoahoc || '',
-        bacdaotao: data.bacdaotao || '',
-        nganh: data.nganh || '',
-      });
-    } catch (e) {
-      setMessage('Không tải được hồ sơ.');
-    } finally {
-      setLoading(false);
-    }
+      setForm(initForm(data));
+    } catch {
+      setMessage({ text: 'Không tải được hồ sơ.', type: 'err' });
+    } finally { setLoading(false); }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setMessage({ text: '', type: '' });
     try {
-      setSaving(true);
-      setMessage('');
-      await studentProfileAPI.update(mssv, {
-        hoten: form.hoten,
-        malop: form.malop,
-        makhoa: form.makhoa,
-        diachi: form.diachi || null,
-        ngaysinh: form.ngaysinh || null,
-        quequan: form.quequan || null,
-        tinhtrang: form.tinhtrang || null,
-        gioitinh: form.gioitinh || null,
-        khoahoc: form.khoahoc || null,
-        bacdaotao: form.bacdaotao || null,
-        nganh: form.nganh || null,
-      });
-      setProfile((p) => ({ ...p, ...form }));
+      const payload = { ...form };
+      Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null; });
+      await studentProfileAPI.update(mssv, payload);
+      setProfile(p => ({ ...p, ...form }));
       setEdit(false);
-      setMessage('Đã lưu hồ sơ.');
-    } catch (e) {
-      setMessage(e.response?.data?.error || 'Lưu thất bại.');
-    } finally {
-      setSaving(false);
-    }
+      setMessage({ text: '✓ Đã lưu hồ sơ thành công.', type: 'ok' });
+    } catch (err) {
+      setMessage({ text: err.response?.data?.error || 'Lưu thất bại.', type: 'err' });
+    } finally { setSaving(false); }
   };
 
-  const handleCancel = () => {
-    setEdit(false);
-    if (profile) {
-      setForm({
-        hoten: profile.hoten || '',
-        malop: profile.malop || '',
-        makhoa: profile.makhoa || '',
-        diachi: profile.diachi || '',
-        ngaysinh: profile.ngaysinh || '',
-        quequan: profile.quequan || '',
-        tinhtrang: profile.tinhtrang || '',
-        gioitinh: profile.gioitinh || '',
-        khoahoc: profile.khoahoc || '',
-        bacdaotao: profile.bacdaotao || '',
-        nganh: profile.nganh || '',
-      });
-    }
-  };
+  const handleCancel = () => { setEdit(false); setForm(initForm(profile)); };
 
-  if (loading) return <div className="page-card">Đang tải...</div>;
-  if (!profile) return <div className="page-card">Không tìm thấy hồ sơ.</div>;
+  if (loading) return <div className="sp-wrap" style={{ textAlign: 'center', paddingTop: 60, color: '#888' }}>Đang tải...</div>;
+  if (!profile) return <div className="sp-wrap" style={{ textAlign: 'center', paddingTop: 60, color: '#888' }}>Không tìm thấy hồ sơ.</div>;
 
   return (
-    <div className="page-card student-profile">
-      <div className="student-profile__header">
-        <div className="student-profile__avatar">
-          {(profile.hoten || profile.mssv || '?')
-            .toString()
-            .trim()
-            .split(/\s+/)
-            .slice(0, 2)
-            .map((p) => p[0]?.toUpperCase())
-            .join('')}
-        </div>
-        <div className="student-profile__header-info">
-          <h1>Hồ sơ cá nhân</h1>
-          <p className="student-profile__subtitle">
-            Sinh viên có thể xem và cập nhật một số thông tin cơ bản để đồng bộ với hệ thống.
-          </p>
-          <div className="student-profile__meta">
-            <span><strong>MSSV:</strong> {profile.mssv}</span>
-            <span><strong>Lớp:</strong> {profile.malop || '—'}</span>
-            <span><strong>Khoa:</strong> {profile.makhoa || '—'}</span>
-          </div>
-        </div>
-      </div>
-
-      {message && <div className="student-profile__message">{message}</div>}
-
-      <div className="student-profile__content">
-        <section className="student-profile__section">
-          <h2>Thông tin học tập</h2>
-          {!edit ? (
-            <div className="student-profile__grid">
-              <div className="student-profile__field">
-                <label>Họ tên</label>
-                <div className="value">{profile.hoten || '—'}</div>
-              </div>
-              <div className="student-profile__field">
-                <label>Lớp học</label>
-                <div className="value">{profile.malop || '—'}</div>
-              </div>
-              <div className="student-profile__field">
-                <label>Khoa</label>
-                <div className="value">{profile.makhoa || '—'}</div>
-              </div>
-              <div className="student-profile__field">
-                <label>Ngành</label>
-                <div className="value">{profile.nganh || profile.makhoa || '—'}</div>
-              </div>
+    <div className="sp-wrap">
+      {/* Hero */}
+      <div className="sp-hero">
+        <div className="sp-hero__banner" />
+        <div className="sp-hero__body">
+          <Avatar name={profile.hoten} mssv={profile.mssv} />
+          <div className="sp-hero__info">
+            <div className="sp-hero__name">{profile.hoten || profile.mssv}</div>
+            <div className="sp-hero__tags">
+              <span className="sp-tag sp-tag--blue">🎓 Sinh viên</span>
+              {profile.malop  && <span className="sp-tag sp-tag--green">Lớp {profile.malop}</span>}
+              {profile.makhoa && <span className="sp-tag sp-tag--amber">Khoa {profile.makhoa}</span>}
+              {profile.tinhtrang && <span className="sp-tag sp-tag--gray">{profile.tinhtrang}</span>}
             </div>
-          ) : (
-            <form onSubmit={handleSave} className="student-profile__form">
-              <div className="form-row">
-                <div className="form-item">
-                  <label>MSSV</label>
-                  <input value={profile.mssv} readOnly disabled />
-                </div>
-                <div className="form-item">
-                  <label>Họ tên</label>
-                  <input
-                    value={form.hoten}
-                    onChange={(e) => setForm((f) => ({ ...f, hoten: e.target.value }))}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-item">
-                  <label>Lớp học</label>
-                  <input
-                    value={form.malop}
-                    onChange={(e) => setForm((f) => ({ ...f, malop: e.target.value }))}
-                  />
-                </div>
-                <div className="form-item">
-                  <label>Khoa</label>
-                  <input
-                    value={form.makhoa}
-                    onChange={(e) => setForm((f) => ({ ...f, makhoa: e.target.value }))}
-                  />
-                </div>
-                <div className="form-item">
-                  <label>Ngành</label>
-                  <input
-                    value={form.nganh}
-                    onChange={(e) => setForm((f) => ({ ...f, nganh: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-item">
-                  <label>Địa chỉ</label>
-                  <input
-                    value={form.diachi}
-                    onChange={(e) => setForm((f) => ({ ...f, diachi: e.target.value }))}
-                  />
-                </div>
-                <div className="form-item">
-                  <label>Quê quán</label>
-                  <input
-                    value={form.quequan}
-                    onChange={(e) => setForm((f) => ({ ...f, quequan: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-item">
-                  <label>Ngày sinh</label>
-                  <input
-                    type="date"
-                    value={form.ngaysinh ? form.ngaysinh.substring(0, 10) : ''}
-                    onChange={(e) => setForm((f) => ({ ...f, ngaysinh: e.target.value }))}
-                  />
-                </div>
-                <div className="form-item">
-                  <label>Giới tính</label>
-                  <input
-                    value={form.gioitinh}
-                    onChange={(e) => setForm((f) => ({ ...f, gioitinh: e.target.value }))}
-                    placeholder="Nam / Nữ / Khác"
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-item">
-                  <label>Khóa học</label>
-                  <input
-                    value={form.khoahoc}
-                    onChange={(e) => setForm((f) => ({ ...f, khoahoc: e.target.value }))}
-                  />
-                </div>
-                <div className="form-item">
-                  <label>Bậc đào tạo</label>
-                  <input
-                    value={form.bacdaotao}
-                    onChange={(e) => setForm((f) => ({ ...f, bacdaotao: e.target.value }))}
-                    placeholder="Đại học / Cao đẳng..."
-                  />
-                </div>
-              </div>
-
-              <div className="student-profile__actions">
-                <button type="button" className="btn secondary" onClick={handleCancel}>
-                  Hủy
-                </button>
-                <button type="submit" className="btn primary" disabled={saving}>
-                  {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
-                </button>
-              </div>
-            </form>
+          </div>
+          {!edit && (
+            <div className="sp-hero__edit-btn">
+              <button className="sp-btn sp-btn--primary" onClick={() => setEdit(true)}>✏️ Chỉnh sửa</button>
+            </div>
           )}
-        </section>
-
-        <section className="student-profile__section">
-          <h2>Thông tin cá nhân mở rộng</h2>
-          <p className="student-profile__hint">
-            Các thông tin dưới đây được lưu trực tiếp trong hồ sơ sinh viên. Vui lòng cập nhật chính xác để nhà
-            trường tiện liên hệ và quản lý.
-          </p>
-          <div className="student-profile__grid student-profile__grid--readonly">
-            <div className="student-profile__field">
-              <label>Địa chỉ</label>
-              <div className="value">{profile.diachi || '—'}</div>
-            </div>
-            <div className="student-profile__field">
-              <label>Ngày sinh</label>
-              <div className="value">
-                {profile.ngaysinh ? new Date(profile.ngaysinh).toLocaleDateString('vi-VN') : '—'}
-              </div>
-            </div>
-            <div className="student-profile__field">
-              <label>Quê quán</label>
-              <div className="value">{profile.quequan || '—'}</div>
-            </div>
-            <div className="student-profile__field">
-              <label>Tình trạng</label>
-              <div className="value">{profile.tinhtrang || 'Đang học'}</div>
-            </div>
-            <div className="student-profile__field">
-              <label>Giới tính</label>
-              <div className="value">{profile.gioitinh || '—'}</div>
-            </div>
-            <div className="student-profile__field">
-              <label>Khóa học</label>
-              <div className="value">{profile.khoahoc || '—'}</div>
-            </div>
-            <div className="student-profile__field">
-              <label>Bậc đào tạo</label>
-              <div className="value">{profile.bacdaotao || '—'}</div>
-            </div>
-            <div className="student-profile__field">
-              <label>Ngành</label>
-              <div className="value">{profile.nganh || profile.makhoa || '—'}</div>
-            </div>
-          </div>
-        </section>
+        </div>
       </div>
 
-      {!edit && (
-        <div className="student-profile__footer-actions">
-          <button type="button" className="btn primary" onClick={() => setEdit(true)}>
-            Chỉnh sửa hồ sơ
-          </button>
-        </div>
+      {message.text && (
+        <div className={`sp-msg sp-msg--${message.type}`}>{message.text}</div>
+      )}
+
+      {!edit ? (
+        <>
+          {/* Thông tin học tập */}
+          <div className="sp-card">
+            <div className="sp-card__title">📚 Thông tin học tập</div>
+            <div className="sp-info-grid">
+              <InfoItem label="MSSV"        value={profile.mssv} />
+              <InfoItem label="Họ tên"      value={profile.hoten} />
+              <InfoItem label="Lớp"         value={profile.malop} />
+              <InfoItem label="Khoa"        value={profile.makhoa} />
+              <InfoItem label="Ngành"       value={profile.nganh} />
+              <InfoItem label="Khóa học"    value={profile.khoahoc} />
+              <InfoItem label="Bậc đào tạo" value={profile.bacdaotao} />
+            </div>
+          </div>
+
+          {/* Thông tin cá nhân */}
+          <div className="sp-card">
+            <div className="sp-card__title">👤 Thông tin cá nhân</div>
+            <div className="sp-info-grid">
+              <InfoItem label="Ngày sinh" value={profile.ngaysinh ? new Date(profile.ngaysinh).toLocaleDateString('vi-VN') : ''} />
+              <InfoItem label="Giới tính" value={profile.gioitinh} />
+              <InfoItem label="Địa chỉ"  value={profile.diachi} />
+              <InfoItem label="Quê quán" value={profile.quequan} />
+            </div>
+          </div>
+        </>
+      ) : (
+        <form onSubmit={handleSave}>
+          {/* Form học tập */}
+          <div className="sp-card">
+            <div className="sp-card__title">📚 Thông tin học tập</div>
+            <div className="sp-form">
+              <div className="sp-form-row">
+                <Field label="MSSV">
+                  <input value={profile.mssv} disabled />
+                </Field>
+                <Field label="Họ tên *">
+                  <input value={form.hoten} onChange={set('hoten')} required />
+                </Field>
+                <Field label="Lớp học">
+                  <input value={form.malop} onChange={set('malop')} />
+                </Field>
+              </div>
+              <div className="sp-form-row">
+                <Field label="Khoa">
+                  <input value={form.makhoa} onChange={set('makhoa')} />
+                </Field>
+                <Field label="Ngành">
+                  <input value={form.nganh} onChange={set('nganh')} />
+                </Field>
+              </div>
+              <div className="sp-form-row">
+                <Field label="Khóa học">
+                  <select value={form.khoahoc} onChange={set('khoahoc')}>
+                    <option value="">-- Chọn khóa --</option>
+                    {KHOA_HOC_LIST.map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </Field>
+                <Field label="Bậc đào tạo">
+                  <select value={form.bacdaotao} onChange={set('bacdaotao')}>
+                    <option value="">-- Chọn --</option>
+                    {BAC_DAO_TAO.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </Field>
+              </div>
+            </div>
+          </div>
+
+          {/* Form cá nhân */}
+          <div className="sp-card">
+            <div className="sp-card__title">👤 Thông tin cá nhân</div>
+            <div className="sp-form">
+              <div className="sp-form-row">
+                <Field label="Ngày sinh">
+                  <input type="date" value={form.ngaysinh ? form.ngaysinh.substring(0,10) : ''} onChange={set('ngaysinh')} />
+                </Field>
+                <Field label="Giới tính">
+                  <select value={form.gioitinh} onChange={set('gioitinh')}>
+                    <option value="">-- Chọn --</option>
+                    {GIOI_TINH.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </Field>
+              </div>
+              <div className="sp-form-row sp-form-row--full">
+                <AddressPicker label="Địa chỉ hiện tại" value={form.diachi} onChange={v => setForm(f => ({ ...f, diachi: v }))} />
+              </div>
+              <div className="sp-form-row sp-form-row--full">
+                <AddressPicker label="Quê quán" value={form.quequan} onChange={v => setForm(f => ({ ...f, quequan: v }))} />
+              </div>
+            </div>
+          </div>
+
+          <div className="sp-actions">
+            <button type="button" className="sp-btn sp-btn--secondary" onClick={handleCancel}>Hủy</button>
+            <button type="submit" className="sp-btn sp-btn--primary" disabled={saving}>
+              {saving ? 'Đang lưu...' : '💾 Lưu thay đổi'}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );

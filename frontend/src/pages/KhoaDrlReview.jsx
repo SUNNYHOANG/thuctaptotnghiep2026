@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { drlSelfAPI, lookupAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import { useUrlMssv } from '../utils/useUrlMssv';
+import { useSocketEvent } from '../context/SocketContext';
 
 const KhoaDrlReview = () => {
   const { user } = useAuth();
@@ -25,17 +26,6 @@ const KhoaDrlReview = () => {
     lookupAPI.getHocKyDangMo().then((r) => setHockyList(r.data || [])).catch(() => {});
     lookupAPI.getLop().then((r) => setLopList(r.data?.data || r.data || [])).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    setMessage('');
-  }, [malop, mahocky, filterMssv]);
-
-  // Khi component mount và urlMssv có giá trị: tự động điền ô tìm kiếm
-  useEffect(() => {
-    if (urlMssv) {
-      setFilterMssv(urlMssv);
-    }
-  }, [urlMssv]);
 
   const loadData = async () => {
     if (!mahocky) {
@@ -69,6 +59,25 @@ const KhoaDrlReview = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setMessage('');
+  }, [malop, mahocky, filterMssv]);
+
+  // Realtime: tự reload khi SV gửi phiếu DRL mới
+  useSocketEvent('drl:submitted', loadData);
+
+  // Realtime: khi admin thay đổi trạng thái học kỳ → reload danh sách
+  useSocketEvent('hocky:updated', () => {
+    lookupAPI.getHocKyDangMo().then((r) => setHockyList(r.data || [])).catch(() => {});
+  });
+
+  // Khi component mount và urlMssv có giá trị: tự động điền ô tìm kiếm
+  useEffect(() => {
+    if (urlMssv) {
+      setFilterMssv(urlMssv);
+    }
+  }, [urlMssv]);
 
   const openRow = (row) => {
     setSelected(row);

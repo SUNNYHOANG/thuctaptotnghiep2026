@@ -164,7 +164,7 @@ export const drlSelfAPI = {
   getByStudentAndSemester: (mssv, mahocky) =>
     api.get(`/drl-self/student/${mssv}/semester/${mahocky}`),
   getByClassAndSemester: (malop, mahocky) =>
-    api.get(`/drl-self/class/${malop}/semester/${mahocky}`),
+    api.get(`/drl-self/class/${malop || '_all_'}/semester/${mahocky}`),
   review: (id, data) => api.put(`/drl-self/${id}/review`, data),
   manage: (filters = {}) => api.get('/drl-self/manage', { params: filters }),
   getKhoaList: () => api.get('/drl-self/manage/khoa-list'),
@@ -239,6 +239,15 @@ export const tieuChiDrlAPI = {
   update: (id, data) => api.put(`/tieu-chi-drl/${id}`, data),
   create: (data) => api.post('/tieu-chi-drl', data),
   delete: (id) => api.delete(`/tieu-chi-drl/${id}`),
+};
+
+// Tiêu chí chi tiết (con) của từng mục DRL
+export const tieuChiChiTietAPI = {
+  getByMuc: (matieuchi) => api.get('/tieu-chi-chitiet', { params: { matieuchi } }),
+  getAllGrouped: () => api.get('/tieu-chi-chitiet/all-grouped'),
+  create: (data) => api.post('/tieu-chi-chitiet', data),
+  update: (id, data) => api.put(`/tieu-chi-chitiet/${id}`, data),
+  delete: (id) => api.delete(`/tieu-chi-chitiet/${id}`),
 };
 
 export default api;

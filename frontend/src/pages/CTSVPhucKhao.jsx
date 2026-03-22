@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { phucKhaoAPI } from '../api/api';
+import { useSocketEvent } from '../context/SocketContext';
 import './CTSVPhucKhao.css';
 
 const TRANGTHAI_LABEL = {
@@ -14,10 +15,6 @@ const CTSVPhucKhao = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
 
-  useEffect(() => {
-    loadRequests();
-  }, [filter]);
-
   const loadRequests = async () => {
     try {
       setLoading(true);
@@ -31,6 +28,13 @@ const CTSVPhucKhao = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadRequests();
+  }, [filter]);
+
+  // Realtime: tự reload khi có đơn phúc khảo mới
+  useSocketEvent('phuckhao:status', loadRequests);
 
   const handleStatus = async (maphuckhao, trangthai, ketqua) => {
     try {

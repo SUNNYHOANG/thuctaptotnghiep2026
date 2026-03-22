@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { drlSelfAPI, lookupAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import { useUrlMssv } from '../utils/useUrlMssv';
+import { useSocketEvent } from '../context/SocketContext';
 
 const DrlClassReview = () => {
   const { user } = useAuth();
@@ -44,6 +45,16 @@ const DrlClassReview = () => {
   useEffect(() => {
     setMessage('');
   }, [malop, mahocky]);
+
+  // Realtime: khi có phiếu mới hoặc cập nhật → tự reload danh sách
+  useSocketEvent(['drl:submitted', 'drl:updated'], () => {
+    if (mahocky) loadData();
+  });
+
+  // Realtime: khi admin thay đổi trạng thái học kỳ → reload danh sách
+  useSocketEvent('hocky:updated', () => {
+    lookupAPI.getHocKyDangMo().then((r) => setHockyList(r.data || [])).catch(() => {});
+  });
 
   const loadData = async () => {
     if (!mahocky) {

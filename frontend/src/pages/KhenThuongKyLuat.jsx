@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { khenThuongKyLuatAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
+import { useSocketEvent } from '../context/SocketContext';
 import './KhenThuongKyLuat.css';
 
 const KhenThuongKyLuat = () => {
@@ -8,10 +9,6 @@ const KhenThuongKyLuat = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'khenthuong', 'kyluat'
   const { user } = useAuth();
-
-  useEffect(() => {
-    loadRecords();
-  }, [user]);
 
   const loadRecords = async () => {
     try {
@@ -26,6 +23,13 @@ const KhenThuongKyLuat = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadRecords();
+  }, [user]);
+
+  // Realtime: tự reload khi có khen thưởng/kỷ luật mới
+  useSocketEvent('reward_discipline', loadRecords);
 
   const filteredRecords = records.filter(record => {
     if (filter === 'all') return true;
