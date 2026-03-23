@@ -44,7 +44,9 @@ export const studentActivitiesAPI = {
   getByStudent: (mssv) => api.get(`/student-activities/student/${mssv}`),
   getByActivity: (mahoatdong) => api.get(`/student-activities/activity/${mahoatdong}`),
   getPendingForCTSV: () => api.get('/student-activities/ctsv/pending'),
+  getApprovedByActivity: (mahoatdong) => api.get(`/student-activities/activity/${mahoatdong}/approved`),
   exportApprovedList: (mahoatdong) => api.get(`/student-activities/activity/${mahoatdong}/export`, { responseType: 'blob' }),
+  closeActivity: (mahoatdong) => api.post(`/student-activities/activity/${mahoatdong}/close`),
   approve: (id, data) => api.post(`/student-activities/${id}/approve`, data),
   reject: (id, data) => api.post(`/student-activities/${id}/reject`, data),
   complete: (id, data) => api.post(`/student-activities/${id}/complete`, data),
@@ -70,6 +72,12 @@ export const khenThuongKyLuatAPI = {
   create: (data) => api.post('/khen-thuong-ky-luat', data),
   update: (id, data) => api.put(`/khen-thuong-ky-luat/${id}`, data),
   delete: (id) => api.delete(`/khen-thuong-ky-luat/${id}`),
+  // Khoa duyệt/từ chối đơn GV
+  khoaApprove: (id) => api.post(`/khen-thuong-ky-luat/${id}/khoa-approve`),
+  khoaReject: (id, lydo) => api.post(`/khen-thuong-ky-luat/${id}/khoa-reject`, { lydo }),
+  // CTSV duyệt/từ chối đơn Khoa
+  approve: (id) => api.post(`/khen-thuong-ky-luat/${id}/approve`),
+  reject: (id, lydo) => api.post(`/khen-thuong-ky-luat/${id}/reject`, { lydo }),
 };
 
 // Dịch Vụ API

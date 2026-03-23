@@ -3,9 +3,11 @@ import pool from '../config/database.js';
 class HocBong {
   static async getList(mahocky = null) {
     let query = `
-      SELECT h.*, COUNT(s.id) as soluong_nhan
+      SELECT h.*, COUNT(s.id) as soluong_nhan,
+             k.tenhocky, k.namhoc
        FROM hocbong h
        LEFT JOIN sinhvien_hocbong s ON h.mahocbong = s.mahocbong AND s.trangthai = 'duyet'
+       LEFT JOIN hocky k ON h.mahocky = k.mahocky
        WHERE 1=1
     `;
     const params = [];

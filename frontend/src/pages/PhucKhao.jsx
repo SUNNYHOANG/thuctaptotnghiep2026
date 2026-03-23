@@ -5,10 +5,14 @@ import { useSocketEvent } from '../context/SocketContext';
 import './PhucKhao.css';
 
 const TRANGTHAI_CONFIG = {
-  cho:      { label: 'Chờ xử lý',  cls: 'cho' },
-  dangxuly: { label: 'Đang xử lý', cls: 'dangxuly' },
-  chapnhan: { label: 'Chấp nhận',  cls: 'chapnhan' },
-  tuchoi:   { label: 'Từ chối',    cls: 'tuchoi' },
+  cho:          { label: 'Chờ GV xem xét',    cls: 'cho' },
+  dangxuly:     { label: 'Đang xử lý',         cls: 'dangxuly' },
+  gv_duyet:     { label: 'GV đã chuyển Khoa',  cls: 'dangxuly' },
+  gv_tuchoi:    { label: 'GV từ chối',         cls: 'tuchoi' },
+  khoa_duyet:   { label: 'Khoa đã chuyển CTSV', cls: 'dangxuly' },
+  khoa_tuchoi:  { label: 'Khoa từ chối',       cls: 'tuchoi' },
+  chapnhan:     { label: 'CTSV chấp nhận',     cls: 'chapnhan' },
+  tuchoi:       { label: 'CTSV từ chối',       cls: 'tuchoi' },
 };
 
 const PhucKhao = () => {
@@ -99,11 +103,11 @@ const PhucKhao = () => {
       <div className="phuckhao-header">
         <div className="filter-buttons">
           {[
-            { key: 'all',      label: 'Tất cả',      count: requests.length },
-            { key: 'cho',      label: 'Chờ xử lý',   count: counts.cho || 0 },
-            { key: 'dangxuly', label: 'Đang xử lý',  count: counts.dangxuly || 0 },
-            { key: 'chapnhan', label: 'Chấp nhận',   count: counts.chapnhan || 0 },
-            { key: 'tuchoi',   label: 'Từ chối',     count: counts.tuchoi || 0 },
+            { key: 'all',         label: 'Tất cả',           count: requests.length },
+            { key: 'cho',         label: 'Chờ GV xem xét',   count: counts.cho || 0 },
+            { key: 'gv_duyet',    label: 'Đang xử lý',       count: (counts.gv_duyet || 0) + (counts.khoa_duyet || 0) },
+            { key: 'chapnhan',    label: 'Chấp nhận',        count: counts.chapnhan || 0 },
+            { key: 'tuchoi',      label: 'Từ chối',          count: (counts.tuchoi || 0) + (counts.gv_tuchoi || 0) + (counts.khoa_tuchoi || 0) },
           ].map((f) => (
             <button key={f.key} className={`filter-btn ${filter === f.key ? 'active' : ''}`} onClick={() => setFilter(f.key)}>
               {f.label} ({f.count})

@@ -48,7 +48,7 @@ const TeacherProfile = () => {
 
   const loadProfile = async () => {
     try {
-      const { data } = await api.get('/users/profile');
+      const { data } = await api.get('/users/profile/me');
       setProfile(data);
       setForm({ hoten: data.hoten || '', email: data.email || '', sodienthoai: data.sodienthoai || '', diachi: data.diachi || '' });
     } catch {
@@ -62,7 +62,7 @@ const TeacherProfile = () => {
     setSaving(true);
     setMessage({ text: '', type: '' });
     try {
-      await api.put('/users/profile', form);
+      await api.put('/users/profile/me', form);
       setMessage({ text: '✓ Cập nhật thông tin thành công.', type: 'ok' });
       setEditing(false);
       loadProfile();

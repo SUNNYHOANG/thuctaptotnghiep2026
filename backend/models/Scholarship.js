@@ -26,6 +26,15 @@ class Scholarship {
     return map[muc] || muc;
   }
 
+  // Giá trị học bổng theo mức
+  static MUC_GIATRI = {
+    xuat_sac: 15_000_000,
+    gioi: 13_000_000,
+    kha: 10_000_000,
+    trung_binh: 0,
+    khong_du_dieu_kien: 0,
+  };
+
   /**
    * Khoa chạy xét học bổng — tính GPA + DRL cho SV thuộc khoa, upsert với cho_khoa_duyet
    */
@@ -52,6 +61,8 @@ class Scholarship {
 
     const mssvList = gpaRows.map(r => r.mssv);
     const placeholders = mssvList.map(() => '?').join(',');
+
+    // Chỉ lấy DRL đúng kỳ — SV không có DRL kỳ này sẽ không được xét
     const [drlRows] = await pool.execute(
       `SELECT mssv, diemtong AS drl FROM diemrenluyen WHERE mahocky = ? AND mssv IN (${placeholders})`,
       [mahocky, ...mssvList]
@@ -59,31 +70,50 @@ class Scholarship {
     const drlMap = {};
     drlRows.forEach(r => { drlMap[r.mssv] = r.drl; });
 
+    // Tính trước danh sách kết quả (chưa insert vào DB)
+    const preResults = [];
+    for (const { mssv, gpa_hocky } of gpaRows) {
+      if (drlMap[mssv] === undefined) continue;
+      preResults.push({ mssv, gpa: gpa_hocky, drl: drlMap[mssv], mucxeploai: this.classifyMucHocBong(gpa_hocky, drlMap[mssv]) });
+    }
+
+    // Hạn chốt = hôm nay + 30 ngày
+    const hanChot = new Date();
+    hanChot.setDate(hanChot.getDate() + 30);
+    const hanChotStr = hanChot.toISOString().slice(0, 10);
+
+    // Giá trị = mức cao nhất đạt được trong kỳ
+    const mucOrder = ['xuat_sac', 'gioi', 'kha', 'trung_binh'];
+    const topMuc = mucOrder.find(m => preResults.some(r => r.mucxeploai === m)) || 'khong_du_dieu_kien';
+    const giatri = this.MUC_GIATRI[topMuc] || 0;
+
     let [hbRows] = await pool.execute(`SELECT mahocbong FROM hocbong WHERE mahocky = ? LIMIT 1`, [mahocky]);
     let mahocbong;
     if (hbRows.length) {
       mahocbong = hbRows[0].mahocbong;
+      await pool.execute(
+        `UPDATE hocbong SET giatri = ?, hanchot = ?, mahocky = ? WHERE mahocbong = ?`,
+        [giatri, hanChotStr, mahocky, mahocbong]
+      );
     } else {
       const [hkRows] = await pool.execute('SELECT tenhocky, namhoc FROM hocky WHERE mahocky = ?', [mahocky]);
       const tenHK = hkRows.length ? `${hkRows[0].tenhocky} ${hkRows[0].namhoc}` : `HK ${mahocky}`;
       const [ins] = await pool.execute(
-        `INSERT INTO hocbong (tenhocbong, mahocky, giatri, trangthai) VALUES (?, ?, 0, 'mo')`,
-        [`Học bổng ${tenHK}`, mahocky]
+        `INSERT INTO hocbong (tenhocbong, mahocky, giatri, hanchot, trangthai) VALUES (?, ?, ?, ?, 'mo')`,
+        [`Học bổng ${tenHK}`, mahocky, giatri, hanChotStr]
       );
       mahocbong = ins.insertId;
     }
 
     const results = [];
-    for (const { mssv, gpa_hocky } of gpaRows) {
-      const drl = drlMap[mssv] ?? null;
-      const muc = this.classifyMucHocBong(gpa_hocky, drl);
+    for (const { mssv, gpa, drl, mucxeploai } of preResults) {
       await pool.execute(
         `INSERT INTO sinhvien_hocbong (mssv, mahocbong, mucxeploai, trangthai)
          VALUES (?, ?, ?, 'cho_khoa_duyet')
          ON DUPLICATE KEY UPDATE mucxeploai = VALUES(mucxeploai), trangthai = 'cho_khoa_duyet'`,
-        [mssv, mahocbong, muc]
+        [mssv, mahocbong, mucxeploai]
       );
-      results.push({ mssv, gpa: gpa_hocky, drl, mucxeploai: muc });
+      results.push({ mssv, gpa, drl, mucxeploai });
     }
 
     // Sắp xếp GPA cao → thấp

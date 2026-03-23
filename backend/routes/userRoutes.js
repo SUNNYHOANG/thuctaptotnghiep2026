@@ -34,7 +34,7 @@ router.get('/profile/me', async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Chưa đăng nhập' });
 
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, email, role, makhoa, status, created_at FROM users WHERE id = ?',
+      'SELECT id, username, hoten, email, role, makhoa, sodienthoai, diachi, status, created_at FROM users WHERE id = ?',
       [userId]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
@@ -50,12 +50,14 @@ router.put('/profile/me', async (req, res) => {
     const userId = req.user?.id || req.headers['x-user-id'];
     if (!userId) return res.status(401).json({ error: 'Chưa đăng nhập' });
 
-    const { hoten, email, password } = req.body;
+    const { hoten, email, password, sodienthoai, diachi } = req.body;
     const updates = [];
     const values = [];
 
     if (hoten !== undefined) { updates.push('hoten = ?'); values.push(hoten); }
     if (email !== undefined) { updates.push('email = ?'); values.push(email || null); }
+    if (sodienthoai !== undefined) { updates.push('sodienthoai = ?'); values.push(sodienthoai || null); }
+    if (diachi !== undefined) { updates.push('diachi = ?'); values.push(diachi || null); }
     if (password && String(password).trim()) { updates.push('password = ?'); values.push(password.trim()); }
 
     if (updates.length === 0) return res.status(400).json({ error: 'Không có dữ liệu cập nhật' });
@@ -64,7 +66,7 @@ router.put('/profile/me', async (req, res) => {
     await pool.execute(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
 
     const [rows] = await pool.execute(
-      'SELECT id, username, hoten, email, role, makhoa, status FROM users WHERE id = ?',
+      'SELECT id, username, hoten, email, role, makhoa, sodienthoai, diachi, status FROM users WHERE id = ?',
       [userId]
     );
     res.json(rows[0]);

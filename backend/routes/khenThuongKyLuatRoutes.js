@@ -8,8 +8,8 @@ const router = express.Router();
 // GET - cho phép sinh viên xem
 router.get('/', async (req, res) => {
   try {
-    const { mahocky, loai } = req.query;
-    const rows = await KhenThuongKyLuat.getBySemester(mahocky, loai);
+    const { mahocky, loai, trangthai } = req.query;
+    const rows = await KhenThuongKyLuat.getBySemester(mahocky, loai, trangthai);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -35,17 +35,65 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', requireRole(['admin', 'giangvien', 'ctsv']), async (req, res) => {
+router.post('/', requireRole(['admin', 'giangvien', 'ctsv', 'khoa']), async (req, res) => {
   try {
-    const data = { ...req.body, nguoilap: req.headers['x-user-id'] || req.body.nguoilap };
+    const role = req.headers['x-user-role'] || '';
+    const makhoa = req.headers['x-user-makhoa'] || req.body.makhoa || null;
+    // GV đề xuất → cho_duyet (chờ Khoa); Khoa tạo → khoa_duyet (chờ CTSV); CTSV/Admin → da_duyet
+    let trangthai = 'da_duyet';
+    if (role === 'giangvien') trangthai = 'cho_duyet';
+    else if (role === 'khoa') trangthai = 'khoa_duyet';
+
+    const data = { ...req.body, nguoilap: req.headers['x-user-id'] || req.body.nguoilap, makhoa, trangthai };
     const row = await KhenThuongKyLuat.create(data);
 
-    // Gửi thông báo realtime đến đúng sinh viên
+    if (trangthai === 'da_duyet' && row?.mssv && row?.loai && row?.noidung) {
+      emitRewardDiscipline(row.mssv, row.loai, row.noidung);
+    }
+    res.status(201).json(row);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Khoa: duyệt đơn GV đề xuất (cho_duyet → khoa_duyet)
+router.post('/:id/khoa-approve', requireRole(['admin', 'khoa']), async (req, res) => {
+  try {
+    const row = await KhenThuongKyLuat.khoaApprove(req.params.id);
+    res.json(row);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Khoa: từ chối đơn GV (cho_duyet → khoa_tuchoi)
+router.post('/:id/khoa-reject', requireRole(['admin', 'khoa']), async (req, res) => {
+  try {
+    const row = await KhenThuongKyLuat.khoaReject(req.params.id, req.body.lydo || null);
+    res.json(row);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// CTSV/Admin: Duyệt đơn từ Khoa (khoa_duyet → da_duyet) → gửi thông báo SV
+router.post('/:id/approve', requireRole(['admin', 'ctsv']), async (req, res) => {
+  try {
+    const row = await KhenThuongKyLuat.approve(req.params.id);
     if (row?.mssv && row?.loai && row?.noidung) {
       emitRewardDiscipline(row.mssv, row.loai, row.noidung);
     }
+    res.json(row);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
-    res.status(201).json(row);
+// CTSV/Admin: Từ chối đơn (khoa_duyet → tu_choi)
+router.post('/:id/reject', requireRole(['admin', 'ctsv']), async (req, res) => {
+  try {
+    const row = await KhenThuongKyLuat.reject(req.params.id, req.body.lydo || null);
+    res.json(row);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

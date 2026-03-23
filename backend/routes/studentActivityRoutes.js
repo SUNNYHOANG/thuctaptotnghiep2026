@@ -1,4 +1,5 @@
 import express from 'express';
+import XLSX from 'xlsx';
 import StudentActivity from '../models/StudentActivity.js';
 import Activity from '../models/Activity.js';
 import { requireRole } from '../middleware/requireRole.js';
@@ -47,7 +48,28 @@ router.get('/ctsv/pending', requireRole(ctsvOrAdmin), async (req, res) => {
   }
 });
 
-// CTSV/Admin: Export danh sách SV đăng ký thành công (CSV)
+// CTSV/Admin: Lấy danh sách SV đã được duyệt của một hoạt động
+router.get('/activity/:mahoatdong/approved', requireRole(ctsvOrAdmin), async (req, res) => {
+  try {
+    const list = await StudentActivity.getApprovedByActivity(req.params.mahoatdong);
+    res.json(list);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// CTSV/Admin: Đóng hoạt động (chuyển trangthai -> dachot)
+router.post('/activity/:mahoatdong/close', requireRole(ctsvOrAdmin), async (req, res) => {
+  try {
+    const activity = await Activity.update(req.params.mahoatdong, { trangthai: 'dachot' });
+    if (!activity) return res.status(404).json({ error: 'Không tìm thấy hoạt động' });
+    res.json(activity);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// CTSV/Admin: Export danh sách SV đăng ký thành công (XLSX)
 router.get('/activity/:mahoatdong/export', requireRole(ctsvOrAdmin), async (req, res) => {
   try {
     const { mahoatdong } = req.params;
@@ -55,22 +77,32 @@ router.get('/activity/:mahoatdong/export', requireRole(ctsvOrAdmin), async (req,
     if (!activity) return res.status(404).json({ error: 'Không tìm thấy hoạt động' });
 
     const list = await StudentActivity.getApprovedByActivity(mahoatdong);
-    const BOM = '\uFEFF';
-    const headers = ['STT', 'MSSV', 'Họ tên', 'Lớp', 'Vai trò', 'Ngày đăng ký', 'Ngày duyệt', 'Trạng thái'];
-    const rows = list.map((r, i) => [
-      i + 1,
-      r.mssv || '',
-      (r.hoten || '').replace(/"/g, '""'),
-      r.malop || '',
-      r.vaitro === 'tochuc' ? 'Tổ chức' : r.vaitro === 'truongnhom' ? 'Trưởng nhóm' : 'Tham gia',
-      r.ngaydangky ? new Date(r.ngaydangky).toLocaleString('vi-VN') : '',
-      r.ngayduyet ? new Date(r.ngayduyet).toLocaleString('vi-VN') : '',
-      'Đăng ký thành công'
-    ]);
-    const csv = [headers.join(','), ...rows.map((row) => row.map((c) => `"${String(c)}"`).join(','))].join('\r\n');
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="Danh_sach_dang_ky_thanh_cong_${activity.tenhoatdong || mahoatdong}.csv"`);
-    res.send(BOM + csv);
+
+    const wsData = [
+      ['STT', 'MSSV', 'Họ tên', 'Lớp', 'Vai trò', 'Ngày đăng ký', 'Ngày duyệt', 'Trạng thái'],
+      ...list.map((r, i) => [
+        i + 1,
+        r.mssv || '',
+        r.hoten || '',
+        r.malop || '',
+        r.vaitro === 'tochuc' ? 'Tổ chức' : r.vaitro === 'truongnhom' ? 'Trưởng nhóm' : 'Tham gia',
+        r.ngaydangky ? new Date(r.ngaydangky).toLocaleString('vi-VN') : '',
+        r.ngayduyet ? new Date(r.ngayduyet).toLocaleString('vi-VN') : '',
+        'Đăng ký thành công',
+      ])
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Căn độ rộng cột
+    ws['!cols'] = [5, 14, 28, 12, 12, 20, 20, 22].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws, 'Danh sách');
+
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const filename = `Danh_sach_${(activity.tenhoatdong || mahoatdong).replace(/\s+/g, '_')}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.send(buf);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

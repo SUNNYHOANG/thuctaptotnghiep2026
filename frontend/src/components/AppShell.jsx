@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ReminderPopup from './ReminderPopup';
@@ -29,6 +29,19 @@ const AppShell = ({ children }) => {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  // Đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const handler = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const navItems = useMemo(() => {
     if (hasRole('admin')) {
@@ -93,12 +106,12 @@ const AppShell = ({ children }) => {
         { label: 'Thống kê DRL', path: '/khoa/drl-stats' },
         { label: 'Khen thưởng / Kỷ luật', path: '/khoa/khen-thuong' },
         { label: 'Học bổng', path: '/khoa/hoc-bong' },
+        { label: 'Phúc khảo', path: '/khoa/phuc-khao' },
         { label: 'Thông báo nội bộ', path: '/khoa/thong-bao' },
       ];
     }
     // sinhvien (default)
     return [
-      { label: 'Trang chủ', path: '/' },
       { label: 'Dashboard', path: '/dashboard' },
       { label: 'Hồ sơ cá nhân', path: '/ho-so-ca-nhan' },
       { label: 'Điểm rèn luyện', path: '/diem-ren-luyen' },
@@ -138,7 +151,7 @@ const AppShell = ({ children }) => {
     <div className="app-shell">
       <aside className={`app-sidebar ${mobileNavOpen ? 'open' : ''}`} aria-label="Điều hướng">
         <div className="app-sidebar__top">
-          <div className="app-brand" onClick={() => navigate(hasRole('admin') ? '/admin/dashboard' : hasRole('khoa') ? '/khoa/dashboard' : '/')}>
+          <div className="app-brand" onClick={() => navigate(hasRole('admin') ? '/admin/dashboard' : hasRole('khoa') ? '/khoa/dashboard' : '/dashboard')}>
             {!logoError ? (
               <img
                 src={LOGO_HVA}
@@ -171,12 +184,6 @@ const AppShell = ({ children }) => {
             </NavLink>
           ))}
         </nav>
-
-        <div className="app-sidebar__bottom">
-          <button className="app-nav__link danger" type="button" onClick={handleLogout}>
-            Đăng xuất
-          </button>
-        </div>
       </aside>
 
       <div className="app-content">
@@ -195,14 +202,56 @@ const AppShell = ({ children }) => {
           </div>
           <div className="app-topbar__spacer" />
           <ReminderPopup />
-          <div className="app-user">
-            <div className="app-user__meta">
-              <div className="app-user__name">{user?.hoten || user?.username || 'Người dùng'}</div>
-              <div className="app-user__role">{getRoleName(user?.role)}</div>
-            </div>
-            <div className="app-user__avatar" aria-hidden="true">
-              {getInitials(user?.hoten || user?.username)}
-            </div>
+          <div className="app-user" ref={userMenuRef}>
+            <button
+              className="app-user__btn"
+              onClick={() => setUserMenuOpen((v) => !v)}
+              aria-haspopup="true"
+              aria-expanded={userMenuOpen}
+            >
+              <div className="app-user__meta">
+                <div className="app-user__name">{user?.hoten || user?.username || 'Người dùng'}</div>
+                <div className="app-user__role">{getRoleName(user?.role)}</div>
+              </div>
+              <div className="app-user__avatar" aria-hidden="true">
+                {getInitials(user?.hoten || user?.username)}
+              </div>
+              <span className="app-user__caret">▾</span>
+            </button>
+
+            {userMenuOpen && (
+              <div className="app-user__dropdown">
+                {user?.role === 'sinhvien' && (
+                  <button
+                    className="app-user__dropdown-item"
+                    onClick={() => { setUserMenuOpen(false); navigate('/ho-so-ca-nhan'); }}
+                  >
+                    👤 Thông tin cá nhân
+                  </button>
+                )}
+                {user?.role === 'giangvien' && (
+                  <button
+                    className="app-user__dropdown-item"
+                    onClick={() => { setUserMenuOpen(false); navigate('/giangvien/ho-so'); }}
+                  >
+                    👤 Thông tin cá nhân
+                  </button>
+                )}
+                <button
+                  className="app-user__dropdown-item"
+                  onClick={() => { setUserMenuOpen(false); navigate('/doi-mat-khau'); }}
+                >
+                  🔑 Đổi mật khẩu
+                </button>
+                <div className="app-user__dropdown-divider" />
+                <button
+                  className="app-user__dropdown-item danger"
+                  onClick={() => { setUserMenuOpen(false); handleLogout(); }}
+                >
+                  🚪 Đăng xuất
+                </button>
+              </div>
+            )}
           </div>
         </header>
 

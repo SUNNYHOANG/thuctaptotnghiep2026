@@ -331,12 +331,33 @@ router.post('/lock/:malophocphan', async (req, res) => {
   try {
     const { malophocphan } = req.params;
     const { ngaykhoa } = req.body;
+    const lockTime = ngaykhoa || new Date();
+
+    // Tính diemtongket và gpa cho tất cả SV chưa có (hoặc null) trước khi khóa
+    const [pending] = await pool.execute(
+      `SELECT mabangdiem, diemchuyencan, diemgiuaky, diemcuoiky
+       FROM bangdiem WHERE malophocphan = ? AND trangthai = 'dangnhap'`,
+      [malophocphan]
+    );
+
+    for (const row of pending) {
+      const cc = parseFloat(row.diemchuyencan) || 0;
+      const gk = parseFloat(row.diemgiuaky) || 0;
+      const ck = parseFloat(row.diemcuoiky) || 0;
+      const diemTongKet = parseFloat((cc * 0.1 + gk * 0.3 + ck * 0.6).toFixed(2));
+      const gpa = parseFloat(((diemTongKet / 10) * 4).toFixed(2));
+      const canhbao = gpa < 2.0 ? 'Cảnh báo: GPA dưới 2.0' : gpa < 2.4 ? 'Cảnh báo: GPA còn thấp' : null;
+      await pool.execute(
+        `UPDATE bangdiem SET diemtongket = ?, gpa = ?, canhbao = ? WHERE mabangdiem = ?`,
+        [diemTongKet, gpa, canhbao, row.mabangdiem]
+      );
+    }
 
     const [result] = await pool.execute(
       `UPDATE bangdiem 
        SET trangthai = 'dakhoa', ngaykhoa = ? 
        WHERE malophocphan = ? AND trangthai = 'dangnhap'`,
-      [ngaykhoa || new Date(), malophocphan]
+      [lockTime, malophocphan]
     );
 
     res.json({ 

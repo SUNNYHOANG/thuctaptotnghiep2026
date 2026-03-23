@@ -4,10 +4,14 @@ import { useSocketEvent } from '../context/SocketContext';
 import './CTSVPhucKhao.css';
 
 const TRANGTHAI_LABEL = {
-  cho: 'Chờ xử lý',
-  dangxuly: 'Đang xử lý',
-  chapnhan: 'Đã chấp nhận',
-  tuchoi: 'Đã từ chối',
+  cho:          'Chờ GV xem xét',
+  gv_duyet:     'GV đã chuyển Khoa',
+  gv_tuchoi:    'GV từ chối',
+  khoa_duyet:   'Khoa đã chuyển CTSV',
+  khoa_tuchoi:  'Khoa từ chối',
+  chapnhan:     'CTSV chấp nhận',
+  tuchoi:       'CTSV từ chối',
+  dangxuly:     'Đang xử lý',
 };
 
 const CTSVPhucKhao = () => {
@@ -66,10 +70,13 @@ const CTSVPhucKhao = () => {
         <label>Trạng thái:</label>
         <select value={filter} onChange={(e) => setFilter(e.target.value)}>
           <option value="">Tất cả</option>
-          <option value="cho">Chờ xử lý</option>
-          <option value="dangxuly">Đang xử lý</option>
+          <option value="khoa_duyet">Chờ CTSV chốt</option>
           <option value="chapnhan">Đã chấp nhận</option>
           <option value="tuchoi">Đã từ chối</option>
+          <option value="gv_duyet">GV đã chuyển Khoa</option>
+          <option value="gv_tuchoi">GV từ chối</option>
+          <option value="khoa_tuchoi">Khoa từ chối</option>
+          <option value="cho">Chờ GV xem xét</option>
         </select>
         <button type="button" className="btn-refresh" onClick={loadRequests}>Tải lại</button>
       </div>
@@ -106,7 +113,7 @@ const CTSVPhucKhao = () => {
                   <td>{req.ngaygui ? new Date(req.ngaygui).toLocaleString('vi-VN') : '-'}</td>
                   <td className="cell-ketqua">{req.ketqua || '-'}</td>
                   <td>
-                    {(req.trangthai === 'cho' || req.trangthai === 'dangxuly') && (
+                    {req.trangthai === 'khoa_duyet' && (
                       <>
                         <button type="button" className="btn-approve" onClick={() => handleChapNhan(req)}>Chấp nhận</button>
                         <button type="button" className="btn-reject" onClick={() => handleTuchoi(req)}>Từ chối</button>

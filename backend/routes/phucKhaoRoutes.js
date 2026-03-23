@@ -6,10 +6,17 @@ import { emitPhucKhaoStatus } from '../socket.js';
 
 const router = express.Router();
 
-// CTSV/Admin: lấy tất cả đơn phúc khảo (có thể lọc theo trangthai)
-router.get('/', requireRole(['admin', 'ctsv']), async (req, res) => {
+// CTSV/Admin/Giảng viên/Khoa: lấy tất cả đơn phúc khảo
+router.get('/', requireRole(['admin', 'ctsv', 'giangvien', 'khoa']), async (req, res) => {
   try {
-    const rows = await PhucKhao.getAll(req.query);
+    const filters = { ...req.query };
+    const role = req.user?.role || req.headers['x-user-role'];
+    const makhoa = req.user?.makhoa || req.headers['x-user-makhoa'];
+    // GV và Khoa tự động filter theo khoa mình
+    if ((role === 'giangvien' || role === 'khoa') && makhoa) {
+      filters.makhoa = makhoa;
+    }
+    const rows = await PhucKhao.getAll(filters);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -66,7 +73,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id/status', requireRole(), async (req, res) => {
+router.put('/:id/status', requireRole(['admin', 'ctsv', 'giangvien', 'khoa']), async (req, res) => {
   try {
     const { trangthai, ketqua } = req.body;
     const row = await PhucKhao.updateStatus(

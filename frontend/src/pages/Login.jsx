@@ -110,7 +110,7 @@ const Login = () => {
       else if (role === 'giangvien') navigate('/giangvien/dashboard');
       else if (role === 'ctsv') navigate('/ctsv/dashboard');
       else if (role === 'khoa') navigate('/khoa/dashboard');
-      else navigate('/');
+      else navigate('/dashboard');
     } catch (err) {
       const msg =
         err.code === 'ERR_NETWORK'
@@ -163,7 +163,7 @@ const Login = () => {
       } else if (role === 'khoa') {
         navigate('/khoa/dashboard');
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Đăng nhập thất bại. Vui lòng thử lại.');

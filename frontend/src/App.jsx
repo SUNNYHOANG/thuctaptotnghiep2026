@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -61,8 +60,20 @@ import TeacherKhenThuong from './pages/TeacherKhenThuong';
 import AdminLopHanhChinh from './pages/AdminLopHanhChinh';
 import AdminTieuChiDRL from './pages/AdminTieuChiDRL';
 import ScholarshipEvaluator from './pages/ScholarshipEvaluator';
+import KhoaPhucKhao from './pages/KhoaPhucKhao';
 import KhoaGrades from './pages/KhoaGrades';
+import ChangePassword from './pages/ChangePassword';
 import './index.css';
+
+function RoleRedirect() {
+  const { user } = useAuth();
+  const role = user?.role;
+  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (role === 'giangvien') return <Navigate to="/giangvien/dashboard" replace />;
+  if (role === 'ctsv') return <Navigate to="/ctsv/dashboard" replace />;
+  if (role === 'khoa') return <Navigate to="/khoa/dashboard" replace />;
+  return <Navigate to="/dashboard" replace />;
+}
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -70,13 +81,13 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/login" element={isAuthenticated() ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/register" element={isAuthenticated() ? <Navigate to="/" replace /> : <Register />} />
+      <Route path="/login" element={isAuthenticated() ? <RoleRedirect /> : <Login />} />
+      <Route path="/register" element={isAuthenticated() ? <RoleRedirect /> : <Register />} />
       
-      {/* Protected routes */}
+      {/* Root redirect by role */}
       <Route path="/" element={
         <ProtectedRoute>
-          <Home />
+          <RoleRedirect />
         </ProtectedRoute>
       } />
       
@@ -345,6 +356,12 @@ function AppRoutes() {
       {/* Default redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
 
+      <Route path="/doi-mat-khau" element={
+        <ProtectedRoute>
+          <ChangePassword />
+        </ProtectedRoute>
+      } />
+
       {/* Khoa routes */}
       <Route path="/khoa/dashboard" element={
         <ProtectedRoute requiredRole="khoa">
@@ -374,6 +391,11 @@ function AppRoutes() {
       <Route path="/khoa/hoc-bong" element={
         <ProtectedRoute requiredRole="khoa">
           <KhoaHocBong />
+        </ProtectedRoute>
+      } />
+      <Route path="/khoa/phuc-khao" element={
+        <ProtectedRoute requiredRole="khoa">
+          <KhoaPhucKhao />
         </ProtectedRoute>
       } />
       <Route path="/khoa/thong-bao" element={

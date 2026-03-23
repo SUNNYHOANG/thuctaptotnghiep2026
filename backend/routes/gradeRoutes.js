@@ -50,7 +50,7 @@ router.get('/class/:malophocphan', requireRole(['giangvien', 'ctsv', 'admin', 'k
 
 // ─── Sinh viên: xem điểm của bản thân (chỉ dakhoa) ──────────────────────────
 
-router.get('/student/:mssv', requireRole(), async (req, res) => {
+router.get('/student/:mssv', requireRole(['sinhvien', 'giangvien', 'ctsv', 'admin', 'khoa']), async (req, res) => {
   try {
     const { role, mssv: userMssv } = getUser(req);
     const { mssv } = req.params;

@@ -238,4 +238,46 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// Đổi mật khẩu
+router.post('/change-password', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: 'Chưa đăng nhập' });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { matkhau_cu, matkhau_moi } = req.body;
+
+    if (!matkhau_cu || !matkhau_moi) {
+      return res.status(400).json({ error: 'Thiếu mật khẩu cũ hoặc mật khẩu mới' });
+    }
+    if (matkhau_moi.length < 6) {
+      return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
+    }
+
+    if (token.startsWith('logged-in-')) {
+      const mssv = token.replace('logged-in-', '');
+      const [rows] = await pool.execute(
+        'SELECT mssv FROM sinhvien WHERE mssv = ? AND password = ?',
+        [mssv, matkhau_cu]
+      );
+      if (rows.length === 0) return res.status(400).json({ error: 'Mật khẩu hiện tại không đúng' });
+      await pool.execute('UPDATE sinhvien SET password = ? WHERE mssv = ?', [matkhau_moi, mssv]);
+    } else if (token.startsWith('staff-')) {
+      const id = token.replace('staff-', '').split('-')[0];
+      const [rows] = await pool.execute(
+        'SELECT id FROM users WHERE id = ? AND password = ?',
+        [id, matkhau_cu]
+      );
+      if (rows.length === 0) return res.status(400).json({ error: 'Mật khẩu hiện tại không đúng' });
+      await pool.execute('UPDATE users SET password = ? WHERE id = ?', [matkhau_moi, id]);
+    } else {
+      return res.status(401).json({ error: 'Token không hợp lệ' });
+    }
+
+    res.json({ message: 'Đổi mật khẩu thành công' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

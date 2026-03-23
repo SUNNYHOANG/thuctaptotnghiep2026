@@ -46,7 +46,7 @@ class PhucKhao {
 
   static async getAll(filters = {}) {
     let query = `
-      SELECT p.*, s.hoten, s.malop, m.tenmonhoc
+      SELECT p.*, s.hoten, s.malop, s.makhoa, m.tenmonhoc
        FROM phuckhao p
        JOIN sinhvien s ON p.mssv = s.mssv
        LEFT JOIN monhoc m ON p.mamonhoc = m.mamonhoc
@@ -56,6 +56,10 @@ class PhucKhao {
     if (filters.trangthai) {
       query += ' AND p.trangthai = ?';
       params.push(filters.trangthai);
+    }
+    if (filters.makhoa) {
+      query += ' AND s.makhoa = ?';
+      params.push(filters.makhoa);
     }
     query += ' ORDER BY p.ngaygui DESC';
     const [rows] = await pool.execute(query, params);

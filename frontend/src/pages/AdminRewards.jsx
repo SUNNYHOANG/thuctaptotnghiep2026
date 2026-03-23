@@ -104,12 +104,16 @@ const StudentSelect = ({ value, onChange }) => {
 };
 
 const AdminRewards = () => {
+  const [tab, setTab] = useState('all'); // 'all' | 'pending'
   const [list, setList] = useState([]);
+  const [pendingList, setPendingList] = useState([]);
   const [hockyList, setHockyList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPending, setLoadingPending] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [searchMssv, setSearchMssv] = useState('');
+  const [processingId, setProcessingId] = useState(null);
   const [form, setForm] = useState({
     mssv: '',
     mahocky: '',
@@ -134,13 +138,22 @@ const AdminRewards = () => {
     }
   };
 
+  const loadPending = async () => {
+    try {
+      setLoadingPending(true);
+      const res = await khenThuongKyLuatAPI.getAll({ trangthai: 'khoa_duyet' });
+      setPendingList(Array.isArray(res.data) ? res.data : []);
+    } catch { setPendingList([]); } finally { setLoadingPending(false); }
+  };
+
   useEffect(() => {
     load();
+    loadPending();
     lookupAPI.getHocKy().then((r) => setHockyList(r.data || []));
   }, []);
 
   // Realtime: tự reload khi có khen thưởng/kỷ luật mới
-  useSocketEvent('reward_discipline', load);
+  useSocketEvent('reward_discipline', () => { load(); loadPending(); });
 
   const loadBySemester = async (mahocky) => {
     try {
@@ -196,6 +209,30 @@ const AdminRewards = () => {
     }
   };
 
+  const handleApprove = async (id, row) => {
+    try {
+      setProcessingId(id);
+      await khenThuongKyLuatAPI.approve(id);
+      await load();
+      await loadPending();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Lỗi khi duyệt.');
+    } finally { setProcessingId(null); }
+  };
+
+  const handleReject = async (id) => {
+    const lydo = window.prompt('Lý do từ chối (tùy chọn):', '');
+    if (lydo === null) return;
+    try {
+      setProcessingId(id);
+      await khenThuongKyLuatAPI.reject(id, lydo || null);
+      await load();
+      await loadPending();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Lỗi khi từ chối.');
+    } finally { setProcessingId(null); }
+  };
+
   const openCreate = () => {
     setForm({
       mssv: searchMssv || '',
@@ -235,7 +272,79 @@ const AdminRewards = () => {
   return (
     <div className="admin-page">
       <h2>⭐ Quản Lý Khen Thưởng & Kỷ Luật</h2>
-      <p>CTSV tạo khen thưởng/kỷ luật sẽ thông báo đến sinh viên.</p>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '2px solid #e9ecef' }}>
+        {[
+          { key: 'all', label: 'Tất cả' },
+          { key: 'pending', label: `Chờ duyệt từ Khoa${pendingList.length > 0 ? ` (${pendingList.length})` : ''}` },
+        ].map(t => (
+          <button key={t.key} type="button" onClick={() => setTab(t.key)}
+            style={{
+              padding: '8px 20px', border: 'none', cursor: 'pointer', fontWeight: 600, background: 'none',
+              borderBottom: tab === t.key ? '2px solid #3498db' : '2px solid transparent',
+              color: tab === t.key ? '#3498db' : '#666', marginBottom: -2,
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: Chờ duyệt từ Khoa */}
+      {tab === 'pending' && (
+        <div>
+          <p style={{ color: '#666', marginBottom: 16 }}>Các đơn do Khoa tạo, chờ CTSV xem xét và duyệt.</p>
+          {loadingPending ? <div>Đang tải...</div>
+            : pendingList.length === 0 ? <p style={{ color: '#888' }}>Không có đơn nào chờ duyệt.</p>
+            : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f5f5f5' }}>
+                    <th style={{ padding: 10, textAlign: 'left' }}>MSSV</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Họ tên</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Lớp</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Khoa</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Loại</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Mức</th>
+                    <th style={{ padding: 10, textAlign: 'left' }}>Nội dung</th>
+                    <th style={{ padding: 10, textAlign: 'center' }}>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingList.map(r => (
+                    <tr key={r.id} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: 10 }}>{r.mssv}</td>
+                      <td style={{ padding: 10 }}>{r.hoten}</td>
+                      <td style={{ padding: 10 }}>{r.malop}</td>
+                      <td style={{ padding: 10 }}>{r.makhoa}</td>
+                      <td style={{ padding: 10 }}>
+                        <span style={{ background: r.loai === 'khenthuong' ? '#d4edda' : '#f8d7da', padding: '2px 8px', borderRadius: 4 }}>
+                          {LOAI_LABEL[r.loai] || r.loai}
+                        </span>
+                      </td>
+                      <td style={{ padding: 10 }}>{r.muc || '—'}</td>
+                      <td style={{ padding: 10, maxWidth: 200 }}>{r.noidung}</td>
+                      <td style={{ padding: 10, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <button onClick={() => handleApprove(r.id, r)} disabled={processingId === r.id}
+                          style={{ marginRight: 6, background: '#27ae60', color: 'white', padding: '5px 12px', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+                          {processingId === r.id ? '...' : '✅ Duyệt'}
+                        </button>
+                        <button onClick={() => handleReject(r.id)} disabled={processingId === r.id}
+                          style={{ background: '#e74c3c', color: 'white', padding: '5px 12px', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+                          ❌ Từ chối
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+        </div>
+      )}
+
+      {/* Tab: Tất cả */}
+      {tab === 'all' && (
+        <>
 
       <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button
@@ -296,18 +405,24 @@ const AdminRewards = () => {
                   </td>
                   <td style={{ padding: 10 }}>{r.tenhocky || r.mahocky}</td>
                   <td style={{ padding: 10, textAlign: 'center' }}>
-                    <button
-                      onClick={() => openEdit(r)}
-                      style={{ marginRight: 8, background: '#3498db', color: 'white', padding: '5px 10px', border: 'none', borderRadius: 4, cursor: 'pointer' }}
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      onClick={() => handleDelete(r.id)}
-                      style={{ background: '#e74c3c', color: 'white', padding: '5px 10px', border: 'none', borderRadius: 4, cursor: 'pointer' }}
-                    >
-                      Xóa
-                    </button>
+                    {r.trangthai !== 'da_duyet' ? (
+                      <>
+                        <button
+                          onClick={() => openEdit(r)}
+                          style={{ marginRight: 8, background: '#3498db', color: 'white', padding: '5px 10px', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(r.id)}
+                          style={{ background: '#e74c3c', color: 'white', padding: '5px 10px', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                        >
+                          Xóa
+                        </button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 12, color: '#27ae60' }}>✅ Đã duyệt</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -315,6 +430,8 @@ const AdminRewards = () => {
           </table>
           {filteredList.length === 0 && <p>Chưa có bản ghi.</p>}
         </div>
+      )}
+      </>
       )}
 
       {showModal && (
