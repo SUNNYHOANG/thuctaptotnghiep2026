@@ -62,6 +62,7 @@ import AdminLopHanhChinh from './pages/AdminLopHanhChinh';
 import AdminTieuChiDRL from './pages/AdminTieuChiDRL';
 import ScholarshipEvaluator from './pages/ScholarshipEvaluator';
 import KhoaGrades from './pages/KhoaGrades';
+import ChatbotWidget from './components/ChatbotWidget';
 import './index.css';
 
 function AppRoutes() {
@@ -427,6 +428,7 @@ function App() {
       <SocketProvider>
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AppRoutes />
+          <ChatbotWidget />
         </Router>
       </SocketProvider>
     </AuthProvider>

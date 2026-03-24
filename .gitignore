@@ -20,3 +20,10 @@ yarn-error.log
 /.idea
 /.vscode
 /.zed
+
+# Chatbot - không cần commit
+python-backend/chatbot/chroma_db/
+python-backend/chatbot/__pycache__/
+venv/
+*.pyc
+
